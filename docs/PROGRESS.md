@@ -8,7 +8,7 @@ Last updated: 2026-11-16
 |---|---|---|---|---|
 | P0 | specs | **approved** 2026-11-16 | [#1](https://github.com/Franciss-prog/go-ytm/pull/1) | all proposed defaults accepted |
 | M0 | scaffold | **in review** | branch `feat/scaffold` (stacked on #1) | CLI skeleton, config loader, logging, style, doctor stub |
-| M1 | player-core | not started | | |
+| M1 | player-core | **in review** | branch `feat/player-core` (stacked on #2) | mpv launcher, JSON IPC, controller, crash restore, fakempv |
 | M2 | ytmusic-auth-search | not started | | |
 | M3 | stream-resolve | not started | | |
 | M4 | tui-shell | not started | | |
@@ -38,6 +38,10 @@ Last updated: 2026-11-16
 | 2026-11-16 | `doctor` exits 1 on any failed check; `config check` exits 1 on errors only | 06 |
 | 2026-11-16 | `--no-color` bridged to `NO_COLOR=1` so fang's help/errors honor it | 06 |
 | 2026-11-16 | Background-SGR detection uses a real SGR parser (`style.BackgroundSGRs`), not a regex | 08 |
+| 2026-11-16 | `loadfile` via named arguments (portable across mpv's positional change) | 02 |
+| 2026-11-16 | Consecutive relative seeks are summed when coalesced, not dropped | 02 |
+| 2026-11-16 | Re-resolve on `EndError` belongs to queue/stream (M3); controller only reports | 02 |
+| 2026-11-16 | Deps added: `go-winio` v0.6.4 (Windows named pipes, listed in 01), `goleak` v1.3.0 (test-only leak checks, required by 01) | 01 |
 
 ## Verified facts (with how)
 
@@ -49,6 +53,13 @@ Last updated: 2026-11-16
 - fang v2.0.1 renders help/errors through `colorprofile.NewWriter(w, os.Environ())`: honors NO_COLOR and
   non-TTY, not app flags; it adds `completion` and hidden `man` commands (read source).
 - go-toml v2.4.3 `unstable.Parser.Shape(range)` gives 1-based line/col (used for diagnostics).
+- mpv 0.41.0: named-arg `loadfile` with `"options":"start=12.500"` works; `set_property pause true`
+  before `loadfile` loads paused; `playlist-clear` keeps the current entry; `time-pos` first reports
+  with no `data` (null) before a file loads (local probe).
+- mpv 0.41.0 + lavfi: reported duration is a growing estimate and seeks land ~0.2 s short — the
+  integration test allows ±0.5 s (local run).
+- Real-mpv integration (`-tags mpv`): load at offset, pause, absolute/relative seek, volume,
+  `kill -9` → relaunch resumes paused at the same position and volume. Passes locally (3/3).
 
 ## Measurements (M0, local, Linux amd64, Go 1.27.4)
 
@@ -57,6 +68,14 @@ Last updated: 2026-11-16
 | `ytm --version` / `config path` / `config check --json` cold run | 1.7 ms median (30 runs) | 150 ms |
 | `ytm doctor --json` | 198 ms median — bounded by `yt-dlp --version` alone (188 ms); probes run in parallel | n/a |
 | Binary size (`-s -w`, trimpath) | 12.8 MB | n/a |
+
+## Measurements (M1, local, Linux amd64)
+
+| What | Result |
+|---|---|
+| `mpvipc` round trip vs fakempv over `net.Pipe` | 9.4 µs/op, 38 allocs |
+| mpv event decode | 658 ns/op (105 MB/s) |
+| Coverage | player 78 %, mpvipc 88 %, clock 94 % |
 
 ## Approved by owner (2026-11-16)
 
@@ -76,6 +95,10 @@ Last updated: 2026-11-16
 ## Known gaps
 
 - macOS Now Playing and Windows SMTC without cgo are unproven (M10 risk).
+- M1: Windows named-pipe transport compiles (cross-build) but is not exercised against a real mpv on
+  Windows; unit tests run there over `net.Pipe`. Real-mpv CI job is Linux only.
+- M1: mpv versions older than 0.41.0 untested locally; CI `mpv-integration` covers Ubuntu's mpv.
+- M1: `doctor` does not yet warn on old mpv versions (spec 02 edge case) — deferred to M3.
 - `golangci-lint` / `staticcheck` not installed locally; Makefile falls back to `go run` (works, ~40 s cold).
 - CI green on linux/macOS/windows × stable/oldstable (PR #2). CLI golden files are Linux reference
   output and skip on Windows (host path rules differ); policy, no-ANSI, JSON and exit-code tests run there.

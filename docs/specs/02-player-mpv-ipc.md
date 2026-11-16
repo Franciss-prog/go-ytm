@@ -1,6 +1,6 @@
 # 02 — Player: mpv over JSON IPC
 
-Status: **draft** · Milestone: M1 (gapless/prefetch hooks finished in M3)
+Status: **implemented (M1)** · Milestone: M1 (gapless/prefetch hooks finished in M3)
 
 ## Goals
 
@@ -68,7 +68,7 @@ type Player interface {
     Seek(d time.Duration, mode SeekMode)                             // relative|absolute
     SetVolume(v int) ; ToggleMute()
     State() State                                                    // copy, lock-free (atomic.Pointer)
-    Events() <-chan Event                                            // TrackStarted, TrackEnded{Reason}, StateChanged, Crashed, Restarted
+    Events() <-chan Event                                            // TrackStarted, TrackEnded{Reason}, StateChanged, EngineCrashed{GaveUp}, Restarted, EngineError
     Close(ctx context.Context) error
 }
 ```
@@ -167,7 +167,34 @@ stateDiagram-v2
   play `av://lavfi:sine=…` generated audio (no network), pause/seek/volume, `kill -9` mpv → resumes.
 - Benchmark: IPC round-trip latency, event decode throughput.
 
+## Implementation notes (M1)
+
+- Packages: `internal/player` (Controller, launcher, state machine), `internal/player/mpvipc`
+  (wire protocol; named to avoid confusion with `internal/ipc`, the CLI↔TUI protocol),
+  `internal/player/fakempv` (test server), `internal/clock` (Real + Fake).
+- `loadfile` uses mpv's **named-argument** form
+  `{"name":"loadfile","url":…,"flags":"replace","options":"start=12.000"}` (verified on 0.41.0).
+  The positional `<options>` argument moved when `<index>` was inserted, so named arguments are the
+  portable choice. Older mpv (Ubuntu 24.04 ships 0.37) is exercised by the CI `mpv-integration` job.
+- Pause on load: `set_property pause <bool>` is sent before `loadfile`; mpv keeps it for the new
+  file (verified). A user `Load` always plays; crash restore restores the previous pause state.
+- After a gapless advance the controller sends `playlist-clear` ("clear the playlist, except the
+  currently played file", mpv manual) so mpv holds at most current + next.
+- Coalescing happens at the tail of the command inbox: consecutive loads/volumes keep the newest,
+  consecutive relative seeks **add up** (holding `>` for 10 steps seeks 10 steps, not 1), an
+  absolute seek replaces. One command is in flight at a time, so 100 seeks → ≤ 2 IPC calls.
+- Restart budget: the crash and each failed restart count as failures; restarts wait 0 / 250 ms /
+  1 s; the 4th failure within 30 s (3 failed restarts) gives up (`EngineCrashed{GaveUp: true}`).
+  A crash while nothing is playing does not relaunch; the next `Load` launches lazily.
+- Every mpv command has a 5 s timeout; a timed-out command is abandoned and its late reply dropped.
+- `TrackEnded{EndError}` is emitted; re-resolve-once-then-skip lives in the queue/stream layer (M3),
+  not in the controller. A failed **preload** emits `TrackEnded{EndError}` for the next item but
+  leaves the current track playing.
+- Position-only `StateChanged` events are throttled to 4 Hz; `State()` is always current.
+
 ## Open questions
 
-1. Load user's `mpv.conf`? Default **no** (`--no-config`) for reproducibility; add
+1. ~~Load user's `mpv.conf`?~~ Approved 2026-11-16: `--no-config` by default,
+   `[playback] mpv_config` / `mpv_args` escape hatch (wired in `MPVLauncher`). Original text:
+   Load user's `mpv.conf`? Default **no** (`--no-config`) for reproducibility; add
    `[playback] mpv_config = false` + `mpv_args = []` escape hatch. Needs your OK (new config keys).
