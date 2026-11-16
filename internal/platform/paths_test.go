@@ -119,8 +119,9 @@ func TestCheckSocketPath(t *testing.T) {
 }
 
 func TestExpandHome(t *testing.T) {
-	for in, want := range map[string]string{"~": "/h", "~/a": "/h" + string(filepath.Separator) + "a", "/abs": "/abs", "~x": "~x"} {
-		if got := ExpandHome(in, "/h"); got != want {
+	h := "/h"
+	for in, want := range map[string]string{"~": h, "~/a": filepath.Join(h, "a"), "/abs": "/abs", "~x": "~x"} {
+		if got := ExpandHome(in, h); got != want {
 			t.Errorf("ExpandHome(%q) = %q, want %q", in, got, want)
 		}
 	}

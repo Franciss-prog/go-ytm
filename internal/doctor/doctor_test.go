@@ -67,7 +67,7 @@ func TestAllGood(t *testing.T) {
 	if it := find(t, r, "Environment", "mpv"); it.Value != "v0.41.0" || it.Detail != "/usr/bin/mpv" {
 		t.Errorf("mpv item: %+v", it)
 	}
-	if it := find(t, r, "Paths", "config"); it.Status != style.StatusInfo || !strings.HasPrefix(it.Value, "~/") {
+	if it := find(t, r, "Paths", "config"); it.Status != style.StatusInfo || !strings.HasPrefix(it.Value, "~"+string(filepath.Separator)) {
 		t.Errorf("config dir item: %+v", it)
 	}
 }
