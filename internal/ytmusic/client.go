@@ -109,8 +109,9 @@ type API struct {
 	lim   *limiter
 	group singleflight.Group
 
-	ctx    context.Context // parent of shared (singleflight) calls
-	cancel context.CancelFunc
+	ctx     context.Context // parent of shared (singleflight) calls
+	cancel  context.CancelFunc
+	ownHTTP bool // HTTP client created by New; Close releases its idle connections
 
 	mu      sync.RWMutex
 	creds   *Credentials
@@ -121,8 +122,9 @@ var _ Client = (*API)(nil)
 
 // New returns an API client.
 func New(o Options) *API {
-	if o.HTTP == nil {
-		o.HTTP = &http.Client{}
+	ownHTTP := o.HTTP == nil
+	if ownHTTP {
+		o.HTTP = &http.Client{Transport: http.DefaultTransport.(*http.Transport).Clone()}
 	}
 	if o.BaseURL == "" {
 		o.BaseURL = DefaultBaseURL
@@ -149,7 +151,7 @@ func New(o Options) *API {
 		o.Logger = slog.New(slog.DiscardHandler)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	a := &API{o: o, lim: newLimiter(o.Clock, o.RatePerSec, o.Burst), ctx: ctx, cancel: cancel}
+	a := &API{o: o, lim: newLimiter(o.Clock, o.RatePerSec, o.Burst), ctx: ctx, cancel: cancel, ownHTTP: ownHTTP}
 	if o.Credentials != nil {
 		c := *o.Credentials
 		a.creds = &c
@@ -157,9 +159,13 @@ func New(o Options) *API {
 	return a
 }
 
-// Close cancels shared in-flight requests. The client must not be used after.
+// Close cancels shared in-flight requests and, for a client created by
+// New, closes idle connections. The client must not be used after.
 func (a *API) Close() error {
 	a.cancel()
+	if a.ownHTTP {
+		a.o.HTTP.CloseIdleConnections()
+	}
 	return nil
 }
 
