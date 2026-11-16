@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -208,11 +209,13 @@ func TestAuthSection(t *testing.T) {
 		t.Errorf("fails=%d warns=%d", f, w)
 	}
 
-	if err := os.Chmod(filepath.Join(d.Paths.Config, auth.AuthFile), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if it := find(t, Run(context.Background(), d), "Auth", "auth.json"); it.Status != style.StatusWarn {
-		t.Errorf("perms: %+v", it)
+	if runtime.GOOS != "windows" { // file modes are not Unix permissions there
+		if err := os.Chmod(filepath.Join(d.Paths.Config, auth.AuthFile), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if it := find(t, Run(context.Background(), d), "Auth", "auth.json"); it.Status != style.StatusWarn {
+			t.Errorf("perms: %+v", it)
+		}
 	}
 
 	if err := os.WriteFile(filepath.Join(d.Paths.Config, auth.AuthFile), []byte("{"), 0o600); err != nil {

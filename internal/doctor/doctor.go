@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -270,7 +271,7 @@ func authSection(d Deps) style.Section {
 			Label: "account", Status: style.StatusOK,
 			Value: fmt.Sprintf("%s · slot %d", who, sess.Credentials.AuthUser), Detail: detail,
 		})
-		if fi, err := d.Stat(filepath.Join(d.Paths.Config, auth.AuthFile)); err == nil && d.Env.GOOS != "windows" && fi.Mode().Perm()&0o077 != 0 {
+		if fi, err := d.Stat(filepath.Join(d.Paths.Config, auth.AuthFile)); err == nil && runtime.GOOS != "windows" && fi.Mode().Perm()&0o077 != 0 {
 			s.Items = append(s.Items, style.Item{
 				Label: "auth.json", Status: style.StatusWarn,
 				Value: fmt.Sprintf("mode %04o", fi.Mode().Perm()), Detail: "readable by other users; chmod 600 it",
