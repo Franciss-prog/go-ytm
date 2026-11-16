@@ -50,6 +50,23 @@ jobs:
         env:
           CGO_ENABLED: "1"
 
+  mpv-integration:
+    needs: detect
+    if: needs.detect.outputs.has_go == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+      - name: install mpv
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends mpv && mpv --version | head -1
+      - name: real-mpv tests (lavfi audio, --ao=null, no network)
+        run: go test -race -count=1 -tags mpv -run TestRealMPV -v ./internal/player/
+        env:
+          CGO_ENABLED: "1"
+
   lint:
     needs: detect
     if: needs.detect.outputs.has_go == 'true'
