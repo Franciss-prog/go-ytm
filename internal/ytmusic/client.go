@@ -78,10 +78,6 @@ func (e *HTTPError) Is(target error) bool {
 // DefaultBaseURL is the InnerTube API root for YouTube Music.
 const DefaultBaseURL = Origin + "/youtubei/v1/"
 
-// webAPIKey is the public key the YouTube Music web client sends; ytmusicapi
-// adds it to browser-authenticated requests (constants.py YTM_PARAMS_KEY).
-const webAPIKey = "AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30"
-
 // Options configure an API client. Zero values pick the defaults noted.
 type Options struct {
 	HTTP        *http.Client  // default: a client with no overall timeout (per-call Timeout applies)
@@ -404,11 +400,10 @@ func (a *API) once(ctx context.Context, endpoint string, payload []byte, extraQu
 	ctx, cancel := context.WithTimeout(ctx, a.o.Timeout)
 	defer cancel()
 
-	u := a.o.BaseURL + endpoint + "?alt=json&prettyPrint=false"
-	if creds != nil {
-		u += "&key=" + webAPIKey
-	}
-	u += extraQuery
+	// No `key` query param: ytmusicapi adds the public web key for browser
+	// auth, but yt-dlp's cookie-authenticated InnerTube calls omit it
+	// (extractor/youtube/_base.py _call_api, 2026.10.26).
+	u := a.o.BaseURL + endpoint + "?alt=json&prettyPrint=false" + extraQuery
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, bytes.NewReader(payload))
 	if err != nil {
 		return node{}, fmt.Errorf("ytmusic: %s: %w", endpoint, err)

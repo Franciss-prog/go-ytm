@@ -87,8 +87,10 @@ Client version date = today's UTC date, as ytmusicapi does (`helpers.py initiali
 build-time constant or refresh job needed (decided M2).
 
 Headers when authenticated: `Cookie`, `Authorization: SAPISIDHASH <ts>_<sha1(ts+" "+SAPISID+" "+origin)>`,
-`X-Goog-AuthUser: <slot>`, `X-Origin`/`Origin: https://music.youtube.com`, browser UA, plus the public
-web API `key` query param (ytmusicapi `YTM_PARAMS_KEY`). The SAPISID value is read from the
+`X-Goog-AuthUser: <slot>`, `X-Origin`/`Origin: https://music.youtube.com`, browser UA. No `key`
+query param: ytmusicapi adds the public web key for browser auth, but yt-dlp's cookie-authenticated
+InnerTube calls omit it (`_base.py _call_api`), and a hard-coded Google key trips secret scanners.
+The SAPISID value is read from the
 `__Secure-3PAPISID` cookie (ytmusicapi `sapisid_from_cookie`), falling back to `SAPISID`. Every request
 sends `SOCS=CAI` (EU consent bypass, as ytmusicapi). `Search(limit)` follows `musicShelfContinuation`
 pages for filtered searches only; unfiltered results carry no duration (YouTube omits it there).

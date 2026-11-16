@@ -167,7 +167,7 @@ func TestAuthenticatedHeaders(t *testing.T) {
 			t.Errorf("%s = %q want %q", k, got, v)
 		}
 	}
-	if !strings.Contains(r.query, "key="+webAPIKey) {
+	if r.query != "alt=json&prettyPrint=false" {
 		t.Errorf("query = %s", r.query)
 	}
 	ctx := r.body["context"].(map[string]any)

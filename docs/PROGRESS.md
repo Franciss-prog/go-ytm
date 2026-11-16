@@ -48,6 +48,7 @@ Last updated: 2026-11-17
 | 2026-11-17 | Token bucket in-house on `clock.Clock` (no `x/time/rate`); singleflight from `x/sync` (already in graph, now direct) | 03 |
 | 2026-11-17 | Deps added: `charm.land/huh/v2` v2.0.3 (setup prompts, listed in 01); `golang.org/x/sync` promoted indirect → direct | 01 |
 | 2026-11-17 | `ytm search` with a rejected session falls back to signed-out results + warning (exit 0) | 03 |
+| 2026-11-17 | No InnerTube `key` param (yt-dlp omits it on cookie-auth calls; GitGuardian flagged the public web key) | 03 |
 | 2026-11-17 | CLI error handler capitalizes only plain first words (fang title-cased `yt-dlp` → `Yt-Dlp`) | 06 |
 
 ## Verified facts (with how)
