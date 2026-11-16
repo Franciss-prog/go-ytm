@@ -9,7 +9,7 @@ Last updated: 2026-11-17
 | P0 | specs | **approved** 2026-11-16 | [#1](https://github.com/Franciss-prog/go-ytm/pull/1) | all proposed defaults accepted |
 | M0 | scaffold | **in review** | branch `feat/scaffold` (stacked on #1) | CLI skeleton, config loader, logging, style, doctor stub |
 | M1 | player-core | **in review** | [#3](https://github.com/Franciss-prog/go-ytm/pull/3) (stacked on #2) | mpv launcher, JSON IPC, controller, crash restore, fakempv |
-| M2 | ytmusic-auth-search | **in review** | branch `feat/ytmusic-auth-search` (stacked on #3) | InnerTube client, search, setup, auth store, doctor Auth |
+| M2 | ytmusic-auth-search | **in review** | [#4](https://github.com/Franciss-prog/go-ytm/pull/4) (stacked on #3) | InnerTube client, search, setup, auth store, doctor Auth |
 | M3 | stream-resolve | not started | | |
 | M4 | tui-shell | not started | | |
 | M4b | dynamic-theme | not started | | |
