@@ -54,6 +54,8 @@ api_timeout = 15                # 1..120 s
 resume_on_launch = true
 history_min_listen_seconds = 5  # 0..3600
 sync_history_to_ytmusic = true
+mpv_config = false              # NEW: load the user's mpv.conf (default: mpv runs with --no-config)
+mpv_args = []                   # NEW: extra mpv arguments
 # prefer_audio: no effect in original → dropped (accepted, ignored)
 
 [cache]
@@ -80,6 +82,7 @@ album_art_mode = "blocks"       # NEW: blocks|off   (old `album_art = true/false
 icons = "unicode"               # NEW: unicode|nerd|ascii
 progress_style = "block"        # block|line
 sidebar_width = 30              # 16..80
+lyrics_width = 36               # 24..80
 col_index = 4                   # 0 = auto
 col_title = 0
 col_artist = 0
@@ -107,6 +110,9 @@ matugen_path = ""               # blank = <config>/matugen-colors.toml
 file = ""                       # used when source = "file"; blank = <config>/theme.toml
 fallback = "ytm-dark"
 color_depth = "auto"            # NEW: auto|truecolor|256|16 (override detection)
+
+[keys]
+chord_timeout_ms = 1000         # 100..5000; pending chord timeout
 
 [notifications]
 enabled = true

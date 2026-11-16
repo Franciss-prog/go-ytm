@@ -6,8 +6,8 @@ Last updated: 2026-11-16
 
 | # | Slug | Status | PR | Notes |
 |---|---|---|---|---|
-| P0 | specs | **approved** 2026-11-16 | branch `docs/phase-0-specs` | all proposed defaults accepted |
-| M0 | scaffold | not started | | |
+| P0 | specs | **approved** 2026-11-16 | [#1](https://github.com/Franciss-prog/go-ytm/pull/1) | all proposed defaults accepted |
+| M0 | scaffold | **in review** | branch `feat/scaffold` (stacked on #1) | CLI skeleton, config loader, logging, style, doctor stub |
 | M1 | player-core | not started | | |
 | M2 | ytmusic-auth-search | not started | | |
 | M3 | stream-resolve | not started | | |
@@ -33,6 +33,11 @@ Last updated: 2026-11-16
 | 2026-11-16 | Comment-preserving config writes via `go-toml/v2/unstable` byte-range splicing (verified `Node.Raw Range`) | 04 |
 | 2026-11-16 | IPC on Windows uses named pipes (original used TCP + token) | 06 |
 | 2026-11-16 | Config dir `~/.config/ytm-go/` (not shared with the Python app) | 00 |
+| 2026-11-16 | Theme tokens are `image/color.Color` (RGB / ANSI index / `lipgloss.NoColor` for terminal default) — no wrapper type | 08 |
+| 2026-11-16 | Config validation is tag-driven (`oneof`, `range`) over a reflect walk of the raw TOML map, so every bad key is reported (not just the first) | 04 |
+| 2026-11-16 | `doctor` exits 1 on any failed check; `config check` exits 1 on errors only | 06 |
+| 2026-11-16 | `--no-color` bridged to `NO_COLOR=1` so fang's help/errors honor it | 06 |
+| 2026-11-16 | Background-SGR detection uses a real SGR parser (`style.BackgroundSGRs`), not a regex | 08 |
 
 ## Verified facts (with how)
 
@@ -41,6 +46,17 @@ Last updated: 2026-11-16
 - matugen 4.2.0 template syntax `{{colors.<role>.default|dark|light.hex}}`, `{{mode}}` (rendered locally).
 - Owner's `~/.cache/wal/colors.json` is matugen-written, lacks `special`, has empty colorN entries.
 - yt-dlp 2026.10.26 has `--cookies-from-browser` and `--cookies FILE`.
+- fang v2.0.1 renders help/errors through `colorprofile.NewWriter(w, os.Environ())`: honors NO_COLOR and
+  non-TTY, not app flags; it adds `completion` and hidden `man` commands (read source).
+- go-toml v2.4.3 `unstable.Parser.Shape(range)` gives 1-based line/col (used for diagnostics).
+
+## Measurements (M0, local, Linux amd64, Go 1.27.4)
+
+| What | Result | Budget |
+|---|---|---|
+| `ytm --version` / `config path` / `config check --json` cold run | 1.7 ms median (30 runs) | 150 ms |
+| `ytm doctor --json` | 198 ms median — bounded by `yt-dlp --version` alone (188 ms); probes run in parallel | n/a |
+| Binary size (`-s -w`, trimpath) | 12.8 MB | n/a |
 
 ## Approved by owner (2026-11-16)
 
@@ -60,4 +76,7 @@ Last updated: 2026-11-16
 ## Known gaps
 
 - macOS Now Playing and Windows SMTC without cgo are unproven (M10 risk).
-- `golangci-lint` / `staticcheck` not installed locally; Makefile falls back to `go run`.
+- `golangci-lint` / `staticcheck` not installed locally; Makefile falls back to `go run` (works, ~40 s cold).
+- Windows/macOS: tests compile for both (`GOOS=… go test -c`) but only run in CI.
+- fang queries the terminal background (OSC 11) when rendering help on a TTY; harmless on real
+  terminals, visible as junk only under `script`-style captures.

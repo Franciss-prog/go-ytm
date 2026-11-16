@@ -27,6 +27,7 @@ Status: **draft** · Depends on: 00
 | Human logs | `charm.land/log/v2` | v2.0.1 | checked in M0 |
 | Color profile | `github.com/charmbracelet/colorprofile` | v0.4.3 | `Detect(w, env)`, `Env(env)`, TrueColor/ANSI256/ANSI/Ascii/NoTTY |
 | CLI | `github.com/spf13/cobra` | v1.10.2 | |
+| TTY detection | `golang.org/x/term` | (x/ module) | `IsTerminal` for the output policy |
 | TOML | `github.com/pelletier/go-toml/v2` | v2.4.3 | `DecodeError.Position()` for line numbers; `unstable.Parser` gives node byte `Range`s (used for comment-preserving writes) |
 | SQLite | `modernc.org/sqlite` | v1.62.0 | pure Go |
 | File watch | `github.com/fsnotify/fsnotify` | v1.10.1 | |

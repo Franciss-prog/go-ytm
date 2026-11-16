@@ -22,7 +22,7 @@ Status: **draft** · Milestones: M0 (skeleton, style, doctor stub), M2 (setup, s
 | `--config-dir DIR` | override config dir (also `YTM_GO_CONFIG_DIR`) |
 | `--no-color` | disable styling (also `NO_COLOR`, `CLICOLOR=0`, `TERM=dumb`) |
 | `--json` | (per command where meaningful) machine output |
-| `--pprof[=ADDR]` | start pprof HTTP server (default `127.0.0.1:6060`), TUI only |
+| `--pprof[=ADDR]` | start pprof HTTP server (default `127.0.0.1:6060`) for the life of any command; address printed to stderr |
 
 ## Output policy (implemented once in `internal/style`)
 
@@ -37,6 +37,9 @@ styled  := stdout is TTY && !NO_COLOR && !--no-color && TERM != "dumb" && CLICOL
   profile-aware writer so 256/16-color terminals degrade.
 - Theme: CLI loads the same `[theme]` config and source (pywal/matugen/…) once, no watcher.
   Transparent mode → no background fills in CLI output either.
+- `--no-color` is bridged to `NO_COLOR=1` before fang runs so help/errors honor it too.
+- Doctor/config rows that would double-count (e.g. a `config.toml` header row above its own
+  diagnostics) are `info`; only the individual diagnostics carry warn/fail.
 - Interactive prompts (Huh) require stdin+stderr TTY; otherwise exit 2 with a message naming the
   non-interactive flags.
 
@@ -65,10 +68,10 @@ styled  := stdout is TTY && !NO_COLOR && !--no-color && TERM != "dumb" && CLICOL
 | `cache status` | `--json` | card | `{"location","size_bytes","max_bytes","entries"}` |
 | `cache clear` | `--yes` | Huh confirm | — (refuses while TUI runs, exit 1) |
 | `import URL` | `--name`, `--multi`, `--yes`, `--json` | Bubble Tea progress + picker | report JSON |
-| `doctor` | `--json` | sectioned report | `{"sections":[{"name","status","items":[{"label","status","detail"}]}]}` |
+| `doctor` | `--json` | sectioned report; **exit 1 if any check fails** | `{"title","meta","sections":[{"name","status","items":[{"label","status","value","detail"}]}],"problems":N,"warnings":N}` (status ∈ ok/warn/fail/info) |
 | `config` | — | opens `$EDITOR` (fallbacks as original) | — |
-| `config check` | `--json` | diagnostics list | `[{"file","line","col","key","severity","message"}]` |
-| `config path` / `config defaults` | | plain | |
+| `config check [file\|-]` | `--json` | diagnostics list; **exit 1 on errors** (warnings exit 0) | `[{"file","line","col","key","severity","message"}]` |
+| `config path` / `config defaults` | `--json` (path) | plain: config.toml path / default TOML | `{"config_file","log_file","dirs":{"config","data","cache","state","runtime"}}` |
 | `theme reload` (IPC) / `theme show` | `--json` | swatches | `{"source","name","tokens":{…}}` |
 | `changelog` | | Glamour markdown | |
 | `completion bash\|zsh\|fish\|powershell` | | cobra | |

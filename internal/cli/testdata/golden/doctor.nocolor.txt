@@ -1,0 +1,18 @@
+ ytm-go doctor (v0.0.0-test · linux/amd64)
+
+ Environment
+   [ok] mpv          v0.41.0                         /usr/bin/mpv
+   [x]  yt-dlp       not found                       install yt-dlp — needed to resolve audio streams
+   [ok] terminal     truecolor
+
+ Paths
+   [i]  config       ~/.config/ytm-go                will be created on first use
+   [i]  data         ~/.local/share/ytm-go           will be created on first use
+   [i]  cache        ~/.cache/ytm-go                 will be created on first use
+   [ok] logs         ~/.local/state/ytm-go
+   [ok] ipc socket   /run/user/1000/ytm-go/ipc.sock  30/103 bytes
+
+ Config
+   [i]  config.toml  ~/.config/ytm-go/config.toml    not present; using defaults
+
+ 1 problem

@@ -17,18 +17,17 @@ Status: **draft** · Milestones: M4 (Theme struct, static themes, style plumbing
 
 ## Theme model
 
+Token values are Go `image/color.Color` (decided in M0): RGB via `lipgloss.Color("#rrggbb")`,
+ANSI palette slots via `ansi.BasicColor`/`ansi.IndexedColor`, and the terminal default via
+`lipgloss.NoColor{}` (`theme.Default`). Lip Gloss v2 already understands all three, so no wrapper type.
+
 ```go
-type Color struct {           // one token value
-    Kind  ColorKind           // RGB | ANSI (0..15) | Default (terminal default fg/bg)
-    RGB   colorful.Color
-    Index uint8
-}
 type Theme struct {
     Name, Source string
     Dark bool                 // drives contrast math + light/dark static variants
     Bg, Fg, Surface, SurfaceAlt, Border, Accent, AccentDim, Muted,
     SelectedBg, SelectedFg, ProgressFilled, ProgressEmpty,
-    LyricsPlayed, LyricsCurrent, LyricsUpcoming, Error, Warn, Success Color
+    LyricsPlayed, LyricsCurrent, LyricsUpcoming, Error, Warn, Success color.Color
     Version uint64            // bumped on every apply; part of render cache keys
 }
 ```
@@ -259,8 +258,9 @@ see 04); `esc` reverts to the values at open. Also reachable from Help and comma
   meets ratios (or hits the documented black/white fallback); hue preserved within 2°.
 - Reload tests (fake clock for debounce): temp-write + rename; partial write then completion; invalid
   JSON keeps old theme; delete then recreate; directory created later; identical content → no message.
-- Transparent render test: registry of every page/component (+ popups); render at 2 sizes; assert no
-  `48;`, `4[0-7]m`, `10[0-7]m` SGR except in registered exemptions (album art box; `solid`
+- Transparent render test: registry of every page/component (+ popups); render at 2 sizes; assert
+  `style.BackgroundSGRs(out)` is empty (a real SGR parameter parser — a regex mis-reads the `107`
+  inside `38;2;255;107;107` as a background code; found in M0) except in registered exemptions (album art box; `solid`
   selection; `popup_fill`). Opaque mode: assert root bg SGR present.
 - Color depth: table tests truecolor → 256 → 16 → none, known nearest results.
 - `config.Patch` tests for every Settings key.

@@ -1,0 +1,22 @@
+ ytm-go doctor (v0.0.0-test · linux/amd64)
+
+ Environment
+   [ok] mpv          v0.41.0                         /usr/bin/mpv
+   [x]  yt-dlp       not found                       install yt-dlp — needed to resolve audio streams
+   [i]  terminal     not a terminal                  output is piped
+
+ Paths
+   [ok] config       ~/.config/ytm-go
+   [i]  data         ~/.local/share/ytm-go           will be created on first use
+   [i]  cache        ~/.cache/ytm-go                 will be created on first use
+   [ok] logs         ~/.local/state/ytm-go
+   [ok] ipc socket   /run/user/1000/ytm-go/ipc.sock  30/103 bytes
+
+ Config
+   [i]  config.toml  ~/.config/ytm-go/config.toml    see below, or run `ytm config check`
+   [!!]   line 2     playback.default_volume         150 is above maximum 100; clamped to 100
+   [!!]   line 3     playback.seek_stp               unknown key (did you mean "seek_step"?)
+   [x]    line 6     theme.source                    "wallpaper" is not one of static, pywal, matugen, ansi, file; using "static"
+   [ok] theme        ytm-dark (static)               transparent
+
+ 2 problems, 2 warnings

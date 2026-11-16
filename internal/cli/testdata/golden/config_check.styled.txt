@@ -1,0 +1,5 @@
+ [1;38;2;245;196;81m![m [38;2;154;154;154m$HOME/.config/ytm-go/config.toml:2:1[m [38;2;255;78;69mplayback.default_volume[m 150 is above maximum 100; clamped to 100
+ [1;38;2;245;196;81m![m [38;2;154;154;154m$HOME/.config/ytm-go/config.toml:3:1[m [38;2;255;78;69mplayback.seek_stp[m unknown key (did you mean "seek_step"?)
+ [1;38;2;255;107;107m✗[m [38;2;154;154;154m$HOME/.config/ytm-go/config.toml:6:1[m [38;2;255;78;69mtheme.source[m "wallpaper" is not one of static, pywal, matugen, ansi, file; using "static"
+
+ 1 error, 2 warnings

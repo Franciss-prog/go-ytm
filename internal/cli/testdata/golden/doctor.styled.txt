@@ -1,0 +1,18 @@
+ [48;2;255;78;69m [m[1;38;2;15;15;15;48;2;255;78;69mytm-go doctor[m[48;2;255;78;69m [m  [38;2;154;154;154mv0.0.0-test · linux/amd64[m
+
+ [1;38;2;255;78;69mEnvironment[m
+   [1;38;2;95;211;141m✓[m [38;2;241;241;241mmpv        [m  [38;2;241;241;241mv0.41.0                       [m  [38;2;154;154;154m/usr/bin/mpv[m
+   [1;38;2;255;107;107m✗[m [38;2;241;241;241myt-dlp     [m  [38;2;241;241;241mnot found                     [m  [38;2;154;154;154minstall yt-dlp — needed to resolve audio streams[m
+   [1;38;2;95;211;141m✓[m [38;2;241;241;241mterminal   [m  [38;2;241;241;241mtruecolor                     [m
+
+ [1;38;2;255;78;69mPaths[m
+   [38;2;154;154;154m·[m [38;2;241;241;241mconfig     [m  [38;2;241;241;241m~/.config/ytm-go              [m  [38;2;154;154;154mwill be created on first use[m
+   [38;2;154;154;154m·[m [38;2;241;241;241mdata       [m  [38;2;241;241;241m~/.local/share/ytm-go         [m  [38;2;154;154;154mwill be created on first use[m
+   [38;2;154;154;154m·[m [38;2;241;241;241mcache      [m  [38;2;241;241;241m~/.cache/ytm-go               [m  [38;2;154;154;154mwill be created on first use[m
+   [1;38;2;95;211;141m✓[m [38;2;241;241;241mlogs       [m  [38;2;241;241;241m~/.local/state/ytm-go         [m
+   [1;38;2;95;211;141m✓[m [38;2;241;241;241mipc socket [m  [38;2;241;241;241m/run/user/1000/ytm-go/ipc.sock[m  [38;2;154;154;154m30/103 bytes[m
+
+ [1;38;2;255;78;69mConfig[m
+   [38;2;154;154;154m·[m [38;2;241;241;241mconfig.toml[m  [38;2;241;241;241m~/.config/ytm-go/config.toml  [m  [38;2;154;154;154mnot present; using defaults[m
+
+ [1;38;2;255;107;107m1 problem[m

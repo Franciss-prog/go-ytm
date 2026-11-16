@@ -1,0 +1,5 @@
+ [!!] $HOME/.config/ytm-go/config.toml:2:1 playback.default_volume 150 is above maximum 100; clamped to 100
+ [!!] $HOME/.config/ytm-go/config.toml:3:1 playback.seek_stp unknown key (did you mean "seek_step"?)
+ [x] $HOME/.config/ytm-go/config.toml:6:1 theme.source "wallpaper" is not one of static, pywal, matugen, ansi, file; using "static"
+
+ 1 error, 2 warnings

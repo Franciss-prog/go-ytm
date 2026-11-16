@@ -2,8 +2,9 @@
 
 > A fast, beautiful YouTube Music client for your terminal, rewritten in Go.
 
-**Status: 🚧 planning / pre-alpha.** Nothing here is released yet. Everything below describes the
-design goals and the planned feature set, not what works today. See the [roadmap](#roadmap).
+**Status: 🚧 pre-alpha (M0 scaffold).** Today `ytm doctor`, `ytm config` (`check`, `path`,
+`defaults`) and `--help`/`--version` work; the player itself does not yet.
+Nothing is released yet. The rest of this README describes the planned feature set. See the [roadmap](#roadmap).
 
 `ytm-go` is a ground-up Go rewrite of [ytm-player](https://github.com/peternaame-boop/ytm-player)
 (MIT). The original is great but the Python/Textual stack can feel laggy. `ytm-go` aims for the same
