@@ -124,7 +124,7 @@ Not available yet. Planned channels:
 
 ```sh
 # from source (once there is a release)
-go install github.com/<you>/ytm-go/cmd/ytm@latest
+go install github.com/Franciss-Prog/go-ytm/cmd/ytm@latest
 
 # later: GitHub releases, AUR, Homebrew, Scoop, Nix
 ```

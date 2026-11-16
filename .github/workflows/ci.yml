@@ -1,0 +1,94 @@
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Phase 0 has no Go code yet; every job checks for go.mod and no-ops without it.
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      has_go: ${{ steps.check.outputs.has_go }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        run: |
+          if [ -f go.mod ]; then echo "has_go=true" >> "$GITHUB_OUTPUT"; else echo "has_go=false" >> "$GITHUB_OUTPUT"; fi
+
+  test:
+    needs: detect
+    if: needs.detect.outputs.has_go == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        go: [stable, oldstable]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+      - run: go mod verify
+      - run: go vet ./...
+      - name: build (no cgo)
+        run: go build ./...
+        env:
+          CGO_ENABLED: "0"
+      - name: test (race detector needs cgo; shipped binary stays cgo-free)
+        run: go test -race -count=1 ./...
+        env:
+          CGO_ENABLED: "1"
+
+  lint:
+    needs: detect
+    if: needs.detect.outputs.has_go == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest
+
+  cross-compile:
+    needs: detect
+    if: needs.detect.outputs.has_go == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - run: go build -trimpath -o /dev/null ./...
+        env:
+          CGO_ENABLED: "0"
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: specs present
+        run: |
+          for f in 00-overview 01-architecture 02-player-mpv-ipc 03-ytmusic-api 04-config-keymap-theme \
+                   05-ui-pages 06-cli-ipc 07-testing-ci-release 08-dynamic-theme-transparency; do
+            test -f "docs/specs/$f.md" || { echo "missing docs/specs/$f.md"; exit 1; }
+          done
