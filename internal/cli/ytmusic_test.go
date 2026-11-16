@@ -56,6 +56,10 @@ func (f fakeYT) Search(_ context.Context, q string, flt ytmusic.SearchFilter, li
 
 func (f fakeYT) SearchSuggestions(context.Context, string) ([]string, error) { return nil, nil }
 
+// Close makes the fake an io.Closer like ytmusic.API, so slot probing
+// registers closers from several goroutines (covered by -race).
+func (f fakeYT) Close() error { return nil }
+
 func (f fakeYT) Account(context.Context) (ytmusic.AccountInfo, error) {
 	if f.creds == nil || !strings.Contains(f.creds.Cookie, "__Secure-3PAPISID=good") {
 		return ytmusic.AccountInfo{}, ytmusic.ErrUnauthenticated

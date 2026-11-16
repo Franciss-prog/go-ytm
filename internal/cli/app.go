@@ -16,6 +16,7 @@ import (
 	"runtime"
 	"slices"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -107,7 +108,11 @@ type App struct {
 	Theme  theme.Theme
 	Log    *slog.Logger
 
+	closeMu sync.Mutex
 	closers []func() error
+
+	httpOnce sync.Once
+	httpc    *http.Client // shared by every ytmusic client of this command
 
 	// RunCommand runs an external program attached to the terminal
 	// (overridden in tests).
@@ -187,7 +192,7 @@ func (a *App) load() error {
 		Stderr:      a.IO.Err,
 	})
 	a.Log = logger
-	a.closers = append(a.closers, closer.Close)
+	a.addCloser(closer.Close)
 	if lerr != nil {
 		a.Log.Warn("file logging disabled", "err", lerr)
 	}
@@ -247,7 +252,7 @@ func (a *App) startPprof(ctx context.Context, addr string) error {
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 	srv := &http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second}
 	go func() { _ = srv.Serve(ln) }()
-	a.closers = append(a.closers, func() error {
+	a.addCloser(func() error {
 		// Shutdown runs after the command context is done; keep its values
 		// but not its cancellation.
 		sctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Second)
@@ -259,13 +264,33 @@ func (a *App) startPprof(ctx context.Context, addr string) error {
 	return err
 }
 
+// addCloser registers a cleanup run by Close (safe for concurrent use).
+func (a *App) addCloser(c func() error) {
+	a.closeMu.Lock()
+	defer a.closeMu.Unlock()
+	a.closers = append(a.closers, c)
+}
+
+// httpClient returns the HTTP client shared by this command's API clients;
+// Close releases its idle connections.
+func (a *App) httpClient() *http.Client {
+	a.httpOnce.Do(func() {
+		a.httpc = &http.Client{Transport: http.DefaultTransport.(*http.Transport).Clone()}
+		a.addCloser(func() error { a.httpc.CloseIdleConnections(); return nil })
+	})
+	return a.httpc
+}
+
 // Close releases resources (log file, pprof server).
 func (a *App) Close() error {
 	var errs []error
-	for _, c := range slices.Backward(a.closers) {
+	a.closeMu.Lock()
+	closers := a.closers
+	a.closers = nil
+	a.closeMu.Unlock()
+	for _, c := range slices.Backward(closers) {
 		errs = append(errs, c())
 	}
-	a.closers = nil
 	return errors.Join(errs...)
 }
 

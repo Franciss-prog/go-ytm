@@ -27,6 +27,7 @@ func (a *App) authStore() auth.Store { return auth.Store{Dir: a.Paths.Config} }
 // ytOptions are the client options derived from config.
 func (a *App) ytOptions() ytmusic.Options {
 	return ytmusic.Options{
+		HTTP:    a.httpClient(),
 		Timeout: time.Duration(a.Config.Playback.APITimeout) * time.Second,
 		Region:  a.Config.UI.Region,
 		BrandID: a.Config.General.BrandAccountID,
@@ -38,7 +39,7 @@ func (a *App) ytOptions() ytmusic.Options {
 func (a *App) newYT(o ytmusic.Options) ytmusic.Client {
 	c := YTMusicFactory(o)
 	if cl, ok := c.(io.Closer); ok {
-		a.closers = append(a.closers, cl.Close)
+		a.addCloser(cl.Close)
 	}
 	return c
 }
