@@ -175,7 +175,7 @@ stateDiagram-v2
 - `loadfile` uses mpv's **named-argument** form
   `{"name":"loadfile","url":…,"flags":"replace","options":"start=12.000"}` (verified on 0.41.0).
   The positional `<options>` argument moved when `<index>` was inserted, so named arguments are the
-  portable choice. Older mpv (Ubuntu 24.04 ships 0.37) is exercised by the CI `mpv-integration` job.
+  portable choice. CI's `mpv-integration` runner also has 0.41.0; older mpv is untested.
 - Pause on load: `set_property pause <bool>` is sent before `loadfile`; mpv keeps it for the new
   file (verified). A user `Load` always plays; crash restore restores the previous pause state.
 - After a gapless advance the controller sends `playlist-clear` ("clear the playlist, except the

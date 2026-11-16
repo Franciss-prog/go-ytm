@@ -8,7 +8,7 @@ Last updated: 2026-11-16
 |---|---|---|---|---|
 | P0 | specs | **approved** 2026-11-16 | [#1](https://github.com/Franciss-prog/go-ytm/pull/1) | all proposed defaults accepted |
 | M0 | scaffold | **in review** | branch `feat/scaffold` (stacked on #1) | CLI skeleton, config loader, logging, style, doctor stub |
-| M1 | player-core | **in review** | branch `feat/player-core` (stacked on #2) | mpv launcher, JSON IPC, controller, crash restore, fakempv |
+| M1 | player-core | **in review** | [#3](https://github.com/Franciss-prog/go-ytm/pull/3) (stacked on #2) | mpv launcher, JSON IPC, controller, crash restore, fakempv |
 | M2 | ytmusic-auth-search | not started | | |
 | M3 | stream-resolve | not started | | |
 | M4 | tui-shell | not started | | |
@@ -97,7 +97,7 @@ Last updated: 2026-11-16
 - macOS Now Playing and Windows SMTC without cgo are unproven (M10 risk).
 - M1: Windows named-pipe transport compiles (cross-build) but is not exercised against a real mpv on
   Windows; unit tests run there over `net.Pipe`. Real-mpv CI job is Linux only.
-- M1: mpv versions older than 0.41.0 untested locally; CI `mpv-integration` covers Ubuntu's mpv.
+- M1: mpv versions older than 0.41.0 untested (local and CI `mpv-integration` runner both 0.41.0).
 - M1: `doctor` does not yet warn on old mpv versions (spec 02 edge case) — deferred to M3.
 - `golangci-lint` / `staticcheck` not installed locally; Makefile falls back to `go run` (works, ~40 s cold).
 - CI green on linux/macOS/windows × stable/oldstable (PR #2). CLI golden files are Linux reference
