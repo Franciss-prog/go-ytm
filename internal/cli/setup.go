@@ -296,7 +296,8 @@ func (a *App) readSession(ctx context.Context, src string, tty bool) (_ []auth.C
 		}
 		creds := ytmusic.Credentials{Cookie: ms.Cookie, UserAgent: ms.UserAgent, AuthUser: ms.AuthUser}
 		if _, err := creds.SAPISID(); err != nil {
-			return nil, ytmusic.Credentials{}, "", unauthErr("the pasted Cookie header is not from a signed-in session (%v)", err)
+			a.Log.Info("setup: pasted cookie lacks SAPISID", "err", err)
+			return nil, ytmusic.Credentials{}, "", unauthErr("the pasted Cookie header has no SAPISID cookie; copy the headers from a signed-in music.youtube.com tab")
 		}
 		return auth.CookiesFromHeader(ms.Cookie, now), creds, resolved, nil
 	}
