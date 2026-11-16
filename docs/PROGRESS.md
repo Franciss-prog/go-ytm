@@ -6,7 +6,7 @@ Last updated: 2026-11-16
 
 | # | Slug | Status | PR | Notes |
 |---|---|---|---|---|
-| P0 | specs | **in review** | branch `docs/phase-0-specs` | awaiting owner approval |
+| P0 | specs | **approved** 2026-11-16 | branch `docs/phase-0-specs` | all proposed defaults accepted |
 | M0 | scaffold | not started | | |
 | M1 | player-core | not started | | |
 | M2 | ytmusic-auth-search | not started | | |
@@ -42,9 +42,20 @@ Last updated: 2026-11-16
 - Owner's `~/.cache/wal/colors.json` is matugen-written, lacks `special`, has empty colorN entries.
 - yt-dlp 2026.10.26 has `--cookies-from-browser` and `--cookies FILE`.
 
+## Approved by owner (2026-11-16)
+
+- Keys: `settings = ,`, `toggle_transparency = C-t`, `command_palette = :`, `theme_picker = g t`.
+- New config keys: `[theme]` section, `[ui] icons|album_art_mode|mouse`, `[yt_dlp] binary`,
+  `[theme] color_depth|ansi_accent`, `[theme.pywal_map]`, `[keys] chord_timeout_ms`.
+- CLI prints human output by default, compact JSON with `--json`.
+- New commands: `toggle`, `theme reload|show`, `changelog`, `config check|path|defaults`, `completion`.
+- mpv launched with `--no-config`; opt-in `[playback] mpv_config` / `mpv_args`.
+- Binary `ytm`, config dir `~/.config/ytm-go/`.
+- All other per-spec open questions: proposed defaults accepted.
+
 ## Open questions (need owner)
 
-See "What needs your decision" in the Phase 0 summary; each spec's last section lists its own.
+- None currently.
 
 ## Known gaps
 
