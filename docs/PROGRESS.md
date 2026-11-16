@@ -77,6 +77,7 @@ Last updated: 2026-11-16
 
 - macOS Now Playing and Windows SMTC without cgo are unproven (M10 risk).
 - `golangci-lint` / `staticcheck` not installed locally; Makefile falls back to `go run` (works, ~40 s cold).
-- Windows/macOS: tests compile for both (`GOOS=… go test -c`) but only run in CI.
+- CI green on linux/macOS/windows × stable/oldstable (PR #2). CLI golden files are Linux reference
+  output and skip on Windows (host path rules differ); policy, no-ANSI, JSON and exit-code tests run there.
 - fang queries the terminal background (OSC 11) when rendering help on a TTY; harmless on real
   terminals, visible as junk only under `script`-style captures.
