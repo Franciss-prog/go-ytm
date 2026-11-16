@@ -12,6 +12,9 @@
    [1;38;2;95;211;141m[ok][m [38;2;241;241;241mlogs       [m  [38;2;241;241;241m~/.local/state/ytm-go         [m
    [1;38;2;95;211;141m[ok][m [38;2;241;241;241mipc socket [m  [38;2;241;241;241m/run/user/1000/ytm-go/ipc.sock[m  [38;2;154;154;154m30/103 bytes[m
 
+ [1;38;2;255;78;69mAuth[m
+   [38;2;154;154;154m[i][m  [38;2;241;241;241maccount    [m  [38;2;241;241;241mnot signed in                 [m  [38;2;154;154;154mrun `ytm setup` (search works signed out)[m
+
  [1;38;2;255;78;69mConfig[m
    [1;38;2;95;211;141m[ok][m [38;2;241;241;241mconfig.toml[m  [38;2;241;241;241m~/.config/ytm-go/config.toml  [m
    [1;38;2;95;211;141m[ok][m [38;2;241;241;241mtheme      [m  [38;2;241;241;241mytm-dark (static)             [m

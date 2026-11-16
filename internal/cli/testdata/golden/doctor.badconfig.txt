@@ -12,6 +12,9 @@
    [ok] logs         ~/.local/state/ytm-go
    [ok] ipc socket   /run/user/1000/ytm-go/ipc.sock  30/103 bytes
 
+ Auth
+   [i]  account      not signed in                   run `ytm setup` (search works signed out)
+
  Config
    [i]  config.toml  ~/.config/ytm-go/config.toml    see below, or run `ytm config check`
    [!!]   line 2     playback.default_volume         150 is above maximum 100; clamped to 100

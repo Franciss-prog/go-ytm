@@ -11,9 +11,11 @@ import (
 
 	"github.com/charmbracelet/colorprofile"
 
+	"github.com/Franciss-Prog/go-ytm/internal/auth"
 	"github.com/Franciss-Prog/go-ytm/internal/config"
 	"github.com/Franciss-Prog/go-ytm/internal/platform"
 	"github.com/Franciss-Prog/go-ytm/internal/style"
+	"github.com/Franciss-Prog/go-ytm/internal/ytmusic"
 )
 
 func baseDeps(t *testing.T) Deps {
@@ -172,5 +174,51 @@ func TestShortVersion(t *testing.T) {
 		if got := shortVersion("mpv", in); got != want {
 			t.Errorf("%q → %q want %q", in, got, want)
 		}
+	}
+}
+
+func TestAuthSection(t *testing.T) {
+	d := baseDeps(t)
+	if it := find(t, Run(context.Background(), d), "Auth", "account"); it.Status != style.StatusInfo || it.Value != "not signed in" {
+		t.Errorf("signed out: %+v", it)
+	}
+
+	d.Config.YtDlp.UseSessionCookies = true
+	if it := find(t, Run(context.Background(), d), "Auth", "stream cookies"); it.Status != style.StatusFail {
+		t.Errorf("missing jar with use_session_cookies: %+v", it)
+	}
+
+	store := auth.Store{Dir: d.Paths.Config}
+	err := store.Save(auth.Session{
+		Credentials: ytmusic.Credentials{Cookie: "SAPISID=x", AuthUser: 1},
+		Account:     auth.Account{Name: "Jane Doe", Handle: "@jane", ChannelID: "UCjane", Source: "firefox"},
+		StreamJar:   []auth.Cookie{{Domain: ".youtube.com", Path: "/", Name: "a", Value: "b"}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := Run(context.Background(), d)
+	if it := find(t, r, "Auth", "account"); it.Status != style.StatusOK || it.Value != "Jane Doe (@jane) · slot 1" || it.Detail != "from firefox" {
+		t.Errorf("signed in: %+v", it)
+	}
+	if it := find(t, r, "Auth", "stream cookies"); it.Status != style.StatusOK {
+		t.Errorf("jar: %+v", it)
+	}
+	if f, w := r.Counts(); f != 0 || w != 0 {
+		t.Errorf("fails=%d warns=%d", f, w)
+	}
+
+	if err := os.Chmod(filepath.Join(d.Paths.Config, auth.AuthFile), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if it := find(t, Run(context.Background(), d), "Auth", "auth.json"); it.Status != style.StatusWarn {
+		t.Errorf("perms: %+v", it)
+	}
+
+	if err := os.WriteFile(filepath.Join(d.Paths.Config, auth.AuthFile), []byte("{"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if it := find(t, Run(context.Background(), d), "Auth", "account"); it.Status != style.StatusFail {
+		t.Errorf("corrupt: %+v", it)
 	}
 }

@@ -39,7 +39,7 @@ func NewRootCmd(a *App) *cobra.Command {
 	pf.StringVar(&a.pprofAddr, "pprof", "", "serve net/http/pprof on `addr` (default 127.0.0.1:6060)")
 	pf.Lookup("pprof").NoOptDefVal = "127.0.0.1:6060"
 
-	root.AddCommand(newDoctorCmd(a), newConfigCmd(a))
+	root.AddCommand(newDoctorCmd(a), newConfigCmd(a), newSearchCmd(a), newSetupCmd(a))
 	return root
 }
 

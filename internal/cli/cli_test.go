@@ -27,6 +27,8 @@ type runOpts struct {
 	env    []string
 	config string // contents of config.toml; empty = no file
 	stdin  string
+	inTTY  bool             // stdin is a terminal (prompts allowed)
+	prep   func(cfg string) // runs before Main with the config dir
 }
 
 type result struct {
@@ -63,6 +65,9 @@ func run(t *testing.T, o runOpts, args ...string) result {
 			t.Fatal(err)
 		}
 	}
+	if o.prep != nil {
+		o.prep(cfgDir)
+	}
 	env := append([]string{
 		"HOME=" + home,
 		"XDG_CONFIG_HOME=" + filepath.Join(home, ".config"),
@@ -84,6 +89,7 @@ func run(t *testing.T, o runOpts, args ...string) result {
 		In: strings.NewReader(o.stdin), Out: &stdout, Err: &stderr, Env: env, GOOS: "linux",
 		IsTTY:   func(io.Writer) bool { return o.tty },
 		Profile: func(io.Writer) colorprofile.Profile { return colorprofile.TrueColor },
+		InTTY:   func() bool { return o.inTTY },
 	}
 	code := Main(context.Background(), args, io)
 	jsonHome, _ := json.Marshal(home)

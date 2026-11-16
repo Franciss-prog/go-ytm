@@ -69,6 +69,8 @@ type IO struct {
 	GOOS string
 	// IsTTY reports whether w is an interactive terminal.
 	IsTTY func(w io.Writer) bool
+	// InTTY reports whether In is an interactive terminal (prompts allowed).
+	InTTY func() bool
 	// Profile detects the color profile of a terminal stream.
 	Profile func(w io.Writer) colorprofile.Profile
 }
@@ -83,6 +85,7 @@ func SystemIO() IO {
 			return ok && term.IsTerminal(int(f.Fd()))
 		},
 		Profile: func(w io.Writer) colorprofile.Profile { return colorprofile.Detect(w, env) },
+		InTTY:   func() bool { return term.IsTerminal(int(os.Stdin.Fd())) },
 	}
 }
 
@@ -299,7 +302,20 @@ func (a *App) handleError(w io.Writer, styles fang.Styles, err error) {
 	if errors.As(err, &ee) && ee.Silent {
 		return
 	}
+	// fang title-cases the first word ("yt-dlp" → "Yt-Dlp", "--slots" →
+	// "--Slots"); capitalize plain words only.
+	styles.ErrorText = styles.ErrorText.Transform(capitalizeFirstWord)
 	fang.DefaultErrorHandler(w, styles, err)
+}
+
+// capitalizeFirstWord upper-cases the first letter when the first word is
+// a plain lowercase word, leaving names, flags and commands as written.
+func capitalizeFirstWord(s string) string {
+	word, _, _ := strings.Cut(s, " ")
+	if word == "" || word[0] < 'a' || word[0] > 'z' || strings.ContainsAny(word, "-_`./[") {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
 }
 
 // ExitCode maps an error from Execute to a process exit code.

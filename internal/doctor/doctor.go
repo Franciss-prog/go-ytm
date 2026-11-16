@@ -12,12 +12,14 @@ import (
 	"io/fs"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/charmbracelet/colorprofile"
 
+	"github.com/Franciss-Prog/go-ytm/internal/auth"
 	"github.com/Franciss-Prog/go-ytm/internal/buildinfo"
 	"github.com/Franciss-Prog/go-ytm/internal/config"
 	"github.com/Franciss-Prog/go-ytm/internal/platform"
@@ -71,6 +73,7 @@ func Run(ctx context.Context, d Deps) style.Report {
 		Sections: []style.Section{
 			environment(ctx, d),
 			paths(d),
+			authSection(d),
 			configSection(d),
 		},
 	}
@@ -228,6 +231,63 @@ func configSection(d Deps) style.Section {
 		Value:  fmt.Sprintf("%s (%s)", d.Config.Theme.Name, d.Config.Theme.Source),
 		Detail: transparentNote(d.Config.Theme.Transparent),
 	})
+	return s
+}
+
+// authSection reports the saved session without touching the network.
+func authSection(d Deps) style.Section {
+	s := style.Section{Name: "Auth"}
+	store := auth.Store{Dir: d.Paths.Config}
+	sess, err := store.Load()
+	switch {
+	case errors.Is(err, auth.ErrNotConfigured):
+		s.Items = append(s.Items, style.Item{
+			Label: "account", Status: style.StatusInfo,
+			Value: "not signed in", Detail: "run `ytm setup` (search works signed out)",
+		})
+	case err != nil:
+		s.Items = append(s.Items, style.Item{
+			Label: "account", Status: style.StatusFail,
+			Value: "unreadable", Detail: err.Error() + "; run `ytm setup`",
+		})
+	default:
+		a := sess.Account
+		who := a.Name
+		if who == "" {
+			who = "unknown account"
+		}
+		if a.Handle != "" {
+			who += " (" + a.Handle + ")"
+		}
+		detail := ""
+		if a.Source != "" {
+			detail = "from " + a.Source
+		}
+		if a.ChannelID == "" || a.Source == "manual" {
+			detail = strings.TrimPrefix(detail+"; no automatic renewal", "; ")
+		}
+		s.Items = append(s.Items, style.Item{
+			Label: "account", Status: style.StatusOK,
+			Value: fmt.Sprintf("%s · slot %d", who, sess.Credentials.AuthUser), Detail: detail,
+		})
+		if fi, err := d.Stat(filepath.Join(d.Paths.Config, auth.AuthFile)); err == nil && d.Env.GOOS != "windows" && fi.Mode().Perm()&0o077 != 0 {
+			s.Items = append(s.Items, style.Item{
+				Label: "auth.json", Status: style.StatusWarn,
+				Value: fmt.Sprintf("mode %04o", fi.Mode().Perm()), Detail: "readable by other users; chmod 600 it",
+			})
+		}
+	}
+	jar := filepath.Join(d.Paths.Config, auth.StreamCookiesFile)
+	_, jerr := d.Stat(jar)
+	switch {
+	case jerr == nil:
+		s.Items = append(s.Items, style.Item{Label: "stream cookies", Status: style.StatusOK, Value: tildify(jar, d.Env)})
+	case d.Config.YtDlp.UseSessionCookies:
+		s.Items = append(s.Items, style.Item{
+			Label: "stream cookies", Status: style.StatusFail,
+			Value: "missing", Detail: "use_session_cookies = true but stream_cookies.txt is missing; run `ytm setup`",
+		})
+	}
 	return s
 }
 
