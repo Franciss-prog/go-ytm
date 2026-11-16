@@ -1,0 +1,135 @@
+{
+ "actions": [
+  {
+   "openPopupAction": {
+    "popup": {
+     "multiPageMenuRenderer": {
+      "sections": [
+       {
+        "multiPageMenuSectionRenderer": {
+         "items": [
+          {
+           "compactLinkRenderer": {
+            "icon": {
+             "iconType": "UNLIMITED"
+            },
+            "navigationEndpoint": {
+             "browseEndpoint": {
+              "browseId": "SPunlimited",
+              "canonicalBaseUrl": "/music_premium",
+              "params": "kgMXShUIBhIRdW5saW1pdGVkLUItbXVzaWM%3D"
+             }
+            },
+            "title": {
+             "runs": [
+              {
+               "text": "Get Music Premium"
+              }
+             ]
+            }
+           }
+          },
+          {
+           "compactLinkRenderer": {
+            "icon": {
+             "iconType": "SETTINGS"
+            },
+            "navigationEndpoint": {
+             "applicationSettingsEndpoint": {
+              "hack": true
+             }
+            },
+            "title": {
+             "runs": [
+              {
+               "text": "Settings"
+              }
+             ]
+            }
+           }
+          },
+          {
+           "compactLinkRenderer": {
+            "icon": {
+             "iconType": "PRIVACY_INFO"
+            },
+            "navigationEndpoint": {
+             "urlEndpoint": {
+              "url": "https://www.youtube.com/t/terms?gl=US&chromeless=1"
+             }
+            },
+            "title": {
+             "runs": [
+              {
+               "text": "Terms & privacy policy"
+              }
+             ]
+            }
+           }
+          },
+          {
+           "compactLinkRenderer": {
+            "icon": {
+             "iconType": "HELP"
+            },
+            "serviceEndpoint": {
+             "signalServiceEndpoint": {
+              "actions": [
+               {
+                "signalAction": {
+                 "signal": "HELP"
+                }
+               }
+              ],
+              "signal": "CLIENT_SIGNAL"
+             }
+            },
+            "title": {
+             "runs": [
+              {
+               "text": "Help"
+              }
+             ]
+            }
+           }
+          },
+          {
+           "compactLinkRenderer": {
+            "icon": {
+             "iconType": "FEEDBACK"
+            },
+            "serviceEndpoint": {
+             "signalServiceEndpoint": {
+              "actions": [
+               {
+                "sendFeedbackAction": {
+                 "bucket": "Kevlar"
+                }
+               }
+              ],
+              "signal": "CLIENT_SIGNAL"
+             }
+            },
+            "title": {
+             "runs": [
+              {
+               "text": "Send feedback"
+              }
+             ]
+            }
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "style": "MULTI_PAGE_MENU_STYLE_TYPE_ACCOUNT"
+     }
+    },
+    "popupType": "DROPDOWN",
+    "reusePopup": true
+   }
+  }
+ ],
+ "responseContext": {}
+}

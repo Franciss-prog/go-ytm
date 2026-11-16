@@ -1,0 +1,333 @@
+[
+  {
+    "type": "artist",
+    "top": true,
+    "name": "Daft Punk",
+    "id": "UCRr1xG_2WIDs18a6cIiCxeA",
+    "audience": "65.9M monthly audience",
+    "thumbnail_url": "https://lh3.googleusercontent.com/qLhu6Py_4_xoBsoubKQsXlhOQGqU9YU1ZRAbFusF0LlrPkXbbpu7bEh-k_ZtE4JwLgubvucAQqcK1hRk=w120-h120-p-l90-rj"
+  },
+  {
+    "type": "song",
+    "video_id": "-xFur30vvVc",
+    "title": "Touch (2021 Epilogue) (feat. Paul Williams)",
+    "artists": [
+      {
+        "name": "Daft Punk",
+        "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+      }
+    ],
+    "thumbnail_url": "https://yt3.googleusercontent.com/R5gMfIj_BHfnfJv_X24gjqUskPT9gwonal56ydS9bIkxsHxaaebzNwHjbIruM54pvcMwcI9PpTJpYPAJ=w120-h120-l90-rj",
+    "is_video": false,
+    "like_status": "unknown",
+    "explicit": false,
+    "available": true,
+    "views": "33M",
+    "video_type": "MUSIC_VIDEO_TYPE_ATV",
+    "duration_seconds": 180
+  },
+  {
+    "type": "song",
+    "video_id": "4D7u5KF7SP8",
+    "title": "Get Lucky (feat. Pharrell Williams and Nile Rodgers)",
+    "artists": [
+      {
+        "name": "Daft Punk",
+        "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+      }
+    ],
+    "thumbnail_url": "https://yt3.googleusercontent.com/N55arCGj69gtw6thXK8JUPisxoVYiwuIEQ7I6SGlkEyNcSJ7xIWPe76Vuu1SiUqRyx5w9qvR_zV8fV3CWQ=w120-h120-l90-rj",
+    "is_video": false,
+    "like_status": "unknown",
+    "explicit": false,
+    "available": true,
+    "views": "1.9B",
+    "video_type": "MUSIC_VIDEO_TYPE_ATV",
+    "duration_seconds": 370
+  },
+  {
+    "type": "song",
+    "video_id": "52fNscjkST4",
+    "title": "Aerodynamic",
+    "artists": [
+      {
+        "name": "Daft Punk",
+        "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+      }
+    ],
+    "thumbnail_url": "https://yt3.googleusercontent.com/qrY7xjdjqL0FEneZKHk845JeeFjdWOgexUa_BhsUxskJ2iflhzpbofqGJZBcPHDGU9JjoZflE4yn3P74=w120-h120-l90-rj",
+    "is_video": false,
+    "like_status": "unknown",
+    "explicit": false,
+    "available": true,
+    "views": "76M",
+    "video_type": "MUSIC_VIDEO_TYPE_ATV",
+    "duration_seconds": 213
+  },
+  {
+    "type": "album",
+    "name": "Discovery",
+    "id": "MPREb_7ltM34kr0mH",
+    "playlist_id": "OLAK5uy_mz6eafmqdRHSaR4IwG0ll6J6rgv0_ZpGw",
+    "kind": "Album",
+    "artists": [
+      {
+        "name": "Daft Punk",
+        "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+      }
+    ],
+    "year": "2001",
+    "thumbnail_url": "https://yt3.googleusercontent.com/qrY7xjdjqL0FEneZKHk845JeeFjdWOgexUa_BhsUxskJ2iflhzpbofqGJZBcPHDGU9JjoZflE4yn3P74=w544-h544-l90-rj"
+  },
+  {
+    "type": "artist",
+    "name": "The Weeknd",
+    "id": "UClYV6hHlupm_S_ObS1W-DYw",
+    "audience": "239M monthly audience",
+    "thumbnail_url": "https://lh3.googleusercontent.com/U-SAmNOu4TynE818gLCfKsuHZ0U5YNEtO9mrjSI9WCCKERs98LzrCal5kajBBTQNwdcisoB2Bn-pHp4=w120-h120-p-l90-rj"
+  },
+  {
+    "type": "album",
+    "name": "Random Access Memories",
+    "id": "MPREb_K8qWMWVqXGi",
+    "playlist_id": "OLAK5uy_kNhM2yaBTOVwrcZJepB1C9P3-n5_Sfy5c",
+    "kind": "Album",
+    "artists": [
+      {
+        "name": "Daft Punk",
+        "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+      }
+    ],
+    "year": "2013",
+    "thumbnail_url": "https://yt3.googleusercontent.com/N55arCGj69gtw6thXK8JUPisxoVYiwuIEQ7I6SGlkEyNcSJ7xIWPe76Vuu1SiUqRyx5w9qvR_zV8fV3CWQ=w544-h544-l90-rj"
+  },
+  {
+    "type": "song",
+    "video_id": "wU26xVT_vBU",
+    "title": "One More Time (Radio Edit)",
+    "artists": [
+      {
+        "name": "Daft Punk",
+        "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+      }
+    ],
+    "thumbnail_url": "https://yt3.googleusercontent.com/_pY9BvNbeIpT2PUw_hQszOM3PZzmBRdi5uGNL8U6ZVE8AvApw7WqgMotzoGg7kk_ip8yj9VBkAJlgwv7_A=w120-h120-l90-rj",
+    "is_video": false,
+    "like_status": "unknown",
+    "explicit": false,
+    "available": true,
+    "views": "859M",
+    "video_type": "MUSIC_VIDEO_TYPE_ATV",
+    "duration_seconds": 0
+  },
+  {
+    "type": "song",
+    "video_id": "OWiVJMgms9E",
+    "title": "Voyager",
+    "artists": [
+      {
+        "name": "Daft Punk",
+        "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+      }
+    ],
+    "thumbnail_url": "https://yt3.googleusercontent.com/qrY7xjdjqL0FEneZKHk845JeeFjdWOgexUa_BhsUxskJ2iflhzpbofqGJZBcPHDGU9JjoZflE4yn3P74=w120-h120-l90-rj",
+    "is_video": false,
+    "like_status": "unknown",
+    "explicit": false,
+    "available": true,
+    "views": "54M",
+    "video_type": "MUSIC_VIDEO_TYPE_ATV",
+    "duration_seconds": 0
+  },
+  {
+    "type": "song",
+    "video_id": "qXI87eMP-bs",
+    "title": "Face to Face",
+    "artists": [
+      {
+        "name": "Daft Punk",
+        "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+      }
+    ],
+    "thumbnail_url": "https://yt3.googleusercontent.com/qrY7xjdjqL0FEneZKHk845JeeFjdWOgexUa_BhsUxskJ2iflhzpbofqGJZBcPHDGU9JjoZflE4yn3P74=w120-h120-l90-rj",
+    "is_video": false,
+    "like_status": "unknown",
+    "explicit": false,
+    "available": true,
+    "views": "56M",
+    "video_type": "MUSIC_VIDEO_TYPE_ATV",
+    "duration_seconds": 0
+  },
+  {
+    "type": "song",
+    "video_id": "NOMa56y_Was",
+    "title": "End of Line (From \"TRON: Legacy\"/Score)",
+    "artists": [
+      {
+        "name": "Daft Punk",
+        "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+      }
+    ],
+    "thumbnail_url": "https://yt3.googleusercontent.com/wY7kATQ2X8UkxWku6-JuLMCfjoIP4V5Mc9B24wV_bNcombU5iOTEPIgRax9iuIpgGcBbsTuF2lhsSyPO=w120-h120-l90-rj",
+    "is_video": false,
+    "like_status": "unknown",
+    "explicit": false,
+    "available": true,
+    "views": "32M",
+    "video_type": "MUSIC_VIDEO_TYPE_ATV",
+    "duration_seconds": 0
+  },
+  {
+    "type": "song",
+    "video_id": "kcxK1Tnwy5M",
+    "title": "Around the World / Harder, Better, Faster, Stronger",
+    "artists": [
+      {
+        "name": "Daft Punk",
+        "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+      }
+    ],
+    "thumbnail_url": "https://yt3.googleusercontent.com/WcxKKKOBAyf3a4qI8N2FjOyylr6Th1wDdoofTEO3rDw5kmjI-DF2h0hPJeGURrCqPCs9BIhJAQj3f10=w120-h120-l90-rj",
+    "is_video": false,
+    "like_status": "unknown",
+    "explicit": false,
+    "available": true,
+    "views": "47M",
+    "video_type": "MUSIC_VIDEO_TYPE_ATV",
+    "duration_seconds": 0
+  },
+  {
+    "type": "album",
+    "name": "Homework (25th Anniversary Edition)",
+    "id": "MPREb_DysYPhLwfgT",
+    "playlist_id": "OLAK5uy_mfg6NA2Q6rWf2THgxCy4kLKAu7gSy0OrA",
+    "kind": "Album",
+    "artists": [
+      {
+        "name": "Daft Punk",
+        "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+      }
+    ],
+    "year": "1997",
+    "thumbnail_url": "https://yt3.googleusercontent.com/lLzvUfGK8pyp2a-lvc56yEETq5OajUCeFGO2N0XQ4Qo0pKw34-mMn0NplkjPXg62rTLKNw6TB7aepE7oxg=w544-h544-l90-rj"
+  },
+  {
+    "type": "playlist",
+    "title": "Daft Punk",
+    "id": "PLZ0oqv-_vPEM",
+    "author": "Christian Isbej",
+    "count": "676 views",
+    "thumbnail_url": "https://yt3.googleusercontent.com/ms3XG08wunf1J_MkhUFsQ_am87q4WrTwdkJQ1Y7gTiBBWLVch0eImQBuweWfKusiXgyx4a2OvA=s1200"
+  },
+  {
+    "type": "video",
+    "video_id": "4whD6uAryMs",
+    "title": "Digital Love",
+    "artists": [
+      {
+        "name": "Daft Punk",
+        "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+      }
+    ],
+    "thumbnail_url": "https://i.ytimg.com/vi/4whD6uAryMs/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg\u0026rs=AMzJL3kp7hYbibiNugifS9V3vLIt-v6m-Q",
+    "is_video": true,
+    "like_status": "unknown",
+    "explicit": false,
+    "available": true,
+    "views": "22M",
+    "video_type": "MUSIC_VIDEO_TYPE_OMV",
+    "duration_seconds": 0
+  },
+  {
+    "type": "video",
+    "video_id": "_5ltJ33V9JI",
+    "title": "Daft Punk - Pentatonix (Audio)",
+    "artists": [
+      {
+        "name": "Pentatonix Music Lyrics",
+        "id": "UClrq4LnpI-ogaJjkClP1OPg"
+      }
+    ],
+    "thumbnail_url": "https://i.ytimg.com/vi/_5ltJ33V9JI/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg\u0026rs=AMzJL3kyGoSPCS5MSqfbm3KeIhu1jevv6Q",
+    "is_video": true,
+    "like_status": "unknown",
+    "explicit": false,
+    "available": true,
+    "views": "488K",
+    "video_type": "MUSIC_VIDEO_TYPE_UGC",
+    "duration_seconds": 0
+  },
+  {
+    "type": "video",
+    "video_id": "34Na4j8AVgA",
+    "title": "Starboy ft. Daft Punk (Official Video) (feat. Daft Punk)",
+    "artists": [
+      {
+        "name": "The Weeknd",
+        "id": "UClYV6hHlupm_S_ObS1W-DYw"
+      }
+    ],
+    "thumbnail_url": "https://i.ytimg.com/vi/34Na4j8AVgA/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg\u0026rs=AMzJL3nIC7d1SOq9BBgMkRglnHI-OXWXLw",
+    "is_video": true,
+    "like_status": "unknown",
+    "explicit": false,
+    "available": true,
+    "views": "2.8B",
+    "video_type": "MUSIC_VIDEO_TYPE_OMV",
+    "duration_seconds": 0
+  },
+  {
+    "type": "playlist",
+    "title": "Daft Punk",
+    "id": "PLRTT1eLEoNHc",
+    "author": "Jonathan Titou",
+    "count": "1.4K views",
+    "thumbnail_url": "https://yt3.googleusercontent.com/6w-Cklvn1VWvqiNIu6YR2vly8aewb9alDR81aGu7NhgQCD8rynEqatqrf_aNyoL459X38v18CNk=s1200"
+  },
+  {
+    "type": "playlist",
+    "title": "Daft Punk",
+    "id": "PLKnoch_ESAUI",
+    "author": "Alejandro",
+    "count": "1.1K views",
+    "thumbnail_url": "https://yt3.googleusercontent.com/C4KqbYUC4YeunbxJLV8uPZ2I-BjyAKe4PuwGQYX1bFTeRSNEvF1xWUuqdWpcxjOVjwrUBmj1wM5n=s1200"
+  },
+  {
+    "type": "artist",
+    "name": "Pharrell",
+    "id": "UCJw8VyO6e3v6S0327AsgwcQ",
+    "audience": "81.4M monthly audience",
+    "thumbnail_url": "https://lh3.googleusercontent.com/4tfdSY9xKgidwJ8GwVmiKAFMfSAW-5TEXCy78ATFMzXjg57kXNx_pmLCuJafVE8R3wGkhxquy0np5Ok=w120-h120-p-l90-rj"
+  },
+  {
+    "type": "artist",
+    "name": "Pentatonix",
+    "id": "UC9ouIc5bVUPVzZ0X_JETPEA",
+    "audience": "9.69M monthly audience",
+    "thumbnail_url": "https://yt3.googleusercontent.com/UuUx31EARJXswzLmdZdx_NGSM9J8PXwIWdiGuGB6yIeRqpWN5pfmER14CLMki_yHoQRfJ76n2Bn_ma0=w120-h120-p-l90-rj"
+  },
+  {
+    "type": "playlist",
+    "title": "Presenting Daft Punk",
+    "id": "RDCLAK5uy_n20FRYQXNt1p1wS55Nj2r14IouO5weaYU",
+    "author": "YouTube Music",
+    "count": "35 songs",
+    "thumbnail_url": "https://yt3.googleusercontent.com/eRtwdlfWFZAS1besPx61TGdPxtN9Vcb3HUnTkKYp5Yv_964RdDxexnS7YPNu_Qg28BYKWwDgwa6tW9M=w544-h544-l90-rj"
+  },
+  {
+    "type": "playlist",
+    "title": "Summer Sonic 2026: Lineup",
+    "id": "RDCLAK5uy_l607eBFIYRZ_itkDW19eigUzFefu5bJ6Y",
+    "author": "YouTube Music",
+    "count": "178 songs",
+    "thumbnail_url": "https://yt3.googleusercontent.com/fb1o9l3EsCFqSKADQ8mYU8yi_nAOWdM1qynVDAPpQW60Uv8gYrvm1q35ASigDavWuM_DpLaod4wnJDCI=w544-h544-l90-rj"
+  },
+  {
+    "type": "playlist",
+    "title": "Harder Better Faster Stronger",
+    "id": "RDCLAK5uy_mP3cXpsPxDWkZAGQWsJzRel1LJMiVtG2k",
+    "author": "YouTube Music",
+    "count": "61 songs",
+    "thumbnail_url": "https://yt3.googleusercontent.com/AzzVz064u2IkclDAtanK8ws8l_hSlwsPLrgk6kwjvhw0KUSJBBbdRgZopv4kDuTlAhIE1inAYAYLvOw=w544-h544-l90-rj"
+  }
+]

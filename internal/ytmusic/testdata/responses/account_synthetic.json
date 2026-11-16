@@ -1,0 +1,47 @@
+{
+ "_comment": "SYNTHETIC: hand-written from the paths ytmusicapi get_account_info and ytm-player _channel_id_from_account_menu read; no real account data. Replace with a scrubbed live capture when one is available.",
+ "actions": [
+  {
+   "openPopupAction": {
+    "popup": {
+     "multiPageMenuRenderer": {
+      "header": {
+       "activeAccountHeaderRenderer": {
+        "accountName": {"runs": [{"text": "Jane Doe"}]},
+        "channelHandle": {"runs": [{"text": "@jane"}]},
+        "accountPhoto": {"thumbnails": [{"url": "https://yt3.ggpht.com/example=s88", "width": 88, "height": 88}]}
+       }
+      },
+      "sections": [
+       {
+        "multiPageMenuSectionRenderer": {
+         "items": [
+          {
+           "compactLinkRenderer": {
+            "icon": {"iconType": "ACCOUNT_BOX"},
+            "title": {"runs": [{"text": "Your channel"}]},
+            "navigationEndpoint": {
+             "browseEndpoint": {
+              "browseId": "UCabcdefghijklmnopqrstuv",
+              "browseEndpointContextSupportedConfigs": {"browseEndpointContextMusicConfig": {"pageType": "MUSIC_PAGE_TYPE_USER_CHANNEL"}}
+             }
+            }
+           }
+          },
+          {
+           "compactLinkRenderer": {
+            "icon": {"iconType": "SETTINGS"},
+            "title": {"runs": [{"text": "Settings"}]},
+            "navigationEndpoint": {"applicationSettingsEndpoint": {"hack": true}}
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   }
+  }
+ ]
+}
