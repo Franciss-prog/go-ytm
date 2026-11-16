@@ -59,11 +59,6 @@ func (n node) str() string {
 	return s
 }
 
-func (n node) boolean() bool {
-	b, _ := n.v.(bool)
-	return b
-}
-
 func (n node) list() []node {
 	a, ok := n.v.([]any)
 	if !ok {

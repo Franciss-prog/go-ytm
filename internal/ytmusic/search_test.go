@@ -78,7 +78,7 @@ func TestParseSearchGolden(t *testing.T) {
 				if r.Title() == "" {
 					t.Errorf("item %d (%s) has no title", i, r.Type)
 				}
-				if c.filter != FilterAll && r.Type != c.filter.resultType() && !(c.filter == FilterSongs && r.Type == TypeVideo) {
+				if c.filter != FilterAll && r.Type != c.filter.resultType() && (c.filter != FilterSongs || r.Type != TypeVideo) {
 					t.Errorf("item %d type %s under filter %s", i, r.Type, c.filter)
 				}
 				if r.Track != nil && r.Track.VideoID == "" {

@@ -178,16 +178,18 @@ func (f *fakeYtDlp) run(_ context.Context, name string, args ...string) ([]byte,
 }
 
 func TestYtDlpExtract(t *testing.T) {
+	home := string(filepath.Separator) + filepath.Join("home", "u")
+	helium := filepath.Join(home, ".config", "net.imput.helium")
 	signedOut := []Cookie{{Domain: ".youtube.com", Path: "/", Expires: far, Name: "YSC", Value: "v"}}
 	f := &fakeYtDlp{jars: map[string][]Cookie{
-		"firefox":         jar(),
-		"chrome":          signedOut,
-		"chrome+kwallet6": jar(),
-		"brave":           signedOut,
-		"chromium:" + filepath.Join("/home/u/.config", "net.imput.helium"):           signedOut,
-		"chromium+basictext:" + filepath.Join("/home/u/.config", "net.imput.helium"): jar(),
+		"firefox":                      jar(),
+		"chrome":                       signedOut,
+		"chrome+kwallet6":              jar(),
+		"brave":                        signedOut,
+		"chromium:" + helium:           signedOut,
+		"chromium+basictext:" + helium: jar(),
 	}}
-	y := YtDlp{Run: f.run, GOOS: "linux", Home: "/home/u", TempDir: t.TempDir(), Getenv: func(string) string { return "" }}
+	y := YtDlp{Run: f.run, GOOS: "linux", Home: home, TempDir: t.TempDir(), Getenv: func(string) string { return "" }}
 	ctx := context.Background()
 
 	got, err := y.Extract(ctx, "firefox")
