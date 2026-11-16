@@ -60,8 +60,8 @@ styled  := stdout is TTY && !NO_COLOR && !--no-color && TERM != "dumb" && CLICOL
 | Command | Flags | TTY output | `--json` shape |
 |---|---|---|---|
 | `ytm` | `--debug`, `--pprof` | launches TUI | — |
-| `setup` | `--browser B`, `--slots N` (10), `--slot N`, `--manual`, `--yes` | Huh wizard | — |
-| `search Q` | `-f/--filter songs\|videos\|albums\|artists\|playlists`, `-l/--limit` (20), `--json` | styled table | `[Track\|Album\|Artist\|Playlist]` with `"type"` |
+| `setup` | `--browser B`, `--slots N` (10), `--slot N`, `--manual`, `--yes` | Huh wizard (prompts on stderr; `ACCESSIBLE=1` → Huh accessible mode) | — |
+| `search Q` | `-f/--filter songs\|videos\|albums\|artists\|playlists`, `-l/--limit` (20, 1–500), `--json` | styled table (`#`, type, title, artist, album/info, time, id; empty columns hidden) | `[Track\|Album\|Artist\|Playlist]` with `"type"` (+ `"top":true` on the top result) |
 | `stats` | `--json` | cards + tables | `{"total_plays":…,"total_seconds":…,"top_tracks":[…],"top_artists":[…],"by_day":[…]}` |
 | `history` | `-l/--limit` (50), `--json` | table | `[{"video_id","title","artist","played_at","listened_seconds"}]` |
 | `history search` | `-l` (50), `--json` | list | `[{"query","searched_at"}]` |

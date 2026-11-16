@@ -1,6 +1,6 @@
 # Progress
 
-Last updated: 2026-11-16
+Last updated: 2026-11-17
 
 ## Milestones
 
@@ -9,7 +9,7 @@ Last updated: 2026-11-16
 | P0 | specs | **approved** 2026-11-16 | [#1](https://github.com/Franciss-prog/go-ytm/pull/1) | all proposed defaults accepted |
 | M0 | scaffold | **in review** | branch `feat/scaffold` (stacked on #1) | CLI skeleton, config loader, logging, style, doctor stub |
 | M1 | player-core | **in review** | [#3](https://github.com/Franciss-prog/go-ytm/pull/3) (stacked on #2) | mpv launcher, JSON IPC, controller, crash restore, fakempv |
-| M2 | ytmusic-auth-search | not started | | |
+| M2 | ytmusic-auth-search | **in review** | branch `feat/ytmusic-auth-search` (stacked on #3) | InnerTube client, search, setup, auth store, doctor Auth |
 | M3 | stream-resolve | not started | | |
 | M4 | tui-shell | not started | | |
 | M4b | dynamic-theme | not started | | |
@@ -42,6 +42,13 @@ Last updated: 2026-11-16
 | 2026-11-16 | Consecutive relative seeks are summed when coalesced, not dropped | 02 |
 | 2026-11-16 | Re-resolve on `EndError` belongs to queue/stream (M3); controller only reports | 02 |
 | 2026-11-16 | Deps added: `go-winio` v0.6.4 (Windows named pipes, listed in 01), `goleak` v1.3.0 (test-only leak checks, required by 01) | 01 |
+| 2026-11-17 | Cookie extraction = `yt-dlp --cookies-from-browser … --cookies FILE` with **no URL** (0.25 s, offline; jar saved on exit). kooky rejected | 03 |
+| 2026-11-17 | InnerTube `clientVersion` uses today's UTC date like ytmusicapi (no build constant / CI refresh job) | 03 |
+| 2026-11-17 | `hl` fixed to `en`; result types come from page types/browse ids, not labels | 03 |
+| 2026-11-17 | Token bucket in-house on `clock.Clock` (no `x/time/rate`); singleflight from `x/sync` (already in graph, now direct) | 03 |
+| 2026-11-17 | Deps added: `charm.land/huh/v2` v2.0.3 (setup prompts, listed in 01); `golang.org/x/sync` promoted indirect → direct | 01 |
+| 2026-11-17 | `ytm search` with a rejected session falls back to signed-out results + warning (exit 0) | 03 |
+| 2026-11-17 | CLI error handler capitalizes only plain first words (fang title-cased `yt-dlp` → `Yt-Dlp`) | 06 |
 
 ## Verified facts (with how)
 
@@ -60,6 +67,20 @@ Last updated: 2026-11-16
   integration test allows ±0.5 s (local run).
 - Real-mpv integration (`-tags mpv`): load at offset, pause, absolute/relative seek, volume,
   `kill -9` → relaunch resumes paused at the same position and volume. Passes locally (3/3).
+- ytmusicapi pinned at `86fcd17` (2026-11-12): search `params`, continuation query
+  (`&ctoken=…&continuation=…&type=next`), SAPISIDHASH from `__Secure-3PAPISID`, account-menu paths (read source).
+- InnerTube 2026-11-17 (signed out, live): unfiltered search = `musicCardShelfRenderer` + one
+  `itemSectionRenderer` per item, subtitle starts with a type label, **no duration** on rows;
+  filtered = one `musicShelfRenderer` with `nextContinuationData`; albums/artists keep the type
+  label even when filtered. Fixtures recorded then scrubbed.
+- yt-dlp 2026.10.26 browsers: brave, chrome, chromium, edge, firefox, opera, safari, vivaldi, whale
+  (no zen/helium); keyrings basictext, gnomekeyring, kwallet, kwallet5, kwallet6 (`--help`).
+- yt-dlp with no URL still writes `--cookies` (exit 2); missing profile → `ERROR: could not find
+  firefox cookies database` and no file (local probe + `TestRealYtDlpExportsWithoutURL`).
+- Signed-out `account/account_menu` has no `activeAccountHeaderRenderer` (live); bogus cookies via
+  `ytm setup --manual` exit 3 (live).
+- `ytm search` live: unfiltered, all 5 filters, 45/60-result continuation paging, suggestions
+  (`YTM_LIVE=1 go test -tags live`).
 
 ## Measurements (M0, local, Linux amd64, Go 1.27.4)
 
@@ -76,6 +97,16 @@ Last updated: 2026-11-16
 | `mpvipc` round trip vs fakempv over `net.Pipe` | 9.4 µs/op, 38 allocs |
 | mpv event decode | 658 ns/op (105 MB/s) |
 | Coverage | player 78 %, mpvipc 88 %, clock 94 % |
+
+## Measurements (M2, local, Linux amd64)
+
+| What | Result |
+|---|---|
+| `ytm search --json daft punk` (live, signed out) | 527 ms median of 5 |
+| `ytm search -f songs -l 60` (3 pages) | 1.5 s median of 3 |
+| Parse unfiltered search page | 36.5 µs/op, 127 allocs |
+| yt-dlp cookie export (no URL) | 0.25 s |
+| Binary size (`-s -w`, trimpath) | 15 MB (was 12.8 MB; + Huh/Bubble Tea) |
 
 ## Approved by owner (2026-11-16)
 
@@ -99,6 +130,13 @@ Last updated: 2026-11-16
   Windows; unit tests run there over `net.Pipe`. Real-mpv CI job is Linux only.
 - M1: mpv versions older than 0.41.0 untested (local and CI `mpv-integration` runner both 0.41.0).
 - M1: `doctor` does not yet warn on old mpv versions (spec 02 edge case) — deferred to M3.
+- M2: **not tested against a real signed-in browser.** Extraction is proven with a throwaway Firefox
+  profile; account probing/renewal against fakes and a *synthetic* `account_menu` fixture
+  (`testdata/responses/account_synthetic.json`). Needs one owner run of `ytm setup` to confirm, and a
+  scrubbed signed-in capture to replace the synthetic fixture.
+- M2: brand-account **listing** in setup deferred (needs a signed-in capture); `brand_account_id` is honored.
+- M2: Helium path is Linux-only (as in ytm-player); Zen/Helium/keyring retries unverified on real installs.
+- M2: no spinner during `ytm search`/`setup` network calls (sub-second typical); revisit with M4's Bubble Tea.
 - `golangci-lint` / `staticcheck` not installed locally; Makefile falls back to `go run` (works, ~40 s cold).
 - CI green on linux/macOS/windows × stable/oldstable (PR #2). CLI golden files are Linux reference
   output and skip on Windows (host path rules differ); policy, no-ANSI, JSON and exit-code tests run there.

@@ -1,6 +1,6 @@
 # 03 — YouTube Music API, auth, and stream resolution
 
-Status: **draft** · Milestones: M2 (client, auth, search), M3 (stream), M6 (browse/radio/history)
+Status: **M2 implemented** (client core, auth, search) · Milestones: M2 (client, auth, search), M3 (stream), M6 (browse/radio/history)
 
 ## Goals
 
@@ -29,6 +29,9 @@ So: write `internal/ytmusic`. Constants (search filter `params`, browse IDs like
 ytmusicapi source **at implementation time** (pinned commit noted in code comments), not from memory.
 
 ## Client interface
+
+The Go interface grows per milestone: M2 ships `Search`, `SearchSuggestions` and `Account`; the
+rest land with the milestone that first uses them. Target shape:
 
 ```go
 type Client interface {
@@ -80,10 +83,15 @@ type Client interface {
 
 `POST https://music.youtube.com/youtubei/v1/<endpoint>?alt=json&prettyPrint=false` with body
 `{"context":{"client":{"clientName":"WEB_REMIX","clientVersion":"1.<YYYYMMDD>.01.00","hl":"en","gl":<region>}, "user":{"onBehalfOfUser":<brand id>?}}, ...}`.
-Client version date = build-time constant refreshed by a monthly CI job comparing against ytmusicapi.
+Client version date = today's UTC date, as ytmusicapi does (`helpers.py initialize_context`); no
+build-time constant or refresh job needed (decided M2).
 
 Headers when authenticated: `Cookie`, `Authorization: SAPISIDHASH <ts>_<sha1(ts+" "+SAPISID+" "+origin)>`,
-`X-Goog-AuthUser: <slot>`, `X-Origin`/`Origin: https://music.youtube.com`, browser UA.
+`X-Goog-AuthUser: <slot>`, `X-Origin`/`Origin: https://music.youtube.com`, browser UA, plus the public
+web API `key` query param (ytmusicapi `YTM_PARAMS_KEY`). The SAPISID value is read from the
+`__Secure-3PAPISID` cookie (ytmusicapi `sapisid_from_cookie`), falling back to `SAPISID`. Every request
+sends `SOCS=CAI` (EU consent bypass, as ytmusicapi). `Search(limit)` follows `musicShelfContinuation`
+pages for filtered searches only; unfiltered results carry no duration (YouTube omits it there).
 
 ### Normalization
 
@@ -102,7 +110,10 @@ shapes; we want to see it, not crash).
 - 401/403 or "sign in" responses → `ErrUnauthenticated` → try **silent renewal** once (re-extract
   cookies from the configured source, verify same account), else toast "run `ytm setup`".
 - Per-request `singleflight` for identical in-flight reads (e.g. two pages asking for the same playlist).
-- Small in-memory TTL cache (60 s) for browse pages to make back/forward instant.
+- Small in-memory TTL cache (60 s) for browse pages to make back/forward instant (lands with the
+  first browse endpoint, M5/M6; M2 has none).
+- Shared (singleflight) calls run under the client's own context and the per-call timeout, not the
+  first caller's; `API.Close` cancels them and closes idle connections.
 
 ## Auth (`ytm setup`, M2)
 
@@ -120,15 +131,36 @@ Sources, in order (same precedence as the original):
    brave, edge, vivaldi, opera, helium).
 3. `--manual`: paste raw request headers copied from devtools (Huh multi-line text field / stdin).
 
-**Extraction mechanism:** run `yt-dlp --cookies-from-browser <b> --cookies <tmpfile> --skip-download
---no-warnings "https://music.youtube.com"` and parse the resulting Netscape file. yt-dlp already
-handles Chromium cookie decryption (keyring/DPAPI/Keychain) and Firefox containers, and is a hard
-dependency anyway. Verified flags exist in yt-dlp 2026.10.26 `--help`. Fallback if this proves
-unreliable: `github.com/browserutils/kooky` v0.2.10 (pure Go, active, 308★) — decided in M2 PR.
+**Extraction mechanism (decided M2):** run `yt-dlp --ignore-config --no-warnings
+--cookies-from-browser <spec> --cookies <tmpfile>` **with no URL** and parse the Netscape file.
+yt-dlp loads the jar, fails argument validation (exit 2) and saves the jar on exit
+(`YoutubeDL.__exit__ → close → save_cookies`, read in 2026.10.26 source); success is judged by the
+file. Measured: 0.25 s and no network, vs 2.8 s plus a page fetch (and still a non-zero exit,
+"Unsupported URL") when passing `https://music.youtube.com`. yt-dlp handles Chromium decryption and
+Firefox containers. Zen (not a yt-dlp browser) is read as `firefox:<zen root>` for each existing
+root; Helium as `chromium:<XDG_CONFIG_HOME>/net.imput.helium` (Linux layout only, as the original).
+On Linux, Chromium-family browsers that yield no session are retried with each keyring
+(`gnomekeyring`, `kwallet6`, `kwallet5`, `kwallet`, `basictext`), mirroring ytm-player. kooky is
+rejected (new dependency, no gain). Proven by `TestRealYtDlpExportsWithoutURL` against a throwaway
+Firefox profile.
 
-Account slots: probe `X-Goog-AuthUser` 0..`--slots`-1 (default 10) with `Account()`; Huh select
-lists the accounts found (name + handle); brand accounts listed via the account menu response;
-chosen brand id stored in `[general] brand_account_id`.
+Cookie header: unexpired `youtube.com`/`music.youtube.com` cookies minus `ST-*` (multi-KB tracking
+cookies that push the header past the server limit, per ytm-player). `stream_cookies.txt`: all
+`youtube.com`/`google.com` cookies.
+
+Account slots: probe `X-Goog-AuthUser` 0..`--slots`-1 (default 10, max 30), four at a time, with
+`Account()`; an account seen in several slots is listed once (lowest slot). Huh select lists the
+accounts found (name + handle + slot). The channel id comes from the account menu's single
+`ACCOUNT_BOX` link to a `UC…` `MUSIC_PAGE_TYPE_USER_CHANNEL` page (ytm-player rule); without it,
+silent renewal is disabled and setup says so. Brand accounts: `[general] brand_account_id` is sent
+as `onBehalfOfUser`; **listing** brand accounts in setup is deferred until a signed-in
+`account_menu`/accounts-list response can be captured (M2 known gap).
+
+`account.json`: `{schema_version, name, handle, channel_id, slot, source, saved_at}` where `source`
+is a browser name, `cookies_file` or `manual`. Silent renewal (`auth.Renewer`) re-reads `source`,
+checks the recorded slot first, then any slot, and accepts only the same `channel_id`; manual
+sessions are never renewed. If the saved session is rejected and renewal fails, `ytm search` falls
+back to a signed-out search with a warning.
 
 Non-interactive: `ytm setup --browser firefox --slot 0 --yes`; with no TTY and no flags → exit 2
 with "stdin is not a terminal; pass --browser/--slot or --manual < headers.txt".
@@ -166,7 +198,8 @@ type Resolver interface {
 
 ## Test plan
 
-- Fixtures: recorded InnerTube JSON responses in `testdata/ytmusic/` (scrubbed of personal data),
+- Fixtures: recorded InnerTube JSON responses in `internal/ytmusic/testdata/responses/` (scrubbed:
+  `responseContext`, tracking params removed),
   one per renderer shape incl. odd ones. Golden tests: fixture → normalized structs (JSON goldens).
 - `httptest.Server` tests for headers (SAPISIDHASH correctness against a known vector), retries,
   401 renewal path, rate limiter.
@@ -176,5 +209,7 @@ type Resolver interface {
 
 ## Open questions
 
-1. Primary cookie extractor: yt-dlp shell-out (default, zero new deps) vs kooky. Decide in M2 after a spike.
-2. `hl` (UI language) for InnerTube: default `en`; expose `[general] language`? (new key → your call)
+1. ~~Primary cookie extractor~~ — yt-dlp shell-out without a URL (M2, see above).
+2. ~~`hl`~~ — fixed to `en`, no new key (owner accepted defaults 2026-11-16). Parsers rely on English
+   labels only for view counts; types come from page types / browse ids, so another `hl` would
+   degrade views only.
