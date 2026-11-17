@@ -19,7 +19,7 @@
 │   >                Seek forward         │  Transparent       [ ]  C-t                         │                                          │
 │   <                Seek backward        │  Selection style   ‹ solid ›  (transparent on…      │                                          │
 │   ^                Restart track        │  Popup fill        [ ]                              │                                          │
-│   l                Like / unlike current│  Album art         ‹ blocks ›                       │                                          │
+│   l                Like / unlike current│  Album art         ‹ auto ›                         │                                          │
 │   D                Discovery mix        │  Enforce contrast  [x]                              │                                          │
 │                                         │  Live reload       [x]                              │                                          │
 │ Navigation                              │                                                     │                                          │

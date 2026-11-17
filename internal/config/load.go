@@ -198,7 +198,7 @@ func (l *loader) applyAlias(cfg *Config, key string, v any) bool {
 		}
 		cfg.UI.AlbumArtMode = "off"
 		if b {
-			cfg.UI.AlbumArtMode = "blocks"
+			cfg.UI.AlbumArtMode = "auto"
 		}
 		l.add(SevInfo, key, "deprecated: use [ui] album_art_mode = %q", cfg.UI.AlbumArtMode)
 		return true

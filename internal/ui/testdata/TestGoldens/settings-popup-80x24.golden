@@ -11,7 +11,7 @@
 │   p       │  Transparent       [ ]  C-t                         │            │
 │   .       │  Selection style   ‹ solid ›  (transparent on…      │            │
 │   P       │  Popup fill        [ ]                              │            │
-│   C-r     │  Album art         ‹ blocks ›                       │            │
+│   C-r     │  Album art         ‹ auto ›                         │            │
 │   C-s     │  Enforce contrast  [x]                              │            │
 │   +       │  Live reload       [x]                              │            │
 │   -       │                                                     │            │

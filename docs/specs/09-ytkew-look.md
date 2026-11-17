@@ -230,4 +230,17 @@ Replaces the Playlists · Albums · Artists tabs.
   wheel scrubs there as on the mini player (hidden on this page). Up next is its own Queue page
   instance (own cursor, shared queue) that opens on the playing track. Cover art and the spectrum
   are not drawn yet (phases 5–6).
+- **Phase 5 (cover art), done.** `internal/art`: `URL` (googleusercontent → `=w400-h400-l90-rj`,
+  JPEG verified live; `i.ytimg.com/vi/<id>/…` → `hqdefault.jpg`, JPEG), `Fetcher` +
+  `HTTPFetcher` (4 MB cap, 15 s timeout, stdlib `image/jpeg`/`image/png`: **no WebP dependency**),
+  `Square`, box-filter `Scale`, LRU `Cache` (32, memory only; disk cache left to M7). Kitty via
+  `x/ansi/kitty` (already a dependency): query `a=q` at start, `uv.KittyGraphicsEvent` reply
+  (Bubble Tea passes unknown ultraviolet events through as messages; `ultraviolet` becomes a
+  direct requirement, same version), PNG transmit with a virtual placement (`U=1`) through
+  `tea.Raw`, placeholder cells colored with the image id, old image freed on change and quit.
+  Cells are drawn by `style.HalfBlocks` / `style.KittyCells` (the only non-token colors).
+  Art follows the queue's current track after every Update (`syncArt`). Half blocks need 256+
+  colors and color at all; `album_art = true` (old key) now maps to `auto`. Live (tmux, signed
+  in): real art fetched and drawn as half blocks. **Kitty placeholders not yet seen in a real
+  kitty window** (tmux does not pass graphics); covered by unit tests only.
 

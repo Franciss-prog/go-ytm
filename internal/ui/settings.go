@@ -46,7 +46,7 @@ var settingRows = []settingRow{
 		ptr: func(c *config.Config) any { return &c.Theme.PopupFill },
 	},
 	{
-		label: "Album art", key: "ui.album_art_mode", choices: []string{"blocks", "off"},
+		label: "Album art", key: "ui.album_art_mode", choices: []string{"auto", "kitty", "blocks", "off"},
 		ptr: func(c *config.Config) any { return &c.UI.AlbumArtMode },
 	},
 	{

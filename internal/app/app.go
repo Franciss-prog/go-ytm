@@ -10,6 +10,7 @@ import (
 	"image/color"
 	"io"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -20,6 +21,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/colorprofile"
 
+	"github.com/Franciss-Prog/go-ytm/internal/art"
 	"github.com/Franciss-Prog/go-ytm/internal/clock"
 	"github.com/Franciss-Prog/go-ytm/internal/config"
 	"github.com/Franciss-Prog/go-ytm/internal/keys"
@@ -33,6 +35,9 @@ import (
 
 // ShutdownBudget bounds the whole shutdown (spec 01).
 const ShutdownBudget = 3 * time.Second
+
+// artTimeout bounds one cover art download.
+const artTimeout = 15 * time.Second
 
 // Options are what the CLI hands to the TUI.
 type Options struct {
@@ -64,6 +69,8 @@ type Options struct {
 	// Resolver turns video IDs into stream URLs (nil: yt-dlp from
 	// [yt_dlp]; tests pass a fake).
 	Resolver stream.Resolver
+	// Art fetches cover art (nil: over HTTP).
+	Art art.Fetcher
 	// ProgramOptions are appended (tests pass tea.WithInput etc.).
 	ProgramOptions []tea.ProgramOption
 }
@@ -135,6 +142,7 @@ func Run(ctx context.Context, o Options) error {
 		Themes:     themeService{m: themes, configDir: o.ThemeSpec.ConfigDir, home: o.ThemeSpec.Home},
 		ConfigPath: o.Paths.ConfigFile(), PatchConfig: config.Patch, Profile: o.Profile,
 		Streams: streams, Prefetch: prefetch, API: o.API, SignedIn: o.SignedIn,
+		Art: artFetcher(o.Art),
 	})
 	if o.TraceFrames {
 		model = &tracer{inner: model, log: o.Log, start: start}
@@ -286,4 +294,12 @@ func pruneCrashes(dir string, keep int) {
 	for _, e := range entries[:len(entries)-keep] {
 		_ = os.Remove(filepath.Join(dir, e.Name()))
 	}
+}
+
+// artFetcher is f, or an HTTP fetcher when nil.
+func artFetcher(f art.Fetcher) art.Fetcher {
+	if f != nil {
+		return f
+	}
+	return art.HTTPFetcher{Client: &http.Client{Timeout: artTimeout}}
 }

@@ -73,7 +73,7 @@ type Search struct {
 
 // UI holds [ui].
 type UI struct {
-	AlbumArtMode      string `toml:"album_art_mode" oneof:"blocks|off"`
+	AlbumArtMode      string `toml:"album_art_mode" oneof:"auto|kitty|blocks|off"`
 	Icons             string `toml:"icons" oneof:"unicode|nerd|ascii"`
 	ProgressStyle     string `toml:"progress_style" oneof:"block|line"`
 	SidebarWidth      int    `toml:"sidebar_width" range:"16,80"`
@@ -176,7 +176,7 @@ func Default() Config {
 		Cache:  Cache{MaxSizeMB: 1024},
 		Search: Search{DefaultMode: "music", MaxHistory: 500, Predictive: true},
 		UI: UI{
-			AlbumArtMode: "blocks", Icons: "unicode", ProgressStyle: "block", SidebarWidth: 30,
+			AlbumArtMode: "auto", Icons: "unicode", ProgressStyle: "block", SidebarWidth: 30,
 			LyricsWidth: 36, ColIndex: 4, ColDuration: 8, BidiMode: "auto", Region: "ZZ",
 			HomeShelves: 3, ShowSelectionInfo: true, SidebarOverflow: "truncate",
 			ShowQueueSource: true, Mouse: true, ShowHints: true,

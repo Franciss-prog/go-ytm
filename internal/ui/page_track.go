@@ -29,6 +29,7 @@ const (
 // Queue page's keys). It reads playback state from the root's bar.
 type trackPage struct {
 	bar    *barState
+	art    *artState
 	upNext *queuePage
 	// Narrow main area: one panel at a time (lastSingle), showNext picks it.
 	showNext, lastSingle bool
@@ -39,9 +40,12 @@ type trackPage struct {
 	progX, progY, progW int
 }
 
-func newTrackPage(bar *barState, cols components.Columns, q *queue.Queue) *trackPage {
-	return &trackPage{bar: bar, upNext: newQueuePage(cols, q)}
+func newTrackPage(bar *barState, a *artState, cols components.Columns, q *queue.Queue) *trackPage {
+	return &trackPage{bar: bar, art: a, upNext: newQueuePage(cols, q)}
 }
+
+// spectrumRows is the height of the spectrum area (0 until phase 6).
+func (p *trackPage) spectrumRows() int { return 0 }
 
 func (p *trackPage) ID() PageID { return PageTrack }
 
@@ -99,16 +103,30 @@ func (p *trackPage) Panels() (left, right panelSpec) {
 	return panelSpec{title: "now playing"}, panelSpec{title: "up next", counter: countText(p.upNext), focused: true}
 }
 
-// ViewLeft renders "now playing": title, artist, album, then the progress
-// line on the last row. (Cover art and the spectrum join in later phases.)
+// ViewLeft renders "now playing": cover art (centered square), title,
+// artist, album, then the progress line on the last row. The art box is
+// kept while the image loads so the text does not jump.
 func (p *trackPage) ViewLeft(w, h int, st *style.UI) string {
 	p.progW = 0
 	b := *p.bar
 	if b.st.Item.IsZero() {
 		return components.Block([]string{"", " " + st.Muted.Render("Nothing playing")}, w, h)
 	}
+	lines := []string{""}
+	if cols, rows := artBox(w, h, p.spectrumRows()); cols > 0 && p.art.url != "" && p.art.enabled(st) {
+		cells := p.art.cells(st, cols, rows)
+		pad := strings.Repeat(" ", (w-cols)/2)
+		for i := range rows {
+			if cells != nil {
+				lines = append(lines, pad+cells[i])
+			} else {
+				lines = append(lines, "")
+			}
+		}
+		lines = append(lines, "")
+	}
 	title, _ := b.title()
-	lines := []string{"", " " + st.BarTitle.Render(ansi.Truncate(title, w-2, "…"))}
+	lines = append(lines, " "+st.BarTitle.Render(ansi.Truncate(title, w-2, "…")))
 	if b.now.VideoID == b.st.Item.ID {
 		if b.now.Artist != "" {
 			lines = append(lines, " "+st.Accent.Render(ansi.Truncate(b.now.Artist, w-2, "…")))

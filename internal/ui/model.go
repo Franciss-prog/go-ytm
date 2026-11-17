@@ -9,7 +9,9 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/colorprofile"
+	uv "github.com/charmbracelet/ultraviolet"
 
+	"github.com/Franciss-Prog/go-ytm/internal/art"
 	"github.com/Franciss-Prog/go-ytm/internal/config"
 	"github.com/Franciss-Prog/go-ytm/internal/keys"
 	"github.com/Franciss-Prog/go-ytm/internal/player"
@@ -60,6 +62,8 @@ type Options struct {
 	// an error). SignedIn reports whether it carries a saved session.
 	API      ytmusic.Client
 	SignedIn bool
+	// Art fetches cover art (nil: no art).
+	Art art.Fetcher
 }
 
 // PlayerEventMsg carries a player event into Update (sent by the app's
@@ -99,7 +103,8 @@ type Model struct {
 	toasts  toasts
 	quiting bool
 
-	pb playback
+	pb  playback
+	art artState
 
 	scrubSeq uint64 // bumps per wheel tick on the progress bar
 }
@@ -128,12 +133,13 @@ func New(o Options) *Model {
 		bar:     barState{style: o.Config.UI.ProgressStyle, repeat: "off"},
 		toasts:  toasts{ctx: o.Context},
 		pb:      playback{q: o.Queue},
+		art:     newArtState(o.Art, o.Config.UI.AlbumArtMode),
 	}
 	m.pages[PageHelp] = &help{keymap: o.Keymap, path: o.KeymapPath}
 	m.pages[PageQueue] = newQueuePage(columns(o.Config), o.Queue)
 	m.pages[PageLibrary] = newLibraryPage()
 	m.pages[PageSearch] = newSearchPage(columns(o.Config))
-	m.pages[PageTrack] = newTrackPage(&m.bar, columns(o.Config), o.Queue)
+	m.pages[PageTrack] = newTrackPage(&m.bar, &m.art, columns(o.Config), o.Queue)
 	if _, ok := m.pages[m.current]; !ok {
 		m.current = PageLibrary
 	}
@@ -179,7 +185,7 @@ func (m *Model) Current() PageID { return m.current }
 // contrast is then checked against what is really behind the text. Only
 // at start, while no root background has been set by us.
 func (m *Model) Init() tea.Cmd {
-	cmds := []tea.Cmd{m.toasts.armAll(), m.activate()}
+	cmds := []tea.Cmd{m.toasts.armAll(), m.activate(), m.queryKitty()}
 	if m.sidebar {
 		cmds = append(cmds, m.side.ensure(m.ctx()))
 	}
@@ -199,9 +205,24 @@ func (m *Model) ctx() *Context {
 	}
 }
 
-// Update implements tea.Model.
+// Update implements tea.Model. After every message the cover art follows
+// the current track (syncArt).
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	_, cmd := m.update(msg)
+	if a := m.syncArt(); a != nil {
+		cmd = tea.Batch(cmd, a)
+	}
+	return m, cmd
+}
+
+func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case artLoadedMsg:
+		m.artLoaded(msg)
+		return m, nil
+	case uv.KittyGraphicsEvent:
+		m.kittyReply(msg)
+		return m, nil
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
 		return m, nil
@@ -348,7 +369,7 @@ var notYet = map[string]string{
 	"like_toggle":   "likes",
 	"discovery_mix": "radio", "current_context": "pages", "jump_to_current": "the queue",
 	"command_palette": "the command palette", "theme_picker": "the theme picker",
-	"toggle_album_art": "album art", "toggle_transliteration": "lyrics",
+	"toggle_transliteration": "lyrics",
 }
 
 func (m *Model) global(a keys.Action) tea.Cmd {
@@ -358,7 +379,12 @@ func (m *Model) global(a keys.Action) tea.Cmd {
 	switch a.Name {
 	case "quit":
 		m.quiting = true
+		if rel := m.releaseArt(); rel != nil {
+			return tea.Sequence(rel, tea.Quit)
+		}
 		return tea.Quit
+	case "toggle_album_art":
+		m.art.on = !m.art.on
 	case "go_back":
 		m.goBack()
 	case "go_forward":
