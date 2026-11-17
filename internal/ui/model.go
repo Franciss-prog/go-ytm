@@ -14,6 +14,7 @@ import (
 	"github.com/Franciss-Prog/go-ytm/internal/config"
 	"github.com/Franciss-Prog/go-ytm/internal/keys"
 	"github.com/Franciss-Prog/go-ytm/internal/player"
+	"github.com/Franciss-Prog/go-ytm/internal/queue"
 	"github.com/Franciss-Prog/go-ytm/internal/style"
 	"github.com/Franciss-Prog/go-ytm/internal/theme"
 )
@@ -54,6 +55,13 @@ type Options struct {
 	PatchConfig func(path string, changes []config.Change) error
 	// Profile is the color depth styles are built for.
 	Profile colorprofile.Profile
+
+	// Streams resolves stream URLs; nil disables playback from the queue.
+	Streams Streams
+	// Prefetch keeps the next track resolved (nil: none).
+	Prefetch Prefetcher
+	// Queue is the playback queue (nil: a new one).
+	Queue *queue.Queue
 }
 
 // PlayerEventMsg carries a player event into Update (sent by the app's
@@ -89,6 +97,8 @@ type Model struct {
 	geom    barGeom
 	toasts  toasts
 	quiting bool
+
+	pb playback
 }
 
 // New builds the root model.
@@ -102,6 +112,9 @@ func New(o Options) *Model {
 	if o.Context == nil {
 		o.Context = context.Background()
 	}
+	if o.Queue == nil {
+		o.Queue = queue.New(nil)
+	}
 	m := &Model{
 		o: o, log: o.Log,
 		disp:    keys.NewDispatcher(o.Keymap),
@@ -110,6 +123,7 @@ func New(o Options) *Model {
 		sidebar: true,
 		bar:     barState{style: o.Config.UI.ProgressStyle, repeat: "off"},
 		toasts:  toasts{ctx: o.Context},
+		pb:      playback{q: o.Queue},
 	}
 	m.pages[PageHelp] = &help{keymap: o.Keymap, path: o.KeymapPath}
 	if _, ok := m.pages[m.current]; !ok {
@@ -118,6 +132,7 @@ func New(o Options) *Model {
 	if o.Player != nil {
 		m.bar.st = o.Player.State()
 	}
+	m.syncQueueFlags()
 	m.restyle()
 	for _, t := range o.Toasts {
 		m.toasts.push(t)
@@ -202,6 +217,21 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.o.Themes.SetTerminalBg(msg.Color)
 		}
 		return m, nil
+	case PlayMsg:
+		cmd := m.play(msg)
+		return m, cmd
+	case EnqueueMsg:
+		cmd := m.enqueue(msg)
+		return m, cmd
+	case PrefetchedMsg:
+		cmd := m.prefetched(msg.Result)
+		return m, cmd
+	case resolvedMsg:
+		cmd := m.resolved(msg)
+		return m, cmd
+	case appendReadyMsg:
+		cmd := m.appendReady(msg)
+		return m, cmd
 	case settingsSavedMsg:
 		if msg.err != nil {
 			m.log.Error("ui: saving settings failed", "err", msg.err)
@@ -248,8 +278,7 @@ func (m *Model) action(a keys.Action) tea.Cmd {
 
 // notYet lists actions whose features arrive in later milestones.
 var notYet = map[string]string{
-	"next_track": "the queue", "previous_track": "the queue", "play_random": "the queue",
-	"cycle_repeat": "the queue", "toggle_shuffle": "the queue", "like_toggle": "likes",
+	"like_toggle":   "likes",
 	"discovery_mix": "radio", "current_context": "pages", "jump_to_current": "the queue",
 	"command_palette": "the command palette", "theme_picker": "the theme picker",
 	"toggle_album_art": "album art", "toggle_transliteration": "lyrics",
@@ -276,6 +305,8 @@ func (m *Model) global(a keys.Action) tea.Cmd {
 		return m.toggleTransparency()
 	case "settings":
 		m.openSettings()
+	case "next_track", "previous_track", "play_random", "cycle_repeat", "toggle_shuffle":
+		return m.queueAction(a.Name)
 	case "play_pause", "volume_up", "volume_down", "mute", "seek_forward", "seek_backward", "seek_start":
 		return m.playback(a)
 	default:
@@ -326,11 +357,10 @@ func (m *Model) playerEvent(ev player.Event) tea.Cmd {
 	switch e := ev.(type) {
 	case player.StateChanged:
 		m.bar.st = e.State
+	case player.TrackStarted:
+		return m.trackStarted(e.Item)
 	case player.TrackEnded:
-		if e.Reason == player.EndError {
-			m.log.Warn("ui: track failed", "id", e.Item.ID, "err", e.Err)
-			return m.toasts.push(Toast{Severity: SevError, Text: "Couldn't play this track: " + e.Err})
-		}
+		return m.trackEnded(e)
 	case player.EngineCrashed:
 		if e.GaveUp {
 			return m.toasts.push(Toast{Severity: SevError, Text: "Playback engine keeps crashing. Run `ytm doctor`."})

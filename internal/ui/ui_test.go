@@ -271,7 +271,7 @@ func TestNoPlayerToasts(t *testing.T) {
 
 func TestNotYetToast(t *testing.T) {
 	m, _ := newTestModel(t, 100, 24)
-	press(m, ch('n'))
+	press(m, ch('l'))
 	if !strings.Contains(plain(m), "Not available yet") {
 		t.Error("no feedback for an action from a later milestone")
 	}

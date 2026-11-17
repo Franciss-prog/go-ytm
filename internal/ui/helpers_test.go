@@ -21,6 +21,8 @@ type fakePlayer struct {
 	calls []string
 	seeks []time.Duration
 	modes []player.SeekMode
+	items []player.Item // Load and Append arguments
+	at    []time.Duration
 }
 
 func (f *fakePlayer) rec(s string) error {
@@ -30,11 +32,17 @@ func (f *fakePlayer) rec(s string) error {
 	return nil
 }
 
-func (f *fakePlayer) Load(context.Context, player.Item, time.Duration) error {
+func (f *fakePlayer) Load(_ context.Context, it player.Item, at time.Duration) error {
+	f.mu.Lock()
+	f.items, f.at = append(f.items, it), append(f.at, at)
+	f.mu.Unlock()
 	return f.rec("load")
 }
 
-func (f *fakePlayer) Append(player.Item) error {
+func (f *fakePlayer) Append(it player.Item) error {
+	f.mu.Lock()
+	f.items, f.at = append(f.items, it), append(f.at, 0)
+	f.mu.Unlock()
 	return f.rec("append")
 }
 

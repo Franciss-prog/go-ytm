@@ -20,10 +20,12 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/colorprofile"
 
+	"github.com/Franciss-Prog/go-ytm/internal/clock"
 	"github.com/Franciss-Prog/go-ytm/internal/config"
 	"github.com/Franciss-Prog/go-ytm/internal/keys"
 	"github.com/Franciss-Prog/go-ytm/internal/platform"
 	"github.com/Franciss-Prog/go-ytm/internal/player"
+	"github.com/Franciss-Prog/go-ytm/internal/stream"
 	"github.com/Franciss-Prog/go-ytm/internal/theme"
 	"github.com/Franciss-Prog/go-ytm/internal/ui"
 )
@@ -55,6 +57,9 @@ type Options struct {
 	// LookPath and NewPlayer are replaced in tests.
 	LookPath  func(string) (string, error)
 	NewPlayer func(ctx context.Context, o player.Options) player.Player
+	// Resolver turns video IDs into stream URLs (nil: yt-dlp from
+	// [yt_dlp]; tests pass a fake).
+	Resolver stream.Resolver
 	// ProgramOptions are appended (tests pass tea.WithInput etc.).
 	ProgramOptions []tea.ProgramOption
 }
@@ -98,12 +103,26 @@ func Run(ctx context.Context, o Options) error {
 		})
 	}
 
+	// Streams: one cache shared by play requests and the prefetcher, so a
+	// play joins an in-flight prefetch of the same track.
+	res := o.Resolver
+	if res == nil {
+		home, _ := os.UserHomeDir()
+		y := stream.FromConfig(o.Config.YtDlp, o.Paths.Config, func(p string) string { return platform.ExpandHome(p, home) })
+		y.Log = o.Log
+		res = y
+	}
+	streams := stream.NewCache(res, clock.Real{}, o.Log)
+	// The prefetcher's results go through prog, created below; onDone is
+	// only called after a Want, which Update sends once prog runs.
+	var prog *tea.Program
+	prefetch := stream.NewPrefetcher(streams, func(r stream.Result) { prog.Send(ui.PrefetchedMsg{Result: r}) }) //nolint:contextcheck // stopped by Close below
+
 	if t := themeToast(o.Theme, o.ThemeSpec); t != nil {
 		toasts = append(toasts, *t)
 	}
 	// The manager's sends go through prog, created below; send is only
 	// called from the manager goroutine, started after prog exists.
-	var prog *tea.Program
 	themes := theme.NewManager(o.ThemeSpec, func(r theme.Result) { prog.Send(ui.ThemeChangedMsg{Result: r}) }, nil, o.Log)
 
 	var model tea.Model = ui.New(ui.Options{
@@ -111,6 +130,7 @@ func Run(ctx context.Context, o Options) error {
 		Theme: o.Theme.Theme, NoColor: o.NoColor, Player: pl, Log: o.Log, Toasts: toasts, Context: ctx,
 		Themes:     themeService{m: themes, configDir: o.ThemeSpec.ConfigDir, home: o.ThemeSpec.Home},
 		ConfigPath: o.Paths.ConfigFile(), PatchConfig: config.Patch, Profile: o.Profile,
+		Streams: streams, Prefetch: prefetch,
 	})
 	if o.TraceFrames {
 		model = &tracer{inner: model, log: o.Log, start: start}
@@ -160,6 +180,10 @@ func Run(ctx context.Context, o Options) error {
 		if err := pl.Close(sctx); err != nil { //nolint:contextcheck // shutdown budget, not the cancelled root ctx
 			o.Log.Warn("player shutdown", "err", err)
 		}
+	}
+	prefetch.Close()
+	if err := streams.Close(sctx); err != nil { //nolint:contextcheck // shutdown budget
+		o.Log.Warn("stream resolver shutdown", "err", err)
 	}
 	cancel()
 	done := make(chan struct{})
