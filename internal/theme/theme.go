@@ -148,3 +148,15 @@ func (t *Theme) Hash() uint64 {
 	}
 	return h.Sum64()
 }
+
+// MarshalTOML renders t in theme.toml form (every token under [colors]),
+// with name/source/dark as leading comments. `ytm theme show --toml` and the
+// golden mapping tests use it.
+func (t *Theme) MarshalTOML() []byte {
+	var b strings.Builder
+	fmt.Fprintf(&b, "# name = %s, source = %s, dark = %v\n[colors]\n", t.Name, t.Source, t.Dark)
+	for n, c := range t.Tokens() {
+		fmt.Fprintf(&b, "%s = %q\n", n, FormatColor(c))
+	}
+	return []byte(b.String())
+}

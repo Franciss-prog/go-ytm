@@ -23,6 +23,7 @@ const (
 	hueRed    = 25.0
 	hueYellow = 85.0
 	hueGreen  = 145.0
+	hueBlue   = 250.0
 )
 
 // statusColor is a red/yellow/green at a lightness that reads on bg (spec
@@ -61,7 +62,7 @@ func Complete(t *Theme) {
 	}
 	set(&t.Bg, Default)
 	set(&t.Fg, Default)
-	set(&t.Accent, ansi.Blue)
+	set(&t.Accent, statusColor(t.Bg, hueBlue, ansi.Blue))
 	t.Dark = IsDarkBg(t.Bg)
 
 	set(&t.Surface, Mix(t.Bg, t.Fg, 0.06))

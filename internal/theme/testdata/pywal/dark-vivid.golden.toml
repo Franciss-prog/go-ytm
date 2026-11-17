@@ -1,0 +1,43 @@
+# name = pywal, source = pywal, dark = true
+[colors]
+bg = "#282936"
+fg = "#e9e9f4"
+surface = "#323340"
+surface_alt = "#383947"
+border = "#3e3f53"
+accent = "#00f769"
+accent_dim = "#379458"
+muted = "#4d4f68"
+selected_bg = "#324e44"
+selected_fg = "#e9e9f4"
+progress_filled = "#00f769"
+progress_empty = "#3e3f53"
+lyrics_played = "#4d4f68"
+lyrics_current = "#00f769"
+lyrics_upcoming = "#e9e9f4"
+error = "#ea51b2"
+warn = "#ebff87"
+success = "#00f769"
+
+# after enforce_contrast (1 adjustments)
+# muted #4d4f68 → #6e718b (1.80 → 3.01 vs #282936)
+# name = pywal, source = pywal, dark = true
+[enforced]
+bg = "#282936"
+fg = "#e9e9f4"
+surface = "#323340"
+surface_alt = "#383947"
+border = "#3e3f53"
+accent = "#00f769"
+accent_dim = "#379458"
+muted = "#6e718b"
+selected_bg = "#324e44"
+selected_fg = "#e9e9f4"
+progress_filled = "#00f769"
+progress_empty = "#3e3f53"
+lyrics_played = "#4d4f68"
+lyrics_current = "#00f769"
+lyrics_upcoming = "#e9e9f4"
+error = "#ea51b2"
+warn = "#ebff87"
+success = "#00f769"
