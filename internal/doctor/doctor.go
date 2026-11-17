@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -87,6 +88,10 @@ func environment(ctx context.Context, d Deps) style.Section {
 	var wg sync.WaitGroup
 	wg.Go(func() {
 		mpv = binary(ctx, d, "mpv", "", []string{"--version"}, "install mpv (https://mpv.io) — needed for playback")
+		if mpv.Status == style.StatusOK && mpvTooOld(mpv.Value) {
+			mpv.Status = style.StatusWarn
+			mpv.Detail = fmt.Sprintf("mpv %s or newer is required (some properties are missing); %s", minMPV, mpv.Detail)
+		}
 	})
 	wg.Go(func() {
 		ytdlp = binary(ctx, d, "yt-dlp", d.YtDlpBinary, []string{"--version"}, "install yt-dlp — needed to resolve audio streams")
@@ -124,6 +129,25 @@ func binary(ctx context.Context, d Deps, name, override string, args []string, f
 	it.Value = shortVersion(name, v)
 	it.Detail = path
 	return it
+}
+
+// minMPV is the oldest mpv the player supports (spec 02: older releases
+// lack properties the controller observes). Tested on 0.41.0 only.
+const minMPV = "0.33"
+
+// mpvTooOld reports whether a version like "v0.32.0" or "0.29.1-dirty" is
+// below minMPV. Unparseable versions (git builds) are not flagged.
+func mpvTooOld(v string) bool {
+	parts := strings.SplitN(strings.TrimPrefix(v, "v"), ".", 3)
+	if len(parts) < 2 {
+		return false
+	}
+	major, err1 := strconv.Atoi(parts[0])
+	minor, err2 := strconv.Atoi(strings.TrimRightFunc(parts[1], func(r rune) bool { return r < '0' || r > '9' }))
+	if err1 != nil || err2 != nil {
+		return false
+	}
+	return major == 0 && minor < 33
 }
 
 // shortVersion trims "mpv v0.41.0-dirty Copyright …" to "v0.41.0-dirty".

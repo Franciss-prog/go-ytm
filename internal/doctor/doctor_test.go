@@ -166,6 +166,28 @@ func TestStatError(t *testing.T) {
 	}
 }
 
+func TestMPVTooOld(t *testing.T) {
+	for v, want := range map[string]bool{
+		"v0.41.0": false, "v0.33.0": false, "v0.32.0": true, "0.29.1-dirty": true,
+		"v1.0.0": false, "v0.40.0-123-gabcdef": false, "git-2026": false, "unknown": false,
+	} {
+		if got := mpvTooOld(v); got != want {
+			t.Errorf("%s: got %v, want %v", v, got, want)
+		}
+	}
+}
+
+func TestDoctorWarnsOldMPV(t *testing.T) {
+	d := baseDeps(t)
+	d.Version = func(context.Context, string, ...string) (string, error) {
+		return "mpv v0.32.0 Copyright", nil
+	}
+	it := find(t, Run(context.Background(), d), "Environment", "mpv")
+	if it.Status != style.StatusWarn || !strings.Contains(it.Detail, "0.33") {
+		t.Errorf("old mpv: %+v", it)
+	}
+}
+
 func TestShortVersion(t *testing.T) {
 	for in, want := range map[string]string{
 		"mpv v0.41.0-dirty Copyright © 2000": "v0.41.0-dirty",
