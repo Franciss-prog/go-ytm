@@ -488,3 +488,20 @@ func levenshtein(a, b string) int {
 	}
 	return prev[len(rb)]
 }
+
+// Pos is a 1-based line/column in a TOML file.
+type Pos struct{ Line, Col int }
+
+// Positions maps "section" and "section.key" to where they appear in a
+// TOML document. Other loaders (keymap.toml) use it for diagnostics.
+func Positions(data []byte) map[string]Pos {
+	out := map[string]Pos{}
+	for k, p := range indexPositions(data) {
+		out[k] = Pos{Line: p.line, Col: p.col}
+	}
+	return out
+}
+
+// Suggest returns ` (did you mean "x"?)` for the closest candidate within
+// edit distance 2, or "".
+func Suggest(word string, candidates []string) string { return suggest(word, candidates) }
