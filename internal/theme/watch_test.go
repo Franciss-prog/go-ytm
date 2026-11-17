@@ -45,8 +45,11 @@ func newWatchRig(t *testing.T, path string) *watchRig {
 	return r
 }
 
-// step performs op, waits for the debounce timer, fires it and returns
-// the result sent (nil if none within a short wait).
+// step performs op, then keeps firing the debounce timer until the
+// watcher goes quiet, and returns the last result sent (nil if none).
+// os.WriteFile produces several events (truncate, write) that may reach
+// the watcher after a first Advance and re-arm the timer, so a single
+// Advance races with event delivery.
 func (r *watchRig) step(op func()) *Result {
 	r.t.Helper()
 	op()
@@ -56,13 +59,23 @@ func (r *watchRig) step(op func()) *Result {
 	if !r.clk.BlockUntil(1, stop) {
 		r.t.Fatal("no debounce timer armed after file change")
 	}
-	r.clk.Advance(DefaultDebounce)
-	select {
-	case res := <-r.sends:
-		return &res
-	case <-time.After(300 * time.Millisecond):
-		return nil
+	var last *Result
+	quiet := 0
+	for quiet < 6 { // ~300 ms with no timer and no result
+		r.clk.Advance(DefaultDebounce)
+		select {
+		case res := <-r.sends:
+			last = &res
+			quiet = 0
+		case <-time.After(50 * time.Millisecond):
+			if r.clk.Pending() == 0 {
+				quiet++
+			} else {
+				quiet = 0
+			}
+		}
 	}
+	return last
 }
 
 func (r *watchRig) recv() Result {
