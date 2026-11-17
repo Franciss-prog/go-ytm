@@ -10,7 +10,7 @@ Last updated: 2026-11-17
 | M0 | scaffold | **in review** | branch `feat/scaffold` (stacked on #1) | CLI skeleton, config loader, logging, style, doctor stub |
 | M1 | player-core | **in review** | [#3](https://github.com/Franciss-prog/go-ytm/pull/3) (stacked on #2) | mpv launcher, JSON IPC, controller, crash restore, fakempv |
 | M2 | ytmusic-auth-search | **in review** | [#4](https://github.com/Franciss-prog/go-ytm/pull/4) (stacked on #3) | InnerTube client, search, setup, auth store, doctor Auth |
-| M3 | stream-resolve | not started | | |
+| M3 | stream-resolve | **in review** | branch `feat/stream-resolve` (stacked on #4) | yt-dlp resolver, URL cache, prefetcher, doctor mpv version |
 | M4 | tui-shell | not started | | |
 | M4b | dynamic-theme | not started | | |
 | M5 | tui-library-search-queue | not started | | |
@@ -50,6 +50,13 @@ Last updated: 2026-11-17
 | 2026-11-17 | `ytm search` with a rejected session falls back to signed-out results + warning (exit 0) | 03 |
 | 2026-11-17 | No InnerTube `key` param (yt-dlp omits it on cookie-auth calls; GitGuardian flagged the public web key) | 03 |
 | 2026-11-17 | CLI error handler capitalizes only plain first words (fang title-cased `yt-dlp` → `Yt-Dlp`) | 06 |
+| 2026-11-17 | Quality format strings copied from ytm-player 2.2.0 (`bestaudio/…` + combined fallback), replacing the draft's opus-first strings | 03 |
+| 2026-11-17 | One yt-dlp process per resolve; warm process rejected (startup 0.2 s of ~4 s; `--batch-file -` reads stdin to EOF) | 03 |
+| 2026-11-17 | yt-dlp `-O '%(.{fields})j'` instead of `-J` (1.6 KB vs 650 KB output) | 03 |
+| 2026-11-17 | Cookie jar copied to a private temp file per resolve (yt-dlp writes `--cookies` back on exit) | 03 |
+| 2026-11-17 | Every URL handed to mpv waits for `available_at` (`Cache.Playable`) | 03 |
+| 2026-11-17 | Fake yt-dlp = re-executed test binary, not a shell script (Windows CI) | 03 |
+| 2026-11-17 | `doctor` warns on mpv < 0.33 (deferred from M1) | 02 |
 
 ## Verified facts (with how)
 
@@ -82,6 +89,18 @@ Last updated: 2026-11-17
   `ytm setup --manual` exit 3 (live).
 - `ytm search` live: unfiltered, all 5 filters, 45/60-result continuation paging, suggestions
   (`YTM_LIVE=1 go test -tags live`).
+- yt-dlp 2026.10.26 `-O '%(.{url,…})j'` prints one JSON line; `available_at` present on every
+  signed-out resolve; URL `expire` = resolve + 6 h (live, `TestLiveResolve`).
+- googlevideo answers **403 until `available_at`** (≈3 s after resolve): mpv fails "loading failed"
+  (`HTTP error 403 Forbidden`); after it, 48/48 ranged GETs returned 206 (Python probe). One
+  403 in 12 Go GETs after the wait was seen once (not reproduced on rerun).
+- Medium and low resolve the same itag (250, ~61 kbit/s) for the test track; high = itag 251 opus 128.
+- `--js-runtimes` adds to the default `deno`; the Python API's `js_runtimes` replaces it
+  (`yt_dlp/__init__.py` builds the dict from the option list), so we pass `--no-js-runtimes` first.
+- yt-dlp error texts: "This video is unavailable" (live), others read from
+  `extractor/youtube/_video.py` (`raise_no_formats(reason)`, "sign in" → login hint, rate-limit note).
+- Real mpv 0.41.0 plays a resolved googlevideo URL at an offset and advances gaplessly into an
+  appended prefetched URL (`TestLiveGapless`, live).
 
 ## Measurements (M0, local, Linux amd64, Go 1.27.4)
 
@@ -108,6 +127,17 @@ Last updated: 2026-11-17
 | Parse unfiltered search page | 36.5 µs/op, 127 allocs |
 | yt-dlp cookie export (no URL) | 0.25 s |
 | Binary size (`-s -w`, trimpath) | 15 MB (was 12.8 MB; + Huh/Bubble Tea) |
+
+## Measurements (M3, local, Linux amd64)
+
+| What | Result |
+|---|---|
+| yt-dlp resolve, wall (live, signed out) | 3.7–4.9 s typical, one 10.2 s outlier (12 runs) |
+| `yt-dlp --version` / import + init | 0.18 s / 0.2 s |
+| `-J` vs `-O` field subset output | 668 KB vs 1.6 KB |
+| Parse `-O` output | 7.5 µs/op, 15 allocs |
+| Cache hit | 497 ns/op, 0 allocs |
+| Coverage | stream 93 % |
 
 ## Approved by owner (2026-11-16)
 
@@ -141,5 +171,13 @@ Last updated: 2026-11-17
 - `golangci-lint` / `staticcheck` not installed locally; Makefile falls back to `go run` (works, ~40 s cold).
 - CI green on linux/macOS/windows × stable/oldstable (PR #2). CLI golden files are Linux reference
   output and skip on Windows (host path rules differ); policy, no-ANSI, JSON and exit-code tests run there.
+- M3: not tested signed in (`use_session_cookies`, `cookies_file`), with `ca_bundle`,
+  `remote_components` or `js_runtimes` against real yt-dlp — args are unit-tested only.
+- M3: age-gated / region-blocked / Premium-only classification is from yt-dlp source, not live
+  captures (only "This video is unavailable" was observed).
+- M3: `Stream.Headers` are parsed but not sent to mpv (ytm-player does not either; URLs play
+  without them). Revisit if 403s appear after `available_at`.
+- M3: re-resolve-once-then-skip policy and prefetch → `Append` wiring land with the queue owner
+  (M4/M5); M3 ships `Cache.Refresh`, `Cache.Playable`, `Prefetcher`.
 - fang queries the terminal background (OSC 11) when rendering help on a TTY; harmless on real
   terminals, visible as junk only under `script`-style captures.

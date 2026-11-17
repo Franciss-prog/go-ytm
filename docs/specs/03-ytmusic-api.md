@@ -1,6 +1,6 @@
 # 03 — YouTube Music API, auth, and stream resolution
 
-Status: **M2 implemented** (client core, auth, search) · Milestones: M2 (client, auth, search), M3 (stream), M6 (browse/radio/history)
+Status: **M2 implemented** (client core, auth, search), **M3 implemented** (stream) · Milestones: M2 (client, auth, search), M3 (stream), M6 (browse/radio/history)
 
 ## Goals
 
@@ -171,23 +171,52 @@ with "stdin is not a terminal; pass --browser/--slot or --manual < headers.txt".
 
 ```go
 type Resolver interface {
-    Resolve(ctx context.Context, videoID string, q Quality) (Stream, error) // {URL, Headers, Expires, Codec, Bitrate}
+    Resolve(ctx context.Context, videoID string, q Quality) (Stream, error)
 }
+// Stream{VideoID, URL, Headers, Expires, AvailableAt, Codec, Bitrate, Duration}
 ```
 
-- Command: `yt-dlp -J --no-playlist --no-warnings -f <fmt> [--cookies f] [--extractor-args ...]
-  [--js-runtimes ...] [--remote-components ...] https://music.youtube.com/watch?v=<id>`; parse
-  `url`, `http_headers`, `expire` from URL query.
-- Quality → format: high `bestaudio[acodec=opus]/bestaudio`, medium `bestaudio[abr<=128]/bestaudio`,
-  low `worstaudio`. (Original's exact strings checked against `services/stream.py` in M3.)
-- `[yt_dlp]` options carried over: `cookies_file`, `use_session_cookies`, `cookie_browser`,
-  `ca_bundle` (→ `SSL_CERT_FILE` env for yt-dlp and our HTTP client), `remote_components`, `js_runtimes`.
-- Cache: in-memory map videoID → Stream; valid until `expire - 5 min`. Persisted? No (URLs are IP-bound).
-- Local audio cache hit (M7) short-circuits resolution: `file://` path.
-- Prefetch worker: single goroutine with a 2-slot priority queue (next, then next+1); cancels stale
-  work when the queue changes. Concurrency limit 2 yt-dlp processes.
-- Cold-path optimization (measured in M3): yt-dlp startup is ~1–2 s; if too slow, evaluate keeping
-  one warm process via `yt-dlp --batch-file -` (stdin) — decision recorded with numbers.
+- Command (one process per track):
+  `yt-dlp --ignore-config --no-playlist --no-warnings --simulate -f <fmt>
+  --extractor-args youtube:player_client=default,android -O '%(.{url,http_headers,acodec,…})j'
+  [--cookies <private copy>] [--compat-options no-certifi] [--remote-components C]…
+  [--no-js-runtimes --js-runtimes R…] https://music.youtube.com/watch?v=<id>`.
+  `-O` with a field subset prints ~1.6 KB instead of `-J`'s ~650 KB. `expire` is read from the
+  URL query (fallback: now + 5 h, ytm-player's TTL).
+- Quality → format, copied from ytm-player 2.2.0 `services/stream.py` `QUALITY_FORMATS`
+  (supersedes the draft strings): high `bestaudio/best[vcodec!=none][acodec!=none]`, medium
+  `bestaudio[abr<=128]/bestaudio/…`, low `bestaudio[abr<=64]/bestaudio/…`. The combined
+  fallback covers clients with no audio-only stream; mpv runs `--no-video`.
+- `[yt_dlp]` options: `cookies_file` (wins) or, with `use_session_cookies`, `stream_cookies.txt`
+  from `ytm setup`; `ca_bundle` → `SSL_CERT_FILE` + `--compat-options no-certifi`;
+  `remote_components`; `js_runtimes` (replaces yt-dlp's default list, like the Python API the
+  original uses). `cookie_browser` is setup-only; playback never reads a browser.
+- The cookie jar is **copied to a private temp file per run**: yt-dlp saves `--cookies` back on
+  exit, which would race between two concurrent runs and could clobber a jar `ytm setup` just wrote.
+- Errors (from yt-dlp's last `ERROR:` line, phrases per yt-dlp 2026.10.26
+  `extractor/youtube/_video.py`): `ErrUnavailable` (unavailable/private/region/Premium/no
+  format), `ErrSignInRequired` ("sign in" reasons: age gate, bot check, members-only),
+  `ErrRateLimited`, `ErrYtDlpNotFound`, `ErrInvalidID` (IDs must match `^[A-Za-z0-9_-]{1,64}$`,
+  checked before running). Cookie-file parse errors are redacted (they quote cookie values).
+- `stream.Cache` wraps the resolver: in-memory, key (videoID, quality), fresh until
+  `expire − 5 min`, max 128 entries (soonest-expiring evicted). Not persisted (URLs are IP-bound).
+  Concurrent requests share one run; the run is cancelled only when **every** waiter has gone,
+  so a cancelled prefetch never aborts a play of the same track. At most 2 yt-dlp processes.
+  Transient failures retry after 1 s and 2 s (3 attempts, as the original); classified errors do
+  not. `Clear()` (after `ytm setup`) drops results of runs already in flight.
+- **`available_at`**: googlevideo answers 403 until this time (observed live ≈3 s after resolving;
+  mpv then fails with "loading failed"). `Cache.Playable` = resolve + wait; every URL handed to
+  mpv goes through it (in a `tea.Cmd`).
+- `Cache.Refresh(id)` = invalidate + resolve: the re-resolve-once step after `TrackEnded{EndError}`
+  (spec 02). The once-then-skip policy itself is applied by the queue owner (M5).
+- `stream.Prefetcher`: one goroutine; `Want(q, next, next+1)` replaces the list (2 slots, priority
+  order), cancels work for tracks no longer wanted, skips cached ones, tries each ID once per list,
+  and reports each result via a non-blocking callback (TUI: `tea.Program.Send`).
+- Local audio cache hit (M7) short-circuits resolution with a `file://` path.
+- Warm process: **rejected with numbers.** A resolve takes 3.7–4.9 s wall (live, 2026-11-17), of
+  which yt-dlp startup + import is ~0.2 s; the rest is network. `--batch-file -` also reads stdin
+  to EOF before extracting (`yt_dlp.get_urls` → `read_batch_urls`), so it cannot serve requests
+  one at a time. Prefetch hides the latency instead.
 
 ## Edge cases
 
@@ -206,8 +235,12 @@ type Resolver interface {
 - `httptest.Server` tests for headers (SAPISIDHASH correctness against a known vector), retries,
   401 renewal path, rate limiter.
 - Live smoke tests behind `//go:build live` + env `YTM_LIVE=1` (not in CI): search, charts, home.
-- Resolver: fake `yt-dlp` script in `testdata/bin/` emitting canned JSON; tests for args assembly
-  per config option, expiry parsing, cancellation kills the process, prefetch reordering.
+- Resolver: fake yt-dlp is the test binary re-executed (`FAKE_YTDLP=mode`, portable to Windows,
+  replacing the draft's shell script in `testdata/bin/`); `Runner` injection for args assembly per
+  config option; scrubbed real `-O` output in `internal/stream/testdata/`; expiry parsing,
+  cancellation kills the process, prefetch reordering, dedupe/limit/retry with a fake clock.
+- Live (`-tags live`, `YTM_LIVE=1`): resolve all qualities + ranged GET; real mpv plays a resolved
+  track and advances gaplessly into a prefetched, appended one.
 
 ## Open questions
 

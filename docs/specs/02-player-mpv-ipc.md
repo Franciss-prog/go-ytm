@@ -120,7 +120,8 @@ stateDiagram-v2
 
 ### Gapless & prefetch
 
-1. When track N starts, queue asks stream resolver for N+1 (see 03); on success the controller
+1. When track N starts, queue asks stream resolver for N+1 (see 03; `Prefetcher.Want`, then
+   `Stream.Wait` for `available_at`); on success the controller
    `loadfile <url> append` (no `-play`) and records `playlist_entry_id → videoID`.
 2. `--prefetch-playlist=yes` lets mpv open N+1 early; transition fires `start-file` with N+1's
    entry id → controller maps it back to the track and emits `TrackStarted`.
@@ -187,7 +188,8 @@ stateDiagram-v2
   1 s; the 4th failure within 30 s (3 failed restarts) gives up (`EngineCrashed{GaveUp: true}`).
   A crash while nothing is playing does not relaunch; the next `Load` launches lazily.
 - Every mpv command has a 5 s timeout; a timed-out command is abandoned and its late reply dropped.
-- `TrackEnded{EndError}` is emitted; re-resolve-once-then-skip lives in the queue/stream layer (M3),
+- `TrackEnded{EndError}` is emitted; re-resolve-once-then-skip lives in the queue owner (M5), which
+  calls `stream.Cache.Refresh` (M3),
   not in the controller. A failed **preload** emits `TrackEnded{EndError}` for the next item but
   leaves the current track playing.
 - Position-only `StateChanged` events are throttled to 4 Hz; `State()` is always current.
