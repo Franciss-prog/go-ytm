@@ -397,3 +397,22 @@ func BenchmarkKeypressRepaint(b *testing.B) {
 		_ = m.View()
 	}
 }
+
+// BenchmarkThemeApplyAndRepaint: ThemeChangedMsg (build styles) + full
+// repaint at 200×60. Budget 50 ms (spec 08).
+func BenchmarkThemeApplyAndRepaint(b *testing.B) {
+	m, _ := newTestModel(b, 200, 60)
+	m.Update(PlayerEventMsg{playerState(playing)})
+	m.navigate(PageHelp)
+	themes := []theme.Theme{}
+	for _, n := range theme.BuiltinNames() {
+		th, _ := theme.Builtin(n)
+		themes = append(themes, th)
+	}
+	i := 0
+	for b.Loop() {
+		m.Update(ThemeChangedMsg{theme.Result{Theme: themes[i%len(themes)], Cause: theme.CauseFile}})
+		_ = m.View()
+		i++
+	}
+}

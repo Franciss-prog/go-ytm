@@ -155,3 +155,10 @@ func TestBackgroundSGRs(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkStylesBuild(b *testing.B) {
+	t := theme.Fallback()
+	for b.Loop() {
+		NewUI(t, UIOptions{Profile: colorprofile.ANSI256}, 1)
+	}
+}

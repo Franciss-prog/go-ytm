@@ -169,9 +169,14 @@ func TestQuoteRoundTrip(t *testing.T) {
 
 // SettingsKeys are the keys the Settings popup persists (spec 08).
 var settingsChanges = []Change{
-	{"theme.source", "matugen"}, {"theme.name", "nord"}, {"theme.transparent", true},
-	{"theme.transparent_selection", "underline"}, {"theme.popup_fill", true},
-	{"ui.album_art_mode", "off"}, {"theme.enforce_contrast", false}, {"theme.watch", false},
+	{"theme.source", "matugen"},
+	{"theme.name", "nord"},
+	{"theme.transparent", true},
+	{"theme.transparent_selection", "underline"},
+	{"theme.popup_fill", true},
+	{"ui.album_art_mode", "off"},
+	{"theme.enforce_contrast", false},
+	{"theme.watch", false},
 }
 
 func TestPatchEverySettingsKey(t *testing.T) {

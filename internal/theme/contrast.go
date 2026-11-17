@@ -64,8 +64,12 @@ func EnforceContrast(t Theme, bg color.Color) (Theme, []Adjustment) {
 		name string
 		p    *color.Color
 	}{
-		{"accent", &t.Accent}, {"lyrics_current", &t.LyricsCurrent}, {"muted", &t.Muted},
-		{"error", &t.Error}, {"warn", &t.Warn}, {"success", &t.Success},
+		{"accent", &t.Accent},
+		{"lyrics_current", &t.LyricsCurrent},
+		{"muted", &t.Muted},
+		{"error", &t.Error},
+		{"warn", &t.Warn},
+		{"success", &t.Success},
 	} {
 		fix(tok.name, tok.p, b, MinAccentContrast)
 	}

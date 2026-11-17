@@ -195,7 +195,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.bar.now = NowPlaying(msg)
 		return m, nil
 	case ThemeChangedMsg:
-		return m, m.themeChanged(msg.Result)
+		cmd := m.themeChanged(msg.Result)
+		return m, cmd
 	case tea.BackgroundColorMsg:
 		if m.o.Themes != nil && msg.Color != nil {
 			m.o.Themes.SetTerminalBg(msg.Color)

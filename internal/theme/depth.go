@@ -3,6 +3,7 @@ package theme
 import (
 	"image/color"
 	"math"
+	"sync"
 
 	"github.com/charmbracelet/colorprofile"
 	"github.com/charmbracelet/x/ansi"
@@ -34,22 +35,37 @@ func xterm256(n int) colorful.Color {
 	return rgb8(lvl[n/36], lvl[(n/6)%6], lvl[n%6])
 }
 
-func okDist(a, b colorful.Color) float64 {
-	l1, a1, b1 := a.OkLab()
-	l2, a2, b2 := b.OkLab()
-	return math.Sqrt((l1-l2)*(l1-l2) + (a1-a2)*(a1-a2) + (b1-b2)*(b1-b2))
+type lab [3]float64
+
+func toLab(c colorful.Color) lab {
+	l, a, b := c.OkLab()
+	return lab{l, a, b}
 }
+
+// dist2 is the squared OKLab distance (ordering only, no sqrt needed).
+func dist2(p, q lab) float64 {
+	return (p[0]-q[0])*(p[0]-q[0]) + (p[1]-q[1])*(p[1]-q[1]) + (p[2]-q[2])*(p[2]-q[2])
+}
+
+// lab256 caches OKLab of indexes 16..255 (index n at n-16).
+var lab256 = sync.OnceValue(func() (t [240]lab) {
+	for n := range t {
+		t[n] = toLab(xterm256(n + 16))
+	}
+	return t
+})
 
 // Nearest256 is the closest xterm-256 cube/gray index (16..255) to c by
 // OKLab distance. The first 16 slots are skipped: the terminal owns them.
 func Nearest256(c colorful.Color) ansi.IndexedColor {
-	best, bestD := 16, math.Inf(1)
-	for n := 16; n < 256; n++ {
-		if d := okDist(c, xterm256(n)); d < bestD {
-			best, bestD = n, d
+	p, tbl := toLab(c), lab256()
+	best, bestD := 0, math.Inf(1)
+	for i := range tbl {
+		if d := dist2(p, tbl[i]); d < bestD {
+			best, bestD = i, d
 		}
 	}
-	return ansi.IndexedColor(best)
+	return ansi.IndexedColor(best + 16)
 }
 
 // Nearest16 is the closest ANSI slot to c, assuming xterm's default values
@@ -59,9 +75,10 @@ func Nearest16(c colorful.Color, palette *[16]colorful.Color) ansi.BasicColor {
 	if palette != nil {
 		p = palette
 	}
+	q := toLab(c)
 	best, bestD := 0, math.Inf(1)
 	for n, v := range p {
-		if d := okDist(c, v); d < bestD {
+		if d := dist2(q, toLab(v)); d < bestD {
 			best, bestD = n, d
 		}
 	}

@@ -25,22 +25,38 @@ type settingRow struct {
 }
 
 var settingRows = []settingRow{
-	{label: "Theme source", key: "theme.source", choices: []string{"static", "pywal", "matugen", "ansi", "file"}, themed: true,
-		ptr: func(c *config.Config) any { return &c.Theme.Source }},
-	{label: "Theme name", key: "theme.name", choices: theme.BuiltinNames(), themed: true,
-		ptr: func(c *config.Config) any { return &c.Theme.Name }},
-	{label: "Transparent", key: "theme.transparent", themed: true,
-		ptr: func(c *config.Config) any { return &c.Theme.Transparent }},
-	{label: "Selection style", key: "theme.transparent_selection", choices: []string{"bar", "reverse", "underline", "solid"},
-		ptr: func(c *config.Config) any { return &c.Theme.TransparentSelection }},
-	{label: "Popup fill", key: "theme.popup_fill",
-		ptr: func(c *config.Config) any { return &c.Theme.PopupFill }},
-	{label: "Album art", key: "ui.album_art_mode", choices: []string{"blocks", "off"},
-		ptr: func(c *config.Config) any { return &c.UI.AlbumArtMode }},
-	{label: "Enforce contrast", key: "theme.enforce_contrast", themed: true,
-		ptr: func(c *config.Config) any { return &c.Theme.EnforceContrast }},
-	{label: "Live reload", key: "theme.watch", themed: true,
-		ptr: func(c *config.Config) any { return &c.Theme.Watch }},
+	{
+		label: "Theme source", key: "theme.source", choices: []string{"static", "pywal", "matugen", "ansi", "file"}, themed: true,
+		ptr: func(c *config.Config) any { return &c.Theme.Source },
+	},
+	{
+		label: "Theme name", key: "theme.name", choices: theme.BuiltinNames(), themed: true,
+		ptr: func(c *config.Config) any { return &c.Theme.Name },
+	},
+	{
+		label: "Transparent", key: "theme.transparent", themed: true,
+		ptr: func(c *config.Config) any { return &c.Theme.Transparent },
+	},
+	{
+		label: "Selection style", key: "theme.transparent_selection", choices: []string{"bar", "reverse", "underline", "solid"},
+		ptr: func(c *config.Config) any { return &c.Theme.TransparentSelection },
+	},
+	{
+		label: "Popup fill", key: "theme.popup_fill",
+		ptr: func(c *config.Config) any { return &c.Theme.PopupFill },
+	},
+	{
+		label: "Album art", key: "ui.album_art_mode", choices: []string{"blocks", "off"},
+		ptr: func(c *config.Config) any { return &c.UI.AlbumArtMode },
+	},
+	{
+		label: "Enforce contrast", key: "theme.enforce_contrast", themed: true,
+		ptr: func(c *config.Config) any { return &c.Theme.EnforceContrast },
+	},
+	{
+		label: "Live reload", key: "theme.watch", themed: true,
+		ptr: func(c *config.Config) any { return &c.Theme.Watch },
+	},
 }
 
 // settings is the open Settings popup: a cursor and the values at open
