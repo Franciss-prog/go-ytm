@@ -1,6 +1,6 @@
 # 04 — Config, keymap, theme files
 
-Status: **M4 keymap engine implemented** · Milestones: M0 (loader), M4 (keymap engine, static themes), M4b (theme sources)
+Status: **M4 keymap engine, M4b config.Patch implemented** · Milestones: M0 (loader), M4 (keymap engine, static themes), M4b (theme sources)
 
 ## Goals
 
@@ -32,6 +32,10 @@ parse with `unstable.Parser` (`KeepComments = true`), find the value node's byte
 the new literal; if the key is missing, append `key = value` at the end of its table (create the
 table at EOF if missing). Atomic write (temp + rename, keep mode). Round-trip tests: comments,
 blank lines, inline tables, dotted keys, CRLF files, missing table, missing file.
+
+Implementation (M4b): strings are written as basic `"…"` strings (TOML escapes only); a key inside an
+inline table is refused ("edit it by hand") rather than rewritten; the patched bytes are re-parsed
+before the rename, so a patch never leaves an invalid file.
 
 ## `config.toml` schema
 

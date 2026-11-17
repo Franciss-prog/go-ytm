@@ -12,7 +12,7 @@ Last updated: 2026-11-17
 | M2 | ytmusic-auth-search | **in review** | [#4](https://github.com/Franciss-prog/go-ytm/pull/4) (stacked on #3) | InnerTube client, search, setup, auth store, doctor Auth |
 | M3 | stream-resolve | **in review** | [#5](https://github.com/Franciss-prog/go-ytm/pull/5) (stacked on #4) | yt-dlp resolver, URL cache, prefetcher, doctor mpv version |
 | M4 | tui-shell | **in review** | [#6](https://github.com/Franciss-prog/go-ytm/pull/6) (stacked on #5) | keymap engine, root model, header, bar, toasts, Help, app wiring |
-| M4b | dynamic-theme | not started | | |
+| M4b | dynamic-theme | **in review** | branch `feat/dynamic-theme` (stacked on #6) | sources, contrast, depth, watcher, Patch, Settings, `theme show` |
 | M5 | tui-library-search-queue | not started | | |
 | M6 | browse-liked-history | not started | | |
 | M7 | session-cache-offline | not started | | |
@@ -64,6 +64,13 @@ Last updated: 2026-11-17
 | 2026-11-17 | `toggle_transparency` is session-only until `config.Patch` lands (M4b) | 05 |
 | 2026-11-17 | Root `ytm` without a TTY exits 2 with a hint; `--trace-frames` added (spec 00) | 06 |
 | 2026-11-17 | Deps added (test-only): `x/exp/teatest/v2`, `x/exp/golden`; `bubbletea/v2` v2.1.1 promoted to direct | 01 |
+| 2026-11-17 | Deps added: `fsnotify` v1.10.1 (listed in 01); `go-colorful` v1.4.1 promoted to direct (has OkLab/OkLch, no in-house OKLCH) | 01 |
+| 2026-11-17 | `Dark` = luminance < 0.179 (equal white/black contrast), not 0.5 | 08 |
+| 2026-11-17 | Built-in themes are embedded TOML parsed like `theme.toml`; nord/gruvbox from nord.css / gruvbox.vim | 08 |
+| 2026-11-17 | Broken palette file keeps current colors; Settings → missing source shows fallback; toast once per error | 08 |
+| 2026-11-17 | `config.Patch` writes basic strings, refuses keys inside inline tables, re-parses before rename | 04 |
+| 2026-11-17 | `ytm theme reload` deferred to M9 (IPC); SIGUSR1 reloads now | 06, 08 |
+| 2026-11-17 | OSC 11 queried only at startup in transparent mode; then COLORFGBG; else black | 08 |
 
 ## Verified facts (with how)
 
@@ -113,6 +120,16 @@ Last updated: 2026-11-17
   (probed in a test). `Program.Send` blocks before start and is a no-op after exit (`go doc`).
 - `tea.Tick`'s goroutine waits out its full duration after the program exits (goleak in
   `internal/app`), hence the ctx-aware timer.
+- matugen 4.2.0 renders every role of `contrib/matugen/ytm-go.toml` (isolated `-c` config, script).
+- xterm default 16 colors: `/usr/share/X11/app-defaults/XTerm-color` + X11 `rgb.txt`.
+- Terminal opacity keys: kitty `background_opacity` (kitty source), alacritty `[window] opacity`
+  (`man 5 alacritty`), foot `[colors-dark] alpha` since 1.26 (foot CHANGELOG), WezTerm
+  `window_background_opacity` (wezterm.org).
+- go-toml unstable: scalar value `Raw` includes quotes; KeyValue `Raw` = `key = value` without
+  trailing comment; Array/InlineTable value and Table `Raw` are empty (probe test).
+- Real binary in a PTY (110×30, pywal source): wallpaper rename → recolored 116–118 ms; SIGUSR1 →
+  "Theme reloaded"; half-written file keeps colors + toast, recovery toast; Settings save and `C-t`
+  wrote `popup_fill`/`transparent` keeping comments.
 - Real binary in a PTY (110×30): renders, `?`/`j`/`g s`/backspace/`3+`/`q` work, alt screen
   entered and left, OSC 11 sets the root bg, exit 0, `--trace-frames` logs every frame.
 
@@ -162,6 +179,15 @@ Last updated: 2026-11-17
 | Playback bar tick (StateChanged + full View, 140×40) | 0.15 ms/op | — |
 | Idle CPU (no playback, 10 s) | 0.5 % | 1 % |
 
+## Measurements (M4b, local, Linux amd64)
+
+| What | Result | Budget |
+|---|---|---|
+| Wallpaper change → recolored (real binary, PTY) | 116–118 ms (3 runs) | 300 ms |
+| `ThemeChangedMsg` + full repaint 200×60 | 1.1 ms/op | 50 ms |
+| Styles build (256-color downsample) | 45 µs/op | 1 ms |
+| `EnforceContrast` (worst-case palette) | 0.23 ms/op | — |
+
 ## Approved by owner (2026-11-16)
 
 - Keys: `settings = ,`, `toggle_transparency = C-t`, `command_palette = :`, `theme_picker = g t`.
@@ -202,5 +228,11 @@ Last updated: 2026-11-17
   without them). Revisit if 403s appear after `available_at`.
 - M3: re-resolve-once-then-skip policy and prefetch → `Append` wiring land with the queue owner
   (M4/M5); M3 ships `Cache.Refresh`, `Cache.Playable`, `Prefetcher`.
+- M4b: `ytm theme reload` needs IPC (M9); palette "Reload theme" needs the palette (M5).
+- M4b: OSC 4 palette queries not implemented (16-color mapping assumes xterm defaults); OSC 11 is
+  only asked at startup in transparent mode. tmux passthrough untested.
+- M4b: not run against a real `wal -i` (would rewrite the owner's palette); pywal fixtures are
+  pywal's own schemes plus the owner's file. Not tested on macOS/Windows terminals.
+- M4b: album-art transparency rules wait for album art (no art yet, no exemption registered).
 - fang queries the terminal background (OSC 11) when rendering help on a TTY; harmless on real
   terminals, visible as junk only under `script`-style captures.

@@ -1,6 +1,6 @@
 # 08 — Dynamic theming & transparency (headline feature)
 
-Status: **draft** · Milestones: M4 (Theme struct, static themes, style plumbing), **M4b** (everything else)
+Status: **M4b implemented** (see "Implementation notes (M4b)") · Milestones: M4 (Theme struct, static themes, style plumbing), **M4b** (everything else)
 
 ## Goals
 
@@ -76,7 +76,7 @@ Default mapping (overridable via `[theme.pywal_map]`, e.g. `accent = "color5"`):
 | warn | color3 → derived yellow |
 | border | color8 mixed toward bg 40 % |
 | surface / surface_alt | derived from bg |
-| Dark | relative luminance(bg) < 0.5 |
+| Dark | relative luminance(bg) < 0.179 (where white and black text contrast equally; see notes) |
 
 `alpha` (pywal's terminal opacity hint) is informational only — shown in `ytm theme show`, never used
 to fake transparency.
@@ -272,7 +272,7 @@ see 04); `esc` reverts to the values at open. Also reachable from Help and comma
 
 "Dynamic theming with pywal and matugen": copy-paste setup for both (template copy + config
 snippet), `transparent = true` + pointer to the terminal's own opacity setting (kitty
-`background_opacity`, alacritty `window.opacity`, foot `[colors] alpha`, wezterm `window_background_opacity`),
+`background_opacity`, alacritty `window.opacity`, foot `[colors-dark] alpha` (foot ≥ 1.26; `[colors]` removed in 1.28), wezterm `window_background_opacity`),
 troubleshooting: theme not updating (check `ytm doctor` Theme section, path, `watch`), ugly contrast
 (`enforce_contrast`, `[theme.pywal_map]`), blocky art in transparent mode (tradeoff, `album_art_mode = "off"`).
 
@@ -281,3 +281,32 @@ troubleshooting: theme not updating (check `ytm doctor` Theme section, path, `wa
 1. Owner's `~/.cache/wal/colors.json` is matugen-written and sparse. Prefer `source = "matugen"` for
    you (richer roles) — should `ytm setup`/first run detect this and suggest it? (default: `doctor` hint only)
 2. New keys `[theme.pywal_map]`, `[theme] ansi_accent` — approve.
+
+## Implementation notes (M4b)
+
+- **Dark** is `luminance(bg) < 0.17913`, the point where white and black text give equal WCAG
+  contrast, not 0.5: with 0.5 a mid-grey bg (#999) would be "dark" while dark text reads better on
+  it. Contrast direction uses the same rule, so the two never disagree. matugen keeps its `mode`.
+- **Version** lives on `style.UI` (bumped per rebuild), not on `Theme`; `Theme.Hash()` is the
+  content digest used to skip identical reloads.
+- **Accent pick (pywal):** colors with OKLCH chroma < 0.03 are not candidates (greys win on float
+  noise otherwise), so all-grey palettes take color4 as specified.
+- **Contrast** search checks the 8-bit quantized color, so the stored hex meets the ratio; the
+  property test runs 3,000 random palettes. `lyrics_played`/`progress_*` are not enforced (not in the
+  list above).
+- **Resolution** (`theme.Resolve`) never fails: source error → `fallback` + `Result.Err`.
+  `theme.toml` `[overrides]` apply to every source. Results carry a `Cause` (initial, file, reload,
+  settings); the UI keeps current colors on a broken file (`CauseFile`/`CauseReload`) and shows the
+  fallback when Settings switches to a missing source. One toast per distinct error; a success toast
+  on recovery.
+- **Manager** (`theme.Manager`) owns resolution and the watcher on one goroutine; Settings/`C-t`
+  call `Set` (non-blocking, latest wins), which restarts watching on the new paths.
+- **Terminal bg (transparent mode):** OSC 11 is queried once at startup when transparent (later the
+  answer could be our own bg); else `COLORFGBG`; else black. Wallpaper sources use their own bg.
+- **Deferred:** `ytm theme reload` needs IPC (M9) — `SIGUSR1` works now. Command palette "Reload
+  theme" lands with the palette (M5). OSC 4 palette queries not implemented: 16-color downsampling
+  assumes xterm defaults (`XTerm-color` app-defaults). Album-art transparency rules wait for album art.
+- **Measured:** wallpaper file rename → new root bg on screen 116–118 ms (real binary in a PTY, 3
+  runs; budget 300 ms). `ThemeChangedMsg` + 200×60 repaint 1.1 ms (budget 50 ms). Styles build
+  45 µs at 256 colors (OKLab table cached; was 3.1 ms).
+

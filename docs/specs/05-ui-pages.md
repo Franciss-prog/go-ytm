@@ -185,10 +185,11 @@ Bottom-right above bar, max 3 stacked, 4 s, severity tokens (error/warn/success)
 - Help is plain Lip Gloss text generated from the live keymap, filterable with `/`. **Glamour is not
   used** (no dependency added): the prose is three lines, and Glamour's built-in styles paint code
   backgrounds that the transparent test would have to exempt. Revisit if Help grows real prose.
-- Actions whose features arrive later (queue, likes, radio, Settings, palette, theme picker, album
+- Actions whose features arrive later (queue, likes, radio, palette, theme picker, album
   art, lyrics) show an info toast "Not available yet: … arrives in a later version".
-- `toggle_transparency` flips for the session only; persisting it needs the comment-preserving
-  `config.Patch` (M4b, with Settings).
+- `toggle_transparency` flips and persists `theme.transparent` via `config.Patch` (M4b). Settings
+  (`,`) is an overlay over the main area that captures keys (`j/k` move, `h/l`/space change, enter
+  saves changed keys, esc/`q`/`,` revert); it is in the transparent-render registry.
 - Timers (toast expiry, chord timeout) use a context-aware `after` Cmd instead of `tea.Tick`, whose
   goroutine outlives the program by up to the tick length (found by goleak).
 - Mouse in M4: header ← Back / Forward →, click on the progress bar seeks, wheel over the volume

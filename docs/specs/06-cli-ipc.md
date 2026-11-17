@@ -72,7 +72,7 @@ styled  := stdout is TTY && !NO_COLOR && !--no-color && TERM != "dumb" && CLICOL
 | `config` | — | opens `$EDITOR` (fallbacks as original) | — |
 | `config check [file\|-]` | `--json` | diagnostics list; **exit 1 on errors** (warnings exit 0) | `[{"file","line","col","key","severity","message"}]` |
 | `config path` / `config defaults` | `--json` (path) | plain: config.toml path / default TOML | `{"config_file","log_file","dirs":{"config","data","cache","state","runtime"}}` |
-| `theme reload` (IPC) / `theme show` | `--json` | swatches | `{"source","name","tokens":{…}}` |
+| `theme reload` (IPC, M9) / `theme show` (M4b) | `--json` | swatches | `{"source","name","dark","transparent","path","error","wallpaper","alpha","tokens":{…},"contrast_against","adjustments":[…],"notes":[…]}` |
 | `changelog` | | Glamour markdown | |
 | `completion bash\|zsh\|fish\|powershell` | | cobra | |
 | `play` `pause` `next` `prev` | | one-line confirm | `{"ok":true}` |

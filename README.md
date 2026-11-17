@@ -130,7 +130,7 @@ go install github.com/Franciss-Prog/go-ytm/cmd/ytm@latest
 # later: GitHub releases, AUR, Homebrew, Scoop, Nix
 ```
 
-## Configuration (planned)
+## Configuration
 
 Files live in `~/.config/ytm-go/` (`$XDG_CONFIG_HOME` respected, `%APPDATA%\ytm-go\` on Windows):
 
@@ -152,20 +152,71 @@ watch = true                # live reload on wallpaper change
 fallback = "ytm-dark"       # used if the source file is missing or invalid
 ```
 
+## Dynamic theming with pywal and matugen
+
+The player recolors itself when your wallpaper palette changes (about 0.1 s after the file is
+written), without restarting or interrupting playback. Check what it resolved with
+`ytm theme show`; `ytm doctor` has a Theme section.
+
 ### pywal
 
-Run `wal -i <wallpaper>` as usual. `ytm-go` watches `~/.cache/wal/colors.json` and updates live.
+```toml
+[theme]
+source = "pywal"
+# pywal_path = "~/.cache/wal/colors.json"   # the default
+```
+
+Run `wal -i <wallpaper>` as usual. If your `colors.json` is written by a matugen template (no
+`special` block, many empty colors), `ytm doctor` says so: `source = "matugen"` gives richer colors.
+Pick tokens yourself with `[theme.pywal_map]`, e.g. `accent = "color5"`.
 
 ### matugen
 
-Add the template from `contrib/matugen/` to your matugen config so it writes
-`~/.config/ytm-go/matugen-colors.toml`, then set `source = "matugen"`. (Template and exact config
-snippet will be added in the dynamic-theme milestone, verified against current matugen docs.)
+1. Copy the template: `cp contrib/matugen/ytm-go.toml ~/.config/ytm-go/matugen-template.toml`
+2. Add to `~/.config/matugen/config.toml`:
+
+   ```toml
+   [templates.ytm-go]
+   input_path = '~/.config/ytm-go/matugen-template.toml'
+   output_path = '~/.config/ytm-go/matugen-colors.toml'
+   # no post_hook needed: ytm-go watches the output file
+   ```
+
+3. Set `source = "matugen"` under `[theme]` and run matugen as usual.
+
+The template was rendered with matugen 4.2.0 (`scripts/gen-matugen-fixtures.sh`).
+
+### Other sources
+
+- `ansi`: the terminal's own 16 colors (`ansi_accent = 4` picks the accent slot). Anything that
+  recolors the terminal recolors the app, with no file watching.
+- `static`: `name = "ytm-dark" | "ytm-light" | "nord" | "gruvbox-dark"`.
+- `file`: your own `~/.config/ytm-go/theme.toml` with `[colors]` (`bg`, `fg`, `accent` required, the
+  rest derived). Its `[overrides]` table applies on top of every source.
 
 ### Transparent terminal
 
-Set opacity in your terminal emulator (for example `background_opacity` in kitty, `opacity` in
-alacritty or foot), then set `transparent = true` here.
+A terminal app cannot set opacity; your terminal does. Set it there, then `transparent = true`
+(or press `Ctrl+T` in the player, or use Settings with `,`):
+
+| Terminal  | Setting                                       |
+| --------- | --------------------------------------------- |
+| kitty     | `background_opacity 0.85`                     |
+| alacritty | `[window]` `opacity = 0.85`                   |
+| foot      | `[colors-dark]` `alpha = 0.85` (foot ≥ 1.26)  |
+| WezTerm   | `config.window_background_opacity = 0.85`    |
+
+In transparent mode `ytm-go` never paints a background; the selection is drawn as an accent bar by
+default (`transparent_selection = "bar" | "reverse" | "underline" | "solid"`).
+
+### Troubleshooting
+
+- **Theme not updating:** `ytm doctor` (Theme section) shows the palette path and whether live reload
+  is on (`watch = true`). `kill -USR1 $(pgrep -x ytm)` forces a reload.
+- **Hard-to-read colors:** keep `enforce_contrast = true`; `ytm theme show` lists every adjusted
+  color. Override single tokens with `[theme.pywal_map]` or `theme.toml` `[overrides]`.
+- **Fallback colors:** if the palette file is missing or broken, the `fallback` theme is used and a
+  toast says why; the player switches once a valid file appears.
 
 ## Roadmap
 
