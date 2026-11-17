@@ -94,6 +94,16 @@ func (p *queuePage) Action(a keys.Action, ctx *Context) (Page, tea.Cmd, bool) {
 	case "delete_item":
 		cmd := p.remove(ctx)
 		return p, cmd, true
+	case "track_actions":
+		if pp := trackActionsPopup(p.table, trackSource{}, true); pp != nil {
+			return p, msgCmd(openPopupMsg{pp}), true
+		}
+		return p, nil, true
+	case "add_to_playlist":
+		if ts := p.table.TargetTracks(); len(ts) > 0 {
+			return p, msgCmd(openPickerMsg{tracks: ts, table: p.table}), true
+		}
+		return p, nil, true
 	}
 	return p, nil, p.table.Action(a)
 }

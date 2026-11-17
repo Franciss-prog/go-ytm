@@ -16,27 +16,6 @@ import (
 // header list: it is opened from other pages, one instance per item.
 const PageContext PageID = "context"
 
-// trackAction applies the actions every track list shares: play from the
-// cursor, play next, add to queue. source is the queue context id.
-func trackAction(t *components.TrackTable, a keys.Action, source string) (tea.Cmd, bool) {
-	switch a.Name {
-	case "select":
-		rows, cur := t.Ordered()
-		if len(rows) == 0 {
-			return nil, true
-		}
-		return msgCmd(PlayMsg{Tracks: rows, Start: cur, Context: source}), true
-	case "play_next", "add_to_queue":
-		ts := t.TargetTracks()
-		if len(ts) == 0 {
-			return nil, true
-		}
-		t.ClearMarks()
-		return msgCmd(EnqueueMsg{Tracks: ts, Next: a.Name == "play_next"}), true
-	}
-	return nil, false
-}
-
 type contextKind int
 
 const (
@@ -59,6 +38,7 @@ type contextPage struct {
 	err   string
 	head  []string // header detail lines (plain text)
 	queue string   // queue context id for PlayMsg
+	owned bool     // a playlist the account owns: rows can be removed
 
 	// playlists: continuation paging
 	cont  string
@@ -175,7 +155,7 @@ func (p *contextPage) Receive(msg tea.Msg, ctx *Context) tea.Cmd {
 	}
 	switch v := l.Value.(type) {
 	case ytmusic.Playlist:
-		p.state, p.name = stateLoaded, v.Title
+		p.state, p.name, p.owned = stateLoaded, v.Title, v.Owned
 		p.head = playlistHead(v)
 		p.table.SetRows(v.Tracks)
 		p.cont, p.total = v.Continuation, v.TrackCount
@@ -289,10 +269,19 @@ func (p *contextPage) Action(a keys.Action, ctx *Context) (Page, tea.Cmd, bool) 
 		}
 		return p, nil, p.releases.Action(a)
 	}
-	if cmd, ok := trackAction(p.table, a, p.queue); ok {
+	if cmd, ok := trackAction(p.table, a, p.source()); ok {
 		return p, cmd, true
 	}
 	return p, nil, p.table.Action(a)
+}
+
+// source describes the rows for track actions.
+func (p *contextPage) source() trackSource {
+	src := trackSource{queue: p.queue}
+	if p.kind == kindPlaylist && p.owned {
+		src.playlist, src.name = p.id, p.name
+	}
+	return src
 }
 
 func (p *contextPage) View(width, height int, st *style.UI) string {

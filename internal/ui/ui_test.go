@@ -91,6 +91,27 @@ var scenarios = func() []scenario {
 			drain(m, m.open(newArtistPage("UCdp", "Daft Punk", columns(m.o.Config))))
 			press(m, tea.Key{Code: tea.KeyTab})
 		}},
+		scenario{"popup-track-actions", func(m *Model) {
+			drain(m, m.open(newPlaylistPage("PLnight", "Late night drives", columns(m.o.Config))))
+			drain(m, press(m, ch('a')))
+			press(m, ch('j'), ch('j'))
+		}},
+		scenario{"popup-playlist-picker", func(m *Model) {
+			drain(m, m.open(newPlaylistPage("PLnight", "Late night drives", columns(m.o.Config))))
+			drain(m, press(m, ch('v'), ch('v')))
+			drain(m, press(m, ch('A')))
+			press(m, tea.Key{Code: tea.KeyDown})
+		}},
+		scenario{"popup-create-playlist", func(m *Model) {
+			drain(m, m.open(newPlaylistPage("PLnight", "Late night drives", columns(m.o.Config))))
+			drain(m, press(m, ch('A')))
+			drain(m, press(m, tea.Key{Code: tea.KeyEnter}))
+			press(m, ch('R'), ch('o'), ch('a'), ch('d'), tea.Key{Code: tea.KeyTab})
+		}},
+		scenario{"popup-confirm-delete", func(m *Model) {
+			drain(m, m.activate())
+			drain(m, press(m, ch('j'), tea.Key{Code: tea.KeyDelete}))
+		}},
 		scenario{"library-signed-out", func(m *Model) {
 			m.o.API.(*fakeAPI).errs["LibraryAlbums"] = ytmusic.ErrUnauthenticated
 			drain(m, press(m, tea.Key{Code: tea.KeyTab}))

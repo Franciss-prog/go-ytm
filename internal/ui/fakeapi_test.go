@@ -43,7 +43,7 @@ func newFakeAPI() *fakeAPI {
 			{Name: "Discovery", ID: "MPREb_disc", Kind: "Album", Year: "2001", Artists: []ytmusic.Artist{{Name: "Daft Punk"}}},
 		},
 		artists: []ytmusic.ArtistRef{{Name: "Daft Punk", ID: "UCdp", Audience: "65.9M monthly audience"}},
-		pages:   map[string][]ytmusic.Track{"PLnight": ts, "PLfocus": ts[:2]},
+		pages:   map[string][]ytmusic.Track{"PLnight": withSetIDs(ts), "PLfocus": withSetIDs(ts[:2])},
 		search: []ytmusic.SearchResult{
 			{Type: ytmusic.TypeArtist, Top: true, Artist: &ytmusic.ArtistRef{Name: "Daft Punk", ID: "UCdp", Audience: "65.9M monthly audience"}},
 			{Type: ytmusic.TypeSong, Track: &ts[0]},
@@ -54,6 +54,15 @@ func newFakeAPI() *fakeAPI {
 		},
 		suggest: map[string][]string{"daft": {"daft punk", "daft punk get lucky"}},
 	}
+}
+
+// withSetIDs gives rows the playlist item ids owned playlists carry.
+func withSetIDs(ts []ytmusic.Track) []ytmusic.Track {
+	out := append([]ytmusic.Track(nil), ts...)
+	for i := range out {
+		out[i].SetVideoID = "set-" + out[i].VideoID
+	}
+	return out
 }
 
 func (f *fakeAPI) rec(method, arg string) error {

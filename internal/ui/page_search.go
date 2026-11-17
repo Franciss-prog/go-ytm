@@ -347,7 +347,7 @@ func (p *searchPage) Action(a keys.Action, ctx *Context) (Page, tea.Cmd, bool) {
 		if p.panel == panelVideos {
 			t = p.videos
 		}
-		if cmd, ok := trackAction(t, a, ""); ok {
+		if cmd, ok := trackAction(t, a, trackSource{}); ok {
 			return p, cmd, true
 		}
 		return p, nil, t.Action(a)

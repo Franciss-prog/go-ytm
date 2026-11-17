@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"slices"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -176,8 +177,40 @@ func (p *libraryPage) Action(a keys.Action, ctx *Context) (Page, tea.Cmd, bool) 
 			next = newArtistPage(r.ID, r.Name, ctx.Columns)
 		}
 		return p, msgCmd(openMsg{next}), true
+	case "track_actions", "delete_item":
+		if p.tab != 0 {
+			return p, nil, a.Name == "track_actions"
+		}
+		_, i, ok := p.lists[0].Selected()
+		if !ok {
+			return p, nil, true
+		}
+		pl := p.playlists[i]
+		switch {
+		case a.Name == "track_actions":
+			return p, msgCmd(openPopupMsg{playlistActionsPopup(pl)}), true
+		case !pl.Owned:
+			return p, ctx.Toast(Toast{Severity: SevInfo, Text: "Only your own playlists can be deleted"}), true
+		}
+		return p, msgCmd(openPopupMsg{deletePlaylistConfirm(pl)}), true
 	}
 	return p, nil, p.lists[p.tab].Action(a)
+}
+
+// dropPlaylist removes a deleted playlist from the list.
+func (p *libraryPage) dropPlaylist(id string) {
+	i := slices.IndexFunc(p.playlists, func(r ytmusic.PlaylistRef) bool { return r.ID == id })
+	if i < 0 {
+		return
+	}
+	p.playlists = slices.Delete(slices.Clone(p.playlists), i, i+1)
+	items := make([]components.Item, len(p.playlists))
+	for k, r := range p.playlists {
+		items[k] = components.Item{Left: r.Title, Right: r.Count, Key: r.ID}
+	}
+	cur := p.lists[0].Cursor()
+	p.lists[0].SetItems(items)
+	p.lists[0].SetCursor(min(cur, len(items)-1))
 }
 
 // tabBar renders "Playlists  Albums  Artists" with the active tab marked.

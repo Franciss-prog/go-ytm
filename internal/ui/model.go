@@ -95,6 +95,7 @@ type Model struct {
 	sidebar, lyrics bool
 
 	settings *settings // open Settings popup, or nil
+	popup    popup     // open popup (actions, picker, confirm, …), or nil
 	themeErr string    // last theme problem toasted (toast once)
 
 	bar     barState
@@ -247,6 +248,21 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case pageMsg:
 		cmd := m.deliver(msg)
 		return m, cmd
+	case popupMsg:
+		cmd := m.deliverPopup(msg)
+		return m, cmd
+	case openPopupMsg:
+		m.popup = msg.p
+		return m, nil
+	case openPickerMsg:
+		cmd := m.openPicker(msg)
+		return m, cmd
+	case actionMsg:
+		cmd := m.action(msg.a)
+		return m, cmd
+	case editDoneMsg:
+		cmd := m.editDone(msg)
+		return m, cmd
 	case openMsg:
 		cmd := m.open(msg.page)
 		return m, cmd
@@ -272,6 +288,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	if m.settings != nil {
 		return m.settingsKey(msg)
+	}
+	if m.popup != nil {
+		return m.popupKey(msg)
 	}
 	page := m.pages[m.current]
 	if page.Capturing() {
@@ -616,6 +635,8 @@ func (m *Model) render() string {
 	}
 	if m.settings != nil {
 		m.overlaySettings(rows, m.width, st)
+	} else if m.popup != nil {
+		m.overlayPopup(rows, m.width, st)
 	}
 	m.toasts.overlay(rows, m.width, st)
 	out = append(out, rows...)
@@ -665,7 +686,7 @@ func (m *Model) lyricsView(w, h int) string {
 }
 
 func (m *Model) click(ms tea.Mouse) tea.Cmd {
-	if ms.Button != tea.MouseLeft {
+	if ms.Button != tea.MouseLeft || m.modal() {
 		return nil
 	}
 	l := m.layout()
@@ -691,6 +712,9 @@ func (m *Model) click(ms tea.Mouse) tea.Cmd {
 }
 
 func (m *Model) wheel(ms tea.Mouse) tea.Cmd {
+	if m.modal() {
+		return nil
+	}
 	g := m.geom
 	if ms.Y != m.barTop+g.volumeRow || ms.X < g.volumeX || ms.X >= g.volumeX+g.volumeW {
 		return nil
@@ -703,6 +727,9 @@ func (m *Model) wheel(ms tea.Mouse) tea.Cmd {
 	}
 	return nil
 }
+
+// modal reports that a popup (or Settings) owns input.
+func (m *Model) modal() bool { return m.settings != nil || m.popup != nil }
 
 // String describes the model for debugging.
 func (m *Model) String() string {

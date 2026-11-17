@@ -13,7 +13,7 @@ Last updated: 2026-11-17
 | M3 | stream-resolve | **in review** | [#5](https://github.com/Franciss-prog/go-ytm/pull/5) (stacked on #4) | yt-dlp resolver, URL cache, prefetcher, doctor mpv version |
 | M4 | tui-shell | **in review** | [#6](https://github.com/Franciss-prog/go-ytm/pull/6) (stacked on #5) | keymap engine, root model, header, bar, toasts, Help, app wiring |
 | M4b | dynamic-theme | **in review** | [#7](https://github.com/Franciss-prog/go-ytm/pull/7) (stacked on #6) | sources, contrast, depth, watcher, Patch, Settings, `theme show` |
-| M5 | tui-library-search-queue | **in progress** | branch `feat/tui-library-search-queue` | done: queue pkg, ytmusic browse/library/edit calls, TrackTable, playback owner (resolve/gapless/retry), Queue page, Library, Context pages, Search page. Next: popups, sidebar, mouse |
+| M5 | tui-library-search-queue | **in progress** | branch `feat/tui-library-search-queue` | done: queue pkg, ytmusic browse/library/edit calls, TrackTable, playback owner (resolve/gapless/retry), Queue page, Library, Context pages, Search page, popups (actions, playlist picker, create, confirm). Next: playlist sidebar, mouse |
 | M6 | browse-liked-history | not started | | |
 | M7 | session-cache-offline | not started | | |
 | M8 | lyrics | not started | | |
@@ -239,6 +239,9 @@ Last updated: 2026-11-17
 - M4b: not run against a real `wal -i` (would rewrite the owner's palette); pywal fixtures are
   pywal's own schemes plus the owner's file. Not tested on macOS/Windows terminals.
 - M5: Search history (shown when the input is empty) waits for the SQLite store (M7).
+- M5: playlist writes (add, create, remove, delete, like) only tested against the fake client;
+  the ytmusic write bodies were never sent live (see 03).
+- M5: picker has no recently-used ordering yet; actions popup has no Start radio (M6) / Download (M7).
 - M5: Search page not driven live in a terminal yet; covered by fake-API tests and goldens.
 - M4b: album-art transparency rules wait for album art (no art yet, no exemption registered).
 - fang queries the terminal background (OSC 11) when rendering help on a TTY; harmless on real

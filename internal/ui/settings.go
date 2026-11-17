@@ -212,23 +212,7 @@ func (m *Model) settingsBox(st *style.UI) []string {
 
 // overlaySettings draws the popup centered over rows.
 func (m *Model) overlaySettings(rows []string, width int, st *style.UI) {
-	box := st.Popup.Render(strings.Join(m.settingsBox(st), "\n"))
-	lines := strings.Split(box, "\n")
-	bw := 0
-	for _, l := range lines {
-		bw = max(bw, ansi.StringWidth(l))
-	}
-	if bw > width {
-		bw = width
-	}
-	x := max((width-bw)/2, 0)
-	y := max((len(rows)-len(lines))/2, 0)
-	for i, l := range lines {
-		if y+i >= len(rows) {
-			break
-		}
-		rows[y+i] = overlayAt(rows[y+i], l, x, bw, width)
-	}
+	overlayBox(rows, width, st.Popup.Render(strings.Join(m.settingsBox(st), "\n")))
 }
 
 // overlayAt replaces cells [x, x+boxW) of line (width cells) with box.

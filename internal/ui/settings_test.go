@@ -57,6 +57,7 @@ var (
 	kSpace = tea.Key{Code: tea.KeySpace, Text: " "}
 	kEnter = tea.Key{Code: tea.KeyEnter}
 	kEsc   = tea.Key{Code: tea.KeyEscape}
+	kTab   = tea.Key{Code: tea.KeyTab}
 )
 
 // run executes cmd and feeds resulting messages back (one level).

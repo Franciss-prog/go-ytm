@@ -1,6 +1,6 @@
 # 05 — UI pages, components, layout
 
-Status: **M4 implemented** (shell, bar, help, toasts) · Milestones: M4 (shell, bar, help), M5, M6, M8
+Status: **M4 implemented** (shell, bar, help, toasts), **M5 in progress** (pages, popups) · Milestones: M4 (shell, bar, help), M5, M6, M8
 
 ## Goals
 
@@ -199,6 +199,26 @@ Bottom-right above bar, max 3 stacked, 4 s, severity tokens (error/warn/success)
   and 140×40, styled opaque/transparent at 80×24, `testdata/TestGoldens/`). Goldens snapshot
   `View().Content` directly; one `teatest` test runs the real program loop. New pages must be added
   to the registry.
+
+## Implementation notes (M5 popups)
+
+- One popup at a time in the root model; a flow replaces it (picker → new playlist → done, picker →
+  "Already in playlist" confirm) instead of stacking. Popups own raw keys; mouse input is ignored
+  behind them. Async results are addressed to the popup instance and dropped once it closed.
+- Actions popup items run the page's own key actions (`select`, `play_next`, `add_to_queue`,
+  `delete_item`, `add_to_playlist`), so popup and keys behave the same. Track items: Play, Play next,
+  Add to queue (Queue page: Remove from queue), Go to artist, Go to album, Add to playlist, Remove
+  from playlist (owned playlists only), Like/Unlike, Copy link (OSC 52, `tea.SetClipboard`). Single-
+  track items hide when rows are marked. **Start radio and Download are left out until M6 / M7.**
+  Library playlists: Open, Delete playlist (owned only), Copy link.
+- Playlist picker lists owned library playlists only (edits fail on others), filters by typed
+  substring like the original, "+ New playlist" first. A refused add (`ErrEditFailed`) asks the
+  original's "Already in …, add anyway?" and retries with duplicates allowed; a selection holding a
+  song twice asks before sending. Recently-used ordering (original: a JSON file) is not ported yet.
+- New playlist: name + privacy (private default, then public, unlisted); no description field.
+  Created with the selected video ids (deduplicated) in one `CreatePlaylist` call.
+- `delete_item` on an owned playlist page and on a library playlist asks to confirm. Edits never
+  change the screen before YouTube Music confirms; the library list and an open playlist reload after.
 
 ## Open questions
 

@@ -140,6 +140,48 @@ func (t *TrackTable) AppendRows(rows []ytmusic.Track) {
 	}
 }
 
+// RemoveWhere drops the rows drop reports true for, keeping the cursor
+// near where it was. Marks are dropped. It returns how many went.
+func (t *TrackTable) RemoveWhere(drop func(ytmusic.Track) bool) int {
+	keep := t.rows[:0:0]
+	var auto []bool
+	playing, n := -1, 0
+	for i, r := range t.rows {
+		if drop(r) {
+			n++
+			continue
+		}
+		if i == t.playing {
+			playing = len(keep)
+		}
+		if t.autoplay != nil && i < len(t.autoplay) {
+			auto = append(auto, t.autoplay[i])
+		}
+		keep = append(keep, r)
+	}
+	if n == 0 {
+		return 0
+	}
+	t.ReplaceRows(keep, -1)
+	t.autoplay, t.playing = auto, playing
+	return n
+}
+
+// SetLikeStatus records a new rating on every row of videoID. Rows are
+// copied first: the slice may be shared with the caller of SetRows.
+func (t *TrackTable) SetLikeStatus(videoID string, s ytmusic.LikeStatus) {
+	cloned := false
+	for i := range t.rows {
+		if t.rows[i].VideoID != videoID {
+			continue
+		}
+		if !cloned {
+			t.rows, cloned = slices.Clone(t.rows), true
+		}
+		t.rows[i].LikeStatus = s
+	}
+}
+
 // SetAutoplay marks rows added by autoplay (parallel to the rows).
 func (t *TrackTable) SetAutoplay(flags []bool) {
 	t.autoplay = flags
