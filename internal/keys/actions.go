@@ -69,6 +69,7 @@ var Actions = []ActionInfo{
 	{Name: "liked_songs", Category: CatPages, Help: "Liked songs", Defaults: []string{"g y"}},
 	{Name: "recently_played", Category: CatPages, Help: "Recently played", Defaults: []string{"g r"}},
 	{Name: "queue", Category: CatPages, Help: "Queue", Defaults: []string{"z"}},
+	{Name: "track_page", Category: CatPages, Help: "Now playing (track page)", Defaults: []string{"g n"}},
 	{Name: "lyrics", Category: CatPages, Help: "Toggle lyrics sidebar", Defaults: []string{"g L"}},
 	{Name: "current_context", Category: CatPages, Help: "Open what is playing (album / playlist)", Defaults: []string{"g space"}},
 	{Name: "jump_to_current", Category: CatPages, Help: "Jump to the playing track", Defaults: []string{"g c"}},

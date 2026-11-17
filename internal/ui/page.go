@@ -34,12 +34,12 @@ const (
 )
 
 // PageIDs lists every page in header order.
-var PageIDs = []PageID{PageLibrary, PageSearch, PageBrowse, PageQueue, PageLiked, PageRecent, PageHelp}
+var PageIDs = []PageID{PageLibrary, PageSearch, PageBrowse, PageQueue, PageTrack, PageLiked, PageRecent, PageHelp}
 
 // pageActions maps navigation actions to pages.
 var pageActions = map[string]PageID{
 	"library": PageLibrary, "search": PageSearch, "browse": PageBrowse, "queue": PageQueue,
-	"liked_songs": PageLiked, "recently_played": PageRecent, "help": PageHelp,
+	"liked_songs": PageLiked, "recently_played": PageRecent, "help": PageHelp, "track_page": PageTrack,
 }
 
 // Title is the page's display name.
@@ -59,6 +59,8 @@ func (p PageID) Title() string {
 		return "Recently Played"
 	case PageHelp:
 		return "Help"
+	case PageTrack:
+		return "Track"
 	}
 	return string(p)
 }

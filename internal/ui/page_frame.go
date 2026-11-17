@@ -155,3 +155,17 @@ func (h *help) Hints() []hint {
 	}
 	return []hint{hk("filter", "filter"), hk("back", "go_back"), hk("settings", "settings")}
 }
+
+// Track page.
+
+// Hints implements hinter: up next's keys, plus seek and play.
+func (p *trackPage) Hints() []hint {
+	hs := []hint{hk("play", "play_pause"), hk("seek", "seek_backward", "seek_forward"), hk("vol", "volume_down", "volume_up")}
+	if p.nextShown() {
+		hs = append(hs, hk("jump", "select"), hk("reorder", "reorder_down", "reorder_up"), hk("remove", "delete_item"))
+	}
+	if p.lastSingle {
+		hs = append(hs, hk("switch", "focus_next"))
+	}
+	return hs
+}

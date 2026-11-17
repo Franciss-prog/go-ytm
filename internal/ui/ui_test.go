@@ -74,6 +74,15 @@ var scenarios = func() []scenario {
 			m.navigate(PageQueue)
 			press(m, ch('j'), ch('j'), ch('v'))
 		}},
+		scenario{"track-playing", func(m *Model) {
+			q := m.Queue()
+			q.AddMany(scenarioTracks())
+			q.JumpTo(1)
+			m.queueChanged()
+			m.Update(PlayerEventMsg{playerState(playing)})
+			m.Update(NowPlayingMsg{VideoID: "abc", Title: "Instant Crush", Artist: "Daft Punk, Julian Casablancas", Album: "Random Access Memories"})
+			drain(m, press(m, ch('g'), ch('n')))
+		}},
 		scenario{"queue-filter-sort", func(m *Model) {
 			m.Queue().AddMany(scenarioTracks())
 			m.queueChanged()
@@ -589,5 +598,45 @@ func TestTabFollowsNavigation(t *testing.T) {
 	m.goBack() // → search
 	if m.tab != PageSearch {
 		t.Errorf("back restores tab %s", m.tab)
+	}
+}
+
+func TestTrackPage(t *testing.T) {
+	m, fp := newTestModel(t, 140, 40)
+	m.Queue().AddMany(scenarioTracks())
+	m.Queue().JumpTo(2)
+	m.queueChanged()
+	m.Update(PlayerEventMsg{playerState(playing)})
+	drain(m, press(m, ch('g'), ch('n')))
+	if m.Current() != PageTrack || m.tab != PageTrack || m.layout().mini {
+		t.Fatalf("g n: page %s tab %s mini %v", m.Current(), m.tab, m.layout().mini)
+	}
+	tp := m.pages[PageTrack].(*trackPage)
+	if tp.upNext.table.CursorSource() != 2 {
+		t.Errorf("up next cursor %d, want the playing track", tp.upNext.table.CursorSource())
+	}
+	// The now-playing progress line seeks on click.
+	_ = plain(m)
+	g := m.geom
+	if g.progressW == 0 {
+		t.Fatal("no progress geometry on the track page")
+	}
+	m.Update(tea.MouseClickMsg{X: g.progressX + g.progressW - 1, Y: g.progressY, Button: tea.MouseLeft})
+	if len(fp.seeks) != 1 || fp.seeks[0] < playing.Duration*9/10 {
+		t.Fatalf("seek %v", fp.seeks)
+	}
+	// Keys go to up next: J moves the cursor track down.
+	drain(m, press(m, ch('J')))
+	if got := queueIDs(m.Queue()); !strings.HasPrefix(got, "t1,t2,t4,t3") {
+		t.Errorf("reorder in up next: %s", got)
+	}
+	// Narrow: one panel, tab switches.
+	m.Update(tea.WindowSizeMsg{Width: 60, Height: 24})
+	if out := plain(m); strings.Contains(out, "up next") || !strings.Contains(out, "now playing") {
+		t.Fatalf("narrow layout:\n%s", out)
+	}
+	drain(m, press(m, tea.Key{Code: tea.KeyTab}))
+	if out := plain(m); !strings.Contains(out, "up next") {
+		t.Fatalf("tab did not switch:\n%s", out)
 	}
 }

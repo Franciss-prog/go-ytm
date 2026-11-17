@@ -20,15 +20,14 @@ type tabDef struct {
 	page PageID
 }
 
-// tabDefs are the tabs in display order. Browse (M6) and the track page
-// (phase 4) join when they exist.
-var tabDefs = []tabDef{{"queue", PageQueue}, {"library", PageLibrary}, {"search", PageSearch}}
+// tabDefs are the tabs in display order. Browse joins in M6.
+var tabDefs = []tabDef{{"queue", PageQueue}, {"library", PageLibrary}, {"track", PageTrack}, {"search", PageSearch}}
 
 // tabOf maps a page to the tab it belongs under; "" keeps the current tab
 // (Context pages, Help).
 func tabOf(id PageID) PageID {
 	switch id {
-	case PageQueue, PageLibrary, PageSearch:
+	case PageQueue, PageLibrary, PageSearch, PageTrack:
 		return id
 	case PageLiked, PageRecent:
 		return PageLibrary
@@ -75,7 +74,8 @@ type layout struct {
 
 func (m *Model) layout() layout {
 	w, h := m.width, m.height
-	l := layout{tabs: true, rule: true, mini: true, hints: m.o.Config.UI.ShowHints}
+	// The track page shows its own progress, so no mini player there.
+	l := layout{tabs: true, rule: true, mini: m.current != PageTrack, hints: m.o.Config.UI.ShowHints}
 	if h < 12 {
 		l.rule, l.hints = false, false
 	}
@@ -510,4 +510,38 @@ func tabBar(names []string, active int, st *style.UI) string {
 		b.WriteString(" ")
 	}
 	return b.String()
+}
+
+// splitter is a page drawn as two panels side by side (the track page).
+// Page coordinates for clicks: the left panel's content starts at x 0,
+// the right one's at x = Split(w) (the left panel's outer width).
+type splitter interface {
+	// Split returns the left panel's outer width for a main area w wide:
+	// w = only the left panel, 0 = only the right one.
+	Split(w int) int
+	Panels() (left, right panelSpec)
+	ViewLeft(w, h int, st *style.UI) string
+	ViewRight(w, h int, st *style.UI) string
+}
+
+// progressor is a page that draws a progress line (page coordinates of
+// the last View; w 0 = none), so clicks seek and the wheel scrubs.
+type progressor interface{ Progress() (x, y, w int) }
+
+// splitPanels draws a splitter's two panels into w×h.
+func splitPanels(st *style.UI, sp splitter, w, h int) []string {
+	lw := sp.Split(w)
+	ls, rs := sp.Panels()
+	switch lw {
+	case w:
+		return panel(st, ls, sp.ViewLeft(w-2, h-2, st), w, h, true)
+	case 0:
+		return panel(st, rs, sp.ViewRight(w-2, h-2, st), w, h, true)
+	}
+	left := panel(st, ls, sp.ViewLeft(lw-2, h-2, st), lw, h, true)
+	right := panel(st, rs, sp.ViewRight(w-lw-2, h-2, st), w-lw, h, true)
+	for i := range left {
+		left[i] += right[i]
+	}
+	return left
 }

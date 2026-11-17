@@ -225,4 +225,9 @@ Replaces the Playlists · Albums · Artists tabs.
   lists keep their cursor row visible in `accent` (the path). Lists drop the right-hand detail
   when it would leave the label fewer than 16 cells. Wheel goes to the column under the
   pointer (`wheeler`). Driven live (signed in): Artists → artist → releases → album tracks.
+- **Phase 4 (track page), done.** `page_track.go`; the root draws pages implementing
+  `splitter` as two panels and takes progress geometry from `progressor`, so clicks seek and the
+  wheel scrubs there as on the mini player (hidden on this page). Up next is its own Queue page
+  instance (own cursor, shared queue) that opens on the playing track. Cover art and the spectrum
+  are not drawn yet (phases 5–6).
 

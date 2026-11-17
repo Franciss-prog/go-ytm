@@ -133,6 +133,7 @@ func New(o Options) *Model {
 	m.pages[PageQueue] = newQueuePage(columns(o.Config), o.Queue)
 	m.pages[PageLibrary] = newLibraryPage()
 	m.pages[PageSearch] = newSearchPage(columns(o.Config))
+	m.pages[PageTrack] = newTrackPage(&m.bar, columns(o.Config), o.Queue)
 	if _, ok := m.pages[m.current]; !ok {
 		m.current = PageLibrary
 	}
@@ -592,6 +593,7 @@ func (m *Model) render() string {
 	l := m.layout()
 	st := m.st
 	m.geom.buttons = m.geom.buttons[:0]
+	m.geom.progressW = 0
 	var out []string
 	if l.tabs {
 		out = append(out, m.tabBar())
@@ -605,9 +607,19 @@ func (m *Model) render() string {
 	if m.o.Config.UI.ShowSelectionInfo {
 		info = page.Info()
 	}
-	main := panel(st, panelSpec{
-		title: m.panelTitle(), counter: countText(page), info: info, focused: !m.sideFocused(),
-	}, page.View(l.mainW, l.mainH, st), l.panelW, l.panelH, l.border)
+	var main []string
+	if sp, ok := page.(splitter); ok && l.border {
+		main = splitPanels(st, sp, l.panelW, l.panelH)
+	} else {
+		main = panel(st, panelSpec{
+			title: m.panelTitle(), counter: countText(page), info: info, focused: !m.sideFocused(),
+		}, page.View(l.mainW, l.mainH, st), l.panelW, l.panelH, l.border)
+	}
+	if pr, ok := page.(progressor); ok {
+		if x, y, w := pr.Progress(); w > 0 {
+			m.geom.progressX, m.geom.progressY, m.geom.progressW = l.mainX0+x, l.mainY0+y, w
+		}
+	}
 	var side, lyr []string
 	in := l.inset()
 	if l.sideW > 0 {
