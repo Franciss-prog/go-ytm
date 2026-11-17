@@ -86,9 +86,18 @@ func (a *App) runTUI(cmd *cobra.Command, _ []string) error {
 	if a.debug {
 		a.Log.Warn("--debug also logs to stderr, which draws over the player; redirect it: ytm --debug 2>debug.log")
 	}
+	api, signedIn, err := a.signedInClient()
+	if err != nil {
+		// A broken session file should not keep the player from starting:
+		// browse signed out and say how to fix it.
+		a.Log.Warn("saved session unreadable; continuing signed out", "err", err)
+		api, signedIn = a.newYT(a.ytOptions()), false
+	}
 	ctx, stop := signal.NotifyContext(cmd.Context(), shutdownSignals...)
 	defer stop()
 	return TUIRunner(ctx, app.Options{
+		API:         api,
+		SignedIn:    signedIn,
 		Config:      a.Config,
 		ConfigDiags: a.Diags,
 		Paths:       a.Paths,

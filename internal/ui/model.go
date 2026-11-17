@@ -17,6 +17,7 @@ import (
 	"github.com/Franciss-Prog/go-ytm/internal/queue"
 	"github.com/Franciss-Prog/go-ytm/internal/style"
 	"github.com/Franciss-Prog/go-ytm/internal/theme"
+	"github.com/Franciss-Prog/go-ytm/internal/ytmusic"
 )
 
 // Header navigation labels (also hit-tested for mouse clicks).
@@ -62,6 +63,10 @@ type Options struct {
 	Prefetch Prefetcher
 	// Queue is the playback queue (nil: a new one).
 	Queue *queue.Queue
+	// API is the YouTube Music client (nil: library and search pages show
+	// an error). SignedIn reports whether it carries a saved session.
+	API      ytmusic.Client
+	SignedIn bool
 }
 
 // PlayerEventMsg carries a player event into Update (sent by the app's
@@ -84,8 +89,8 @@ type Model struct {
 
 	pages   map[PageID]Page
 	current PageID
-	back    []PageID
-	forward []PageID
+	back    []navEntry
+	forward []navEntry
 
 	sidebar, lyrics bool
 
@@ -127,6 +132,7 @@ func New(o Options) *Model {
 	}
 	m.pages[PageHelp] = &help{keymap: o.Keymap, path: o.KeymapPath}
 	m.pages[PageQueue] = newQueuePage(columns(o.Config), o.Queue)
+	m.pages[PageLibrary] = newLibraryPage()
 	if _, ok := m.pages[m.current]; !ok {
 		m.current = PageLibrary
 	}
@@ -168,17 +174,21 @@ func (m *Model) Current() PageID { return m.current }
 // contrast is then checked against what is really behind the text. Only
 // at start, while no root background has been set by us.
 func (m *Model) Init() tea.Cmd {
+	cmds := []tea.Cmd{m.toasts.armAll(), m.activate()}
 	if m.o.Config.Theme.Transparent && m.o.Themes != nil && !m.o.NoColor {
-		return tea.Batch(m.toasts.armAll(), tea.RequestBackgroundColor)
+		cmds = append(cmds, tea.RequestBackgroundColor)
 	}
-	return m.toasts.armAll()
+	return tea.Batch(cmds...)
 }
 
 // SettingsOpen reports whether the Settings popup is open (tests).
 func (m *Model) SettingsOpen() bool { return m.settings != nil }
 
 func (m *Model) ctx() *Context {
-	return &Context{Keymap: m.o.Keymap, KeymapPath: m.o.KeymapPath, Height: m.layout().mainH}
+	return &Context{
+		Keymap: m.o.Keymap, KeymapPath: m.o.KeymapPath, Height: m.layout().mainH,
+		API: m.o.API, SignedIn: m.o.SignedIn, Root: m.o.Context, Columns: columns(m.o.Config), Styles: m.st,
+	}
 }
 
 // Update implements tea.Model.
@@ -232,6 +242,12 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, cmd
 	case appendReadyMsg:
 		cmd := m.appendReady(msg)
+		return m, cmd
+	case pageMsg:
+		cmd := m.deliver(msg)
+		return m, cmd
+	case openMsg:
+		cmd := m.open(msg.page)
 		return m, cmd
 	case jumpMsg:
 		if _, ok := m.pb.q.JumpTo(msg.pos); !ok {
@@ -296,8 +312,7 @@ var notYet = map[string]string{
 
 func (m *Model) global(a keys.Action) tea.Cmd {
 	if id, ok := pageActions[a.Name]; ok {
-		m.navigate(id)
-		return nil
+		return m.navigate(id)
 	}
 	switch a.Name {
 	case "quit":
@@ -384,38 +399,123 @@ func (m *Model) playerEvent(ev player.Event) tea.Cmd {
 	return nil
 }
 
+// navEntry is one history step: the page id and the page instance shown
+// (Context pages differ per album/playlist/artist; restoring the instance
+// restores cursor, scroll, filter and sort).
+type navEntry struct {
+	id   PageID
+	page Page
+}
+
+// activator is a page that loads data when it is shown.
+type activator interface {
+	Activate(ctx *Context) tea.Cmd
+}
+
 // navigate opens id, recording history.
-func (m *Model) navigate(id PageID) {
+func (m *Model) navigate(id PageID) tea.Cmd {
 	if id == m.current {
-		return
+		return nil
 	}
-	m.back = pushBounded(m.back, m.current)
-	m.forward = nil
+	m.pushHistory()
 	m.current = id
+	return m.activate()
+}
+
+// open shows a new page instance (a Context page), recording history.
+func (m *Model) open(p Page) tea.Cmd {
+	m.pushHistory()
+	m.current = p.ID()
+	m.pages[p.ID()] = p
+	return m.activate()
+}
+
+func (m *Model) pushHistory() {
+	m.back = pushBounded(m.back, navEntry{m.current, m.pages[m.current]})
+	m.forward = nil
+}
+
+func (m *Model) activate() tea.Cmd {
+	if a, ok := m.pages[m.current].(activator); ok {
+		return a.Activate(m.ctx())
+	}
+	return nil
 }
 
 func (m *Model) goBack() {
 	if len(m.back) == 0 {
 		return
 	}
-	m.forward = pushBounded(m.forward, m.current)
-	m.current, m.back = m.back[len(m.back)-1], m.back[:len(m.back)-1]
+	m.forward = pushBounded(m.forward, navEntry{m.current, m.pages[m.current]})
+	e := m.back[len(m.back)-1]
+	m.back = m.back[:len(m.back)-1]
+	m.current, m.pages[e.id] = e.id, e.page
 }
 
 func (m *Model) goForward() {
 	if len(m.forward) == 0 {
 		return
 	}
-	m.back = pushBounded(m.back, m.current)
-	m.current, m.forward = m.forward[len(m.forward)-1], m.forward[:len(m.forward)-1]
+	m.back = pushBounded(m.back, navEntry{m.current, m.pages[m.current]})
+	e := m.forward[len(m.forward)-1]
+	m.forward = m.forward[:len(m.forward)-1]
+	m.current, m.pages[e.id] = e.id, e.page
 }
 
-func pushBounded(s []PageID, id PageID) []PageID {
-	s = append(s, id)
+func pushBounded(s []navEntry, e navEntry) []navEntry {
+	s = append(s, e)
 	if len(s) > MaxHistory {
 		s = s[len(s)-MaxHistory:]
 	}
 	return s
+}
+
+// titler is a page whose header title depends on its content.
+type titler interface{ Title() string }
+
+func (m *Model) pageTitle() string {
+	if t, ok := m.pages[m.current].(titler); ok {
+		return t.Title()
+	}
+	return m.current.Title()
+}
+
+// pageMsg carries an async result back to the page instance that asked
+// for it. Results for pages no longer in the history are dropped.
+type pageMsg struct {
+	to  Page
+	msg tea.Msg
+}
+
+// receiver is a page that takes async results.
+type receiver interface {
+	Receive(msg tea.Msg, ctx *Context) tea.Cmd
+}
+
+func (m *Model) deliver(pm pageMsg) tea.Cmd {
+	if !m.hasPage(pm.to) {
+		return nil
+	}
+	if r, ok := pm.to.(receiver); ok {
+		return r.Receive(pm.msg, m.ctx())
+	}
+	return nil
+}
+
+func (m *Model) hasPage(p Page) bool {
+	for _, q := range m.pages {
+		if q == p {
+			return true
+		}
+	}
+	for _, s := range [][]navEntry{m.back, m.forward} {
+		for _, e := range s {
+			if e.page == p {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // layout is the screen split for the current size (spec 05 breakpoints).
@@ -541,7 +641,7 @@ func (m *Model) header() string {
 		}
 		return st.HeaderDim.Render(s)
 	}
-	left := st.Header.Render(" ") + link(len(m.back) > 0, backLabel) + st.Header.Render("  ") + st.HeaderActive.Render(m.current.Title())
+	left := st.Header.Render(" ") + link(len(m.back) > 0, backLabel) + st.Header.Render("  ") + st.HeaderActive.Render(m.pageTitle())
 	if p := m.disp.Pending(); p != "" {
 		left += st.Header.Render("  ") + st.Pending.Render(p)
 	}

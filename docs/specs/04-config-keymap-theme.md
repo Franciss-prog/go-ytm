@@ -221,6 +221,7 @@ capture keys first; `escape` leaves them.
 | `toggle_transparency` | `C-t` | Unbound in original; `t`/`T` taken (`T` = transliteration). Ctrl+T is not intercepted by common terminals in non-tab contexts. Rebindable. |
 | `command_palette` | `:` | Replaces Textual's `Ctrl+P` palette (which the original used for theme switching). `C-p` stays `move_up` as in the original. |
 | `theme_picker` | `g t` | Quick static-theme switcher (original: `C-p` → Theme). |
+| `retry` | `r` | M5: the "retry button `r`" of spec 05's API-error empty state, as a bindable action. `r` is unbound in the original (only `C-r`, `s r`, `g r`). |
 
 ## `theme.toml` (source = "file", and per-token overrides)
 

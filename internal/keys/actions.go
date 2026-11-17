@@ -56,6 +56,7 @@ var Actions = []ActionInfo{
 	{Name: "focus_pane_left", Category: CatNavigation, Help: "Focus pane to the left", Defaults: []string{"C-w h"}},
 	{Name: "focus_pane_right", Category: CatNavigation, Help: "Focus pane to the right", Defaults: []string{"C-w l"}},
 	{Name: "focus_pane_cycle", Category: CatNavigation, Help: "Cycle pane focus", Defaults: []string{"C-w w"}},
+	{Name: "retry", Category: CatNavigation, Help: "Retry a failed load", Defaults: []string{"r"}},
 	{Name: "go_back", Category: CatNavigation, Help: "Back", Defaults: []string{"backspace"}},
 	{Name: "go_forward", Category: CatNavigation, Help: "Forward", Defaults: []string{"S-backspace"}},
 

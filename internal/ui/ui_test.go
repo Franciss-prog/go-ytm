@@ -30,7 +30,7 @@ type scenario struct {
 var scenarios = func() []scenario {
 	s := []scenario{}
 	for _, id := range PageIDs {
-		s = append(s, scenario{"page-" + string(id), func(m *Model) { m.navigate(id) }})
+		s = append(s, scenario{"page-" + string(id), func(m *Model) { drain(m, m.navigate(id)) }})
 	}
 	return append(s,
 		scenario{"playing", func(m *Model) {
@@ -79,6 +79,21 @@ var scenarios = func() []scenario {
 			m.queueChanged()
 			m.navigate(PageQueue)
 			press(m, ch('s'), ch('d'), ch('/'), ch('d'), ch('a'))
+		}},
+		scenario{"context-playlist", func(m *Model) {
+			drain(m, m.open(newPlaylistPage("PLnight", "Late night drives", columns(m.o.Config))))
+			press(m, ch('j'))
+		}},
+		scenario{"context-album", func(m *Model) {
+			drain(m, m.open(newAlbumPage("MPREb_ram", "Random Access Memories", columns(m.o.Config))))
+		}},
+		scenario{"context-artist", func(m *Model) {
+			drain(m, m.open(newArtistPage("UCdp", "Daft Punk", columns(m.o.Config))))
+			press(m, tea.Key{Code: tea.KeyTab})
+		}},
+		scenario{"library-signed-out", func(m *Model) {
+			m.o.API.(*fakeAPI).errs["LibraryAlbums"] = ytmusic.ErrUnauthenticated
+			drain(m, press(m, tea.Key{Code: tea.KeyTab}))
 		}},
 		scenario{"no-sidebar-muted", func(m *Model) {
 			m.sidebar = false

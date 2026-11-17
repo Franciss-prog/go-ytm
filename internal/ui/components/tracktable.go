@@ -252,6 +252,17 @@ func (t *TrackTable) TargetTracks() []ytmusic.Track {
 	return out
 }
 
+// Ordered returns the visible rows in screen order and the cursor's
+// position among them (playing from a sorted or filtered list follows
+// what is shown).
+func (t *TrackTable) Ordered() ([]ytmusic.Track, int) {
+	out := make([]ytmusic.Track, len(t.view))
+	for v, i := range t.view {
+		out[v] = t.rows[i]
+	}
+	return out, t.cursor
+}
+
 // ClearMarks drops every mark.
 func (t *TrackTable) ClearMarks() { t.marks, t.anchor = map[int]bool{}, -1 }
 

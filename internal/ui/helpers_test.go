@@ -101,12 +101,20 @@ var _ player.Player = (*fakePlayer)(nil)
 func newTestModel(t testing.TB, w, h int, mut ...func(*Options)) (*Model, *fakePlayer) {
 	t.Helper()
 	fp := &fakePlayer{st: player.State{Volume: 80}}
-	o := Options{Config: config.Default(), Theme: theme.Fallback(), Player: fp, KeymapPath: "~/.config/ytm-go/keymap.toml"}
+	// A cancelled context makes timer commands (toast expiry) return at
+	// once, so drain can run every command synchronously.
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	o := Options{
+		Config: config.Default(), Theme: theme.Fallback(), Player: fp, KeymapPath: "~/.config/ytm-go/keymap.toml",
+		Context: ctx, API: newFakeAPI(), SignedIn: true,
+	}
 	for _, f := range mut {
 		f(&o)
 	}
 	m := New(o)
 	m.Update(tea.WindowSizeMsg{Width: w, Height: h})
+	drain(m, m.Init())
 	return m, fp
 }
 

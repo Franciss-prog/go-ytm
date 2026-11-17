@@ -28,6 +28,7 @@ import (
 	"github.com/Franciss-Prog/go-ytm/internal/stream"
 	"github.com/Franciss-Prog/go-ytm/internal/theme"
 	"github.com/Franciss-Prog/go-ytm/internal/ui"
+	"github.com/Franciss-Prog/go-ytm/internal/ytmusic"
 )
 
 // ShutdownBudget bounds the whole shutdown (spec 01).
@@ -57,6 +58,9 @@ type Options struct {
 	// LookPath and NewPlayer are replaced in tests.
 	LookPath  func(string) (string, error)
 	NewPlayer func(ctx context.Context, o player.Options) player.Player
+	// API is the YouTube Music client (signed in when SignedIn).
+	API      ytmusic.Client
+	SignedIn bool
 	// Resolver turns video IDs into stream URLs (nil: yt-dlp from
 	// [yt_dlp]; tests pass a fake).
 	Resolver stream.Resolver
@@ -130,7 +134,7 @@ func Run(ctx context.Context, o Options) error {
 		Theme: o.Theme.Theme, NoColor: o.NoColor, Player: pl, Log: o.Log, Toasts: toasts, Context: ctx,
 		Themes:     themeService{m: themes, configDir: o.ThemeSpec.ConfigDir, home: o.ThemeSpec.Home},
 		ConfigPath: o.Paths.ConfigFile(), PatchConfig: config.Patch, Profile: o.Profile,
-		Streams: streams, Prefetch: prefetch,
+		Streams: streams, Prefetch: prefetch, API: o.API, SignedIn: o.SignedIn,
 	})
 	if o.TraceFrames {
 		model = &tracer{inner: model, log: o.Log, start: start}

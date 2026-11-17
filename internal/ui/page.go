@@ -6,10 +6,15 @@
 package ui
 
 import (
+	"context"
+	"errors"
+
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/Franciss-Prog/go-ytm/internal/keys"
 	"github.com/Franciss-Prog/go-ytm/internal/style"
+	"github.com/Franciss-Prog/go-ytm/internal/ui/components"
+	"github.com/Franciss-Prog/go-ytm/internal/ytmusic"
 )
 
 // PageID names a page; values match [general] startup_page.
@@ -83,6 +88,54 @@ type Context struct {
 	KeymapPath string
 	// Height is the main area's current height (for paging).
 	Height int
+
+	// API is the YouTube Music client (nil: unavailable).
+	API ytmusic.Client
+	// SignedIn reports whether API carries a saved session.
+	SignedIn bool
+	// Root ends with the program; async loads derive from it.
+	Root context.Context
+	// Columns are the TrackTable widths from [ui] col_*.
+	Columns components.Columns
+	// Styles are the current styles (mouse hit-testing).
+	Styles *style.UI
+}
+
+// Load runs f in a command and delivers its result to page p as a
+// Loaded message (dropped if p has left the history meanwhile).
+func (c *Context) Load(p Page, key string, f func(ctx context.Context, api ytmusic.Client) (any, error)) tea.Cmd {
+	api, root := c.API, c.Root
+	return func() tea.Msg {
+		if api == nil {
+			return pageMsg{to: p, msg: Loaded{Key: key, Err: errNoAPI}}
+		}
+		v, err := f(root, api)
+		return pageMsg{to: p, msg: Loaded{Key: key, Value: v, Err: err}}
+	}
+}
+
+// Loaded is an async result for a page; Key says which request it answers.
+type Loaded struct {
+	Key   string
+	Value any
+	Err   error
+}
+
+var errNoAPI = errors.New("YouTube Music client unavailable")
+
+// loadErrorText is the short message shown for a failed load.
+func loadErrorText(err error) string {
+	switch {
+	case errors.Is(err, ytmusic.ErrUnauthenticated):
+		return "Not signed in. Run `ytm setup` to see your library."
+	case errors.Is(err, ytmusic.ErrRateLimited):
+		return "YouTube Music is rate limiting; press r to retry later."
+	case errors.Is(err, context.Canceled):
+		return ""
+	case errors.Is(err, errNoAPI):
+		return "YouTube Music is unavailable."
+	}
+	return "Couldn't load from YouTube Music; press r to retry. Details are in the log."
 }
 
 // Toast returns a command that shows t.

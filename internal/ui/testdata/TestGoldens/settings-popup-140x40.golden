@@ -32,7 +32,7 @@
                               │   C-w h            Focus pane to the left                                                                   
                               │   C-w l            Focus pane to the right                                                                  
                               │   C-w w            Cycle pane focus                                                                         
-                              │   backspace        Back                                                                                     
+                              │   r                Retry a failed load                                                                      
                                                                                                                                             
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
  Nothing playing                                                                                                                            
