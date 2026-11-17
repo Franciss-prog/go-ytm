@@ -611,32 +611,46 @@ func TestTrackPage(t *testing.T) {
 	if m.Current() != PageTrack || m.tab != PageTrack || m.layout().mini {
 		t.Fatalf("g n: page %s tab %s mini %v", m.Current(), m.tab, m.layout().mini)
 	}
+	out := plain(m)
+	// One centered card: no up next panel, status line with the queue position.
+	if strings.Contains(out, "up next") || !strings.Contains(out, "now playing") {
+		t.Fatalf("card layout:\n%s", out)
+	}
+	if !strings.Contains(out, "vol 80%") || !strings.Contains(out, "· 3/7") {
+		t.Errorf("status line missing:\n%s", out)
+	}
 	tp := m.pages[PageTrack].(*trackPage)
-	if tp.upNext.table.CursorSource() != 2 {
-		t.Errorf("up next cursor %d, want the playing track", tp.upNext.table.CursorSource())
+	x, _, w := tp.Progress()
+	if w == 0 || x < 20 {
+		t.Fatalf("progress line not centered: x %d w %d", x, w)
 	}
-	// The now-playing progress line seeks on click.
-	_ = plain(m)
+	// The progress line seeks on click.
 	g := m.geom
-	if g.progressW == 0 {
-		t.Fatal("no progress geometry on the track page")
-	}
 	m.Update(tea.MouseClickMsg{X: g.progressX + g.progressW - 1, Y: g.progressY, Button: tea.MouseLeft})
 	if len(fp.seeks) != 1 || fp.seeks[0] < playing.Duration*9/10 {
 		t.Fatalf("seek %v", fp.seeks)
 	}
-	// Keys go to up next: J moves the cursor track down.
-	drain(m, press(m, ch('J')))
-	if got := queueIDs(m.Queue()); !strings.HasPrefix(got, "t1,t2,t4,t3") {
-		t.Errorf("reorder in up next: %s", got)
-	}
-	// Narrow: one panel, tab switches.
-	m.Update(tea.WindowSizeMsg{Width: 60, Height: 24})
-	if out := plain(m); strings.Contains(out, "up next") || !strings.Contains(out, "now playing") {
+	// Narrow and short: still one card, nothing overflows.
+	m.Update(tea.WindowSizeMsg{Width: 40, Height: 14})
+	if out := plain(m); !strings.Contains(out, "now playing") {
 		t.Fatalf("narrow layout:\n%s", out)
 	}
-	drain(m, press(m, tea.Key{Code: tea.KeyTab}))
-	if out := plain(m); !strings.Contains(out, "up next") {
-		t.Fatalf("tab did not switch:\n%s", out)
+}
+
+func TestCardLayout(t *testing.T) {
+	tests := []struct {
+		w, h, spec     int
+		cw, cols, rows int
+	}{
+		{136, 34, 6, 80, 36, 18}, // capped at cardMax; rows limited by height
+		{100, 60, 6, 60, 60, 30}, // rows limited by width (cw/2)
+		{40, 19, 6, 30, 0, 0},    // too short for 4 art rows
+		{20, 40, 0, 18, 18, 9},   // never wider than the content
+	}
+	for _, tt := range tests {
+		cw, cols, rows := cardLayout(tt.w, tt.h, tt.spec)
+		if cw != tt.cw || cols != tt.cols || rows != tt.rows {
+			t.Errorf("cardLayout(%d,%d,%d) = %d,%d,%d want %d,%d,%d", tt.w, tt.h, tt.spec, cw, cols, rows, tt.cw, tt.cols, tt.rows)
+		}
 	}
 }

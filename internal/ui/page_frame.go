@@ -158,14 +158,11 @@ func (h *help) Hints() []hint {
 
 // Track page.
 
-// Hints implements hinter: up next's keys, plus seek and play.
+// Hints implements hinter: playback keys only (the card has no
+// page-scoped keys).
 func (p *trackPage) Hints() []hint {
-	hs := []hint{hk("play", "play_pause"), hk("seek", "seek_backward", "seek_forward"), hk("vol", "volume_down", "volume_up")}
-	if p.nextShown() {
-		hs = append(hs, hk("jump", "select"), hk("reorder", "reorder_down", "reorder_up"), hk("remove", "delete_item"))
+	return []hint{
+		hk("play", "play_pause"), hk("seek", "seek_backward", "seek_forward"),
+		hk("vol", "volume_down", "volume_up"), hk("next", "next_track"), hk("prev", "previous_track"),
 	}
-	if p.lastSingle {
-		hs = append(hs, hk("switch", "focus_next"))
-	}
-	return hs
 }

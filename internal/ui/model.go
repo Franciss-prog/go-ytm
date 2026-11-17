@@ -142,7 +142,7 @@ func New(o Options) *Model {
 	m.pages[PageQueue] = newQueuePage(columns(o.Config), o.Queue)
 	m.pages[PageLibrary] = newLibraryPage()
 	m.pages[PageSearch] = newSearchPage(columns(o.Config))
-	m.pages[PageTrack] = newTrackPage(&m.bar, &m.art, &m.spec, columns(o.Config), o.Queue)
+	m.pages[PageTrack] = newTrackPage(&m.bar, &m.art, &m.spec, o.Queue)
 	if _, ok := m.pages[m.current]; !ok {
 		m.current = PageLibrary
 	}

@@ -186,21 +186,6 @@ func (m *Model) trackArtSize() (cols, rows int) {
 	if !ok || !l.border {
 		return 0, 0
 	}
-	lw := tp.Split(l.panelW)
-	if lw == 0 {
-		return 0, 0
-	}
-	return artBox(lw-2, l.panelH-2, tp.spectrumRows())
-}
-
-// artBox sizes the art for a now-playing panel of w×h content cells: a
-// square (2 columns per row, cells being about twice as tall as wide)
-// above one blank row, three text rows, the spectrum and the progress row.
-func artBox(w, h, spectrum int) (cols, rows int) {
-	avail := h - 1 - 1 - 3 - spectrum - 1 - 1 // top pad, gap, text, spectrum, gap, progress
-	rows = min(avail, (w-2)/2)
-	if rows < 4 {
-		return 0, 0
-	}
-	return rows * 2, rows
+	_, cols, rows = cardLayout(l.mainW, l.mainH, tp.spectrumRows())
+	return cols, rows
 }

@@ -13,7 +13,7 @@ PipeWire `pw-cat`).
 - Replace the M4/M5 chrome with a ytkew-style frame: tab bar, one titled bordered panel per page,
   a one-row mini player, and a key-hint footer.
 - Library as Miller columns (one column per level), like a file manager.
-- A new **track** page: now playing (cover art, metadata, spectrum, progress) beside "up next".
+- A new **track** page: a centered playing card (cover art, metadata, spectrum, progress).
 - Cover art: truecolor half-blocks everywhere, kitty graphics where supported.
 - Spectrum visualizer on Linux (PipeWire).
 - All existing pages, keys, popups and mouse targets keep working. Transparent mode stays first
@@ -106,24 +106,38 @@ Replaces the Playlists · Albums · Artists tabs.
 
 ## Track page (`g n`, tab "track")
 
+Revised 2026-11-17 (owner): a full-width "playing card" like kew's track view replaces the
+now playing / up next split. Up next lives on the Queue page only.
+
 ```
-╭│ now playing │──────────────╮╭│ up next │───────────────────────────────────────╮
-│      ┌──────────────┐       ││ Guns N' Roses   Knockin' On Heaven's Door    5:36 │
-│      │  cover art   │       ││ DREAMDNVR       RUNAWAY                      2:16 │
-│      └──────────────┘       ││ …                                                 │
-│ Stairway to Heaven          ││                                                   │
-│ Led Zeppelin                ││                                                   │
-│ Led Zeppelin IV             ││                                                   │
-│        ▂▅█▇▅▃▂▃▆▇▅▃▂        ││                                                   │
-│ 1:54 ──────●──────── 8:02   ││                                                   │
-╰──────────────────│ 1/30 │──╯╰───────────────────────────────────────────────────╯
+╭│ now playing │───────────────────────────────────────────────────────────────────╮
+│                                                                                   │
+│                    ┌──────────────────┐                                           │
+│                    │                  │                                           │
+│                    │    cover art     │                                           │
+│                    │                  │                                           │
+│                    └──────────────────┘                                           │
+│                                                                                   │
+│                    Stairway to Heaven                                             │
+│                    Led Zeppelin                                                   │
+│                    Led Zeppelin IV                                                │
+│                                                                                   │
+│                    1:54 / 8:02 · vol 80% · 3/30                                   │
+│                                                                                   │
+│                    ▂▅█▇▅▃▂▃▆▇▅▃▂▃▅▆▇▅▃▂▃▅▆▇▅▃▂▃▅▆▇▅                               │
+│                    ───────────●────────────────────                               │
+╰──────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-- Left panel 40 % (min 30, max 60 cols): art (square, as large as fits above the text), title
-  (`text` bold), artist (`accent`), album (`muted`), spectrum (if available), progress line with
-  knob and times.
-- Right panel: queue from the current track on, Queue page keys (reorder, delete, enter jumps).
-- Narrower than 70 cols: up next is hidden; `tab` toggles.
+- One panel, title "now playing". A card column `cw` = 60 % of the content width, 30–80 cells
+  (never wider than the content), centered horizontally; the whole card is centered vertically.
+- Top to bottom, left-aligned in the column: art (square, 2 cells per row, as large as fits:
+  `rows ≤ cw/2`, hidden below 4 rows), a blank row, title (`text` bold), artist (`accent`), album
+  (`muted`), a blank row, `pos / dur · vol N% · i/n` (`muted`; `muted` replaces `vol N%` when
+  muted), a blank row, spectrum `cw` wide (when the visualizer is on), progress line `cw` wide
+  (`[ui] progress_style`). Rows drop from the art first when the panel is short.
+- Clicks on the progress line seek and the wheel scrubs, as on the mini player (hidden here).
+- Keys: the global ones (play, seek, volume, next/prev, …). No page-scoped keys.
 
 ## Cover art
 
