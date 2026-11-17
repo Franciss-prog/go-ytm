@@ -14,7 +14,7 @@ Last updated: 2026-11-17
 | M4 | tui-shell | **in review** | [#6](https://github.com/Franciss-prog/go-ytm/pull/6) (stacked on #5) | keymap engine, root model, header, bar, toasts, Help, app wiring |
 | M4b | dynamic-theme | **in review** | [#7](https://github.com/Franciss-prog/go-ytm/pull/7) (stacked on #6) | sources, contrast, depth, watcher, Patch, Settings, `theme show` |
 | M5 | tui-library-search-queue | **in review** | [#8](https://github.com/Franciss-prog/go-ytm/pull/8) (stacked on #7) | queue pkg, ytmusic browse/library/edit calls, TrackTable, playback owner (resolve/gapless/retry), Queue, Library, Context, Search pages, popups, playlist sidebar, mouse |
-| M5b | ytkew-look | **in progress** (spec 09 approved 2026-11-17) | branch `feat/ytkew-look` (stacked on #8) | side quest, spec 09. Done: phases 1–5 (frame, rows, Library columns, track page, cover art). Next: phase 6 visualizer |
+| M5b | ytkew-look | **in review** (spec 09 approved 2026-11-17) | branch `feat/ytkew-look` (stacked on #8) | side quest, spec 09: frame, rows, Library columns, track page, cover art, visualizer |
 | M6 | browse-liked-history | not started | | |
 | M7 | session-cache-offline | not started | | |
 | M8 | lyrics | not started | | |
@@ -81,6 +81,10 @@ Last updated: 2026-11-17
 | 2026-11-17 | Sidebar loads its own `LibraryPlaylists` (not shared with the Library page): one extra call at start, simpler ownership | 05 |
 | 2026-11-17 | Mouse semantics from ytm-player 2.2.0 `track_table.py` / `progress_bar.py`: click cursor row = select, scrub 3 s/tick, commit after 0.6 s; wheel moves the cursor (not the viewport) | 05 |
 | 2026-11-17 | Nerd icons for Recent/Mix = Font Awesome `f017`/`f001` (same codepoints in Nerd Fonts) | 05 |
+| 2026-11-17 | ytkew look (spec 09) reimplemented from screenshots only; ytkew is GPL-3.0, no code ported | 09 |
+| 2026-11-17 | Cover art as JPEG via `=…-rj` URL suffix (verified live); no WebP dependency | 09 |
+| 2026-11-17 | Kitty art via `x/ansi/kitty` Unicode placeholders; `ultraviolet` promoted indirect → direct for `KittyGraphicsEvent` | 09, 01 |
+| 2026-11-17 | Visualizer = `pw-cat` sink-monitor capture + in-house FFT (no dependency); Linux only | 09 |
 
 ## Verified facts (with how)
 
@@ -208,6 +212,14 @@ Last updated: 2026-11-17
 | `BenchmarkTrackTableView1000` | 0.10 ms/op, 21 allocs | — |
 | Keypress → repaint (root model) | 0.41 ms/op | 16 ms |
 | Coverage | queue 91 %, ui 87 %, ui/components 75 %, ytmusic 85 % | — |
+
+## Measurements (M5b, local, Linux amd64)
+
+| What | Result | Budget |
+|---|---|---|
+| Spectrum analysis frame (2048 FFT, 96 bands) | 37 µs/op, 0 allocs (~0.1 % core at 30 fps) | 2 % CPU |
+| pw-cat while on the track page (live) | 0.0 % CPU | — |
+| `BenchmarkScroll1000` after the row restyle | 0.12 ms/op | 16 ms |
 
 ## Approved by owner (2026-11-16)
 

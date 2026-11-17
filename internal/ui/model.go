@@ -64,6 +64,8 @@ type Options struct {
 	SignedIn bool
 	// Art fetches cover art (nil: no art).
 	Art art.Fetcher
+	// Spectrum is the visualizer (nil: unavailable).
+	Spectrum Spectrum
 }
 
 // PlayerEventMsg carries a player event into Update (sent by the app's
@@ -103,8 +105,9 @@ type Model struct {
 	toasts  toasts
 	quiting bool
 
-	pb  playback
-	art artState
+	pb   playback
+	art  artState
+	spec specState
 
 	scrubSeq uint64 // bumps per wheel tick on the progress bar
 }
@@ -139,7 +142,7 @@ func New(o Options) *Model {
 	m.pages[PageQueue] = newQueuePage(columns(o.Config), o.Queue)
 	m.pages[PageLibrary] = newLibraryPage()
 	m.pages[PageSearch] = newSearchPage(columns(o.Config))
-	m.pages[PageTrack] = newTrackPage(&m.bar, &m.art, columns(o.Config), o.Queue)
+	m.pages[PageTrack] = newTrackPage(&m.bar, &m.art, &m.spec, columns(o.Config), o.Queue)
 	if _, ok := m.pages[m.current]; !ok {
 		m.current = PageLibrary
 	}
@@ -205,10 +208,11 @@ func (m *Model) ctx() *Context {
 	}
 }
 
-// Update implements tea.Model. After every message the cover art follows
-// the current track (syncArt).
+// Update implements tea.Model. After every message the visualizer and
+// the cover art follow the page and the current track.
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	_, cmd := m.update(msg)
+	m.syncSpectrum()
 	if a := m.syncArt(); a != nil {
 		cmd = tea.Batch(cmd, a)
 	}
@@ -219,6 +223,11 @@ func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case artLoadedMsg:
 		m.artLoaded(msg)
+		return m, nil
+	case SpectrumMsg:
+		if m.spec.active {
+			m.spec.levels = msg.Levels
+		}
 		return m, nil
 	case uv.KittyGraphicsEvent:
 		m.kittyReply(msg)

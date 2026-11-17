@@ -243,4 +243,13 @@ Replaces the Playlists · Albums · Artists tabs.
   colors and color at all; `album_art = true` (old key) now maps to `auto`. Live (tmux, signed
   in): real art fetched and drawn as half blocks. **Kitty placeholders not yet seen in a real
   kitty window** (tmux does not pass graphics); covered by unit tests only.
+- **Phase 6 (visualizer), done.** `internal/viz`: `PWCat` source (`pw-cat --record --raw
+  --format s16 --rate 48000 --channels 1 -P '{ stream.capture.sink=true }' -`; no `--target`
+  needed, the property records the default sink's monitor), in-house radix-2 FFT with Hann
+  window, 96 log bands 45 Hz–16 kHz, ×0.86 decay, hop 1600 samples = 30 updates/s (no clock).
+  `Visualizer.Run` is the one goroutine (app-owned, ends with ctx, goleak-tested); `SetActive`
+  never blocks. The UI activates it only on the track page while playing (`syncSpectrum`).
+  Measured: analysis 37 µs/frame, 0 allocs (~0.1 % of a core at 30 fps); live, pw-cat
+  appears on the track page, shows 0.0 % CPU, and is gone on leaving and on quit. Bars with
+  real music not seen yet (tests played nothing audible).
 

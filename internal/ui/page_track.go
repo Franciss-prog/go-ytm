@@ -30,6 +30,7 @@ const (
 type trackPage struct {
 	bar    *barState
 	art    *artState
+	spec   *specState
 	upNext *queuePage
 	// Narrow main area: one panel at a time (lastSingle), showNext picks it.
 	showNext, lastSingle bool
@@ -40,12 +41,18 @@ type trackPage struct {
 	progX, progY, progW int
 }
 
-func newTrackPage(bar *barState, a *artState, cols components.Columns, q *queue.Queue) *trackPage {
-	return &trackPage{bar: bar, art: a, upNext: newQueuePage(cols, q)}
+func newTrackPage(bar *barState, a *artState, s *specState, cols components.Columns, q *queue.Queue) *trackPage {
+	return &trackPage{bar: bar, art: a, spec: s, upNext: newQueuePage(cols, q)}
 }
 
-// spectrumRows is the height of the spectrum area (0 until phase 6).
-func (p *trackPage) spectrumRows() int { return 0 }
+// spectrumRows is the height of the spectrum area: fixed while the
+// visualizer is enabled, so the layout does not jump when it starts.
+func (p *trackPage) spectrumRows() int {
+	if p.spec.enabled {
+		return spectrumHeight
+	}
+	return 0
+}
 
 func (p *trackPage) ID() PageID { return PageTrack }
 
@@ -148,6 +155,15 @@ func (p *trackPage) ViewLeft(w, h int, st *style.UI) string {
 			bar = b.blockLine(pw, st)
 		}
 		p.progX, p.progY, p.progW = 1+ansi.StringWidth(pos)+1, h-1, pw
+	}
+	// Spectrum (when enabled) sits right above a gap and the progress row.
+	if sr := p.spectrumRows(); sr > 0 && h-2-sr >= len(lines) {
+		for len(lines) < h-2-sr {
+			lines = append(lines, "")
+		}
+		for _, l := range spectrumLines(p.spec.levels, w-2, sr, st) {
+			lines = append(lines, " "+l)
+		}
 	}
 	for len(lines) < h-1 {
 		lines = append(lines, "")

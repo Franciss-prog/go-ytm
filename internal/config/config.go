@@ -94,6 +94,8 @@ type UI struct {
 	ShowSidebar bool `toml:"show_sidebar"`
 	// ShowHints shows the key-hint footer (spec 09).
 	ShowHints bool `toml:"show_hints"`
+	// Visualizer shows the spectrum on the track page (spec 09).
+	Visualizer bool `toml:"visualizer"`
 }
 
 // Theme holds [theme]. See docs/specs/08-dynamic-theme-transparency.md.
@@ -179,7 +181,7 @@ func Default() Config {
 			AlbumArtMode: "auto", Icons: "unicode", ProgressStyle: "block", SidebarWidth: 30,
 			LyricsWidth: 36, ColIndex: 4, ColDuration: 8, BidiMode: "auto", Region: "ZZ",
 			HomeShelves: 3, ShowSelectionInfo: true, SidebarOverflow: "truncate",
-			ShowQueueSource: true, Mouse: true, ShowHints: true,
+			ShowQueueSource: true, Mouse: true, ShowHints: true, Visualizer: true,
 		},
 		Theme: Theme{
 			Source: "static", Name: "ytm-dark", TransparentSelection: "solid", EnforceContrast: true,

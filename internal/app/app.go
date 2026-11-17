@@ -30,6 +30,7 @@ import (
 	"github.com/Franciss-Prog/go-ytm/internal/stream"
 	"github.com/Franciss-Prog/go-ytm/internal/theme"
 	"github.com/Franciss-Prog/go-ytm/internal/ui"
+	"github.com/Franciss-Prog/go-ytm/internal/viz"
 	"github.com/Franciss-Prog/go-ytm/internal/ytmusic"
 )
 
@@ -38,6 +39,10 @@ const ShutdownBudget = 3 * time.Second
 
 // artTimeout bounds one cover art download.
 const artTimeout = 15 * time.Second
+
+// spectrumBands is how many bands the visualizer analyzes; the track page
+// resamples them to its width.
+const spectrumBands = 96
 
 // Options are what the CLI hands to the TUI.
 type Options struct {
@@ -71,6 +76,8 @@ type Options struct {
 	Resolver stream.Resolver
 	// Art fetches cover art (nil: over HTTP).
 	Art art.Fetcher
+	// Audio is the visualizer's capture (nil: pw-cat when available).
+	Audio viz.Source
 	// ProgramOptions are appended (tests pass tea.WithInput etc.).
 	ProgramOptions []tea.ProgramOption
 }
@@ -136,13 +143,23 @@ func Run(ctx context.Context, o Options) error {
 	// called from the manager goroutine, started after prog exists.
 	themes := theme.NewManager(o.ThemeSpec, func(r theme.Result) { prog.Send(ui.ThemeChangedMsg{Result: r}) }, nil, o.Log)
 
+	// Visualizer: one goroutine (started below, ends with ctx) captures
+	// while the track page asks for it; levels go through prog.
+	var spectrum *viz.Visualizer
+	if src := o.Audio; o.Config.UI.Visualizer && (src != nil || viz.Available(o.LookPath)) {
+		if src == nil {
+			src = viz.PWCat{}
+		}
+		spectrum = viz.New(src, spectrumBands, func(l []float64) { prog.Send(ui.SpectrumMsg{Levels: l}) }, o.Log)
+	}
+
 	var model tea.Model = ui.New(ui.Options{
 		Config: o.Config, Keymap: km, KeymapPath: o.Paths.KeymapFile(),
 		Theme: o.Theme.Theme, NoColor: o.NoColor, Player: pl, Log: o.Log, Toasts: toasts, Context: ctx,
 		Themes:     themeService{m: themes, configDir: o.ThemeSpec.ConfigDir, home: o.ThemeSpec.Home},
 		ConfigPath: o.Paths.ConfigFile(), PatchConfig: config.Patch, Profile: o.Profile,
 		Streams: streams, Prefetch: prefetch, API: o.API, SignedIn: o.SignedIn,
-		Art: artFetcher(o.Art),
+		Art: artFetcher(o.Art), Spectrum: uiSpectrum(spectrum),
 	})
 	if o.TraceFrames {
 		model = &tracer{inner: model, log: o.Log, start: start}
@@ -175,6 +192,9 @@ func Run(ctx context.Context, o Options) error {
 	}
 
 	wg.Go(func() { guard(o, "theme-manager", func() { themes.Run(ctx, o.Theme) }) })
+	if spectrum != nil {
+		wg.Go(func() { guard(o, "visualizer", func() { spectrum.Run(ctx) }) })
+	}
 	stopSignals := reloadOnSignal(ctx, themes.Reload)
 	defer stopSignals()
 
@@ -302,4 +322,12 @@ func artFetcher(f art.Fetcher) art.Fetcher {
 		return f
 	}
 	return art.HTTPFetcher{Client: &http.Client{Timeout: artTimeout}}
+}
+
+// uiSpectrum avoids handing the UI a typed nil.
+func uiSpectrum(v *viz.Visualizer) ui.Spectrum {
+	if v == nil {
+		return nil
+	}
+	return v
 }
