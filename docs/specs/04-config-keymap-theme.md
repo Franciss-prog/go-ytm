@@ -82,7 +82,7 @@ max_history = 500               # ≈ enforced (original ignored it)
 predictive = true
 
 [ui]
-album_art_mode = "blocks"       # NEW: blocks|off   (old `album_art = true/false` accepted as alias)
+album_art_mode = "auto"         # NEW: auto|kitty|blocks|off (spec 09; old `album_art = true/false` accepted as alias)
 icons = "unicode"               # NEW: unicode|nerd|ascii
 progress_style = "block"        # block|line
 sidebar_width = 30              # 16..80
@@ -99,13 +99,16 @@ show_selection_info = true
 sidebar_overflow = "truncate"   # truncate|wrap
 show_queue_source = true
 mouse = true                    # NEW: allow disabling mouse capture (terminal text selection)
+show_sidebar = false            # NEW (09): playlist sidebar shown at start
+show_hints = true               # NEW (09): key-hint footer
+visualizer = true               # NEW (09): spectrum on the track page (Linux, PipeWire)
 # theme = "..." : original key → accepted as alias of [theme].name with a deprecation warning
 
 [theme]                         # NEW section, see 08
 source = "static"               # static|pywal|matugen|ansi|file
 name = "ytm-dark"
 transparent = false
-transparent_selection = "bar"   # bar|reverse|underline|solid
+transparent_selection = "solid" # bar|reverse|underline|solid (default solid since 09)
 popup_fill = false
 enforce_contrast = true
 watch = true
@@ -221,6 +224,9 @@ capture keys first; `escape` leaves them.
 | `toggle_transparency` | `C-t` | Unbound in original; `t`/`T` taken (`T` = transliteration). Ctrl+T is not intercepted by common terminals in non-tab contexts. Rebindable. |
 | `command_palette` | `:` | Replaces Textual's `Ctrl+P` palette (which the original used for theme switching). `C-p` stays `move_up` as in the original. |
 | `theme_picker` | `g t` | Quick static-theme switcher (original: `C-p` → Theme). |
+| `track_page` | `g n` | Spec 09: the now-playing "track" tab. |
+| `column_left` / `column_right` | `h` `left` / `right` | Spec 09: Library Miller columns (page-scoped; `l` stays `like_toggle`). |
+| `play_all` | `P` | Spec 09: play the focused list from its first track. |
 | `retry` | `r` | M5: the "retry button `r`" of spec 05's API-error empty state, as a bindable action. `r` is unbound in the original (only `C-r`, `s r`, `g r`). |
 
 ## `theme.toml` (source = "file", and per-token overrides)

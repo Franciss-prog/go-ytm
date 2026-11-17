@@ -17,6 +17,10 @@ Status: **M4 implemented** (shell, bar, help, toasts), **M5 implemented** (pages
 
 ## Layout
 
+> **Superseded by spec 09 (M5b, ytkew look)** for the frame (tab bar, titled panels, mini player,
+> hint footer), TrackTable row style, the Library page (Miller columns) and the new track page.
+> The sections below describe the M4/M5 layout and stay valid where 09 says nothing.
+
 ```
 ┌ header: ← Back  Library  ·  g- (pending chord)                     Forward → ┐
 ├──────────────┬───────────────────────────────────────────┬──────────────────┤
