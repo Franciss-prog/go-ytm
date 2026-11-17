@@ -1,0 +1,390 @@
+package ui
+
+import (
+	"fmt"
+	"slices"
+	"strings"
+	"testing"
+	"time"
+
+	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/x/exp/golden"
+	"github.com/charmbracelet/x/exp/teatest/v2"
+
+	"github.com/Franciss-Prog/go-ytm/internal/keys"
+	"github.com/Franciss-Prog/go-ytm/internal/player"
+	"github.com/Franciss-Prog/go-ytm/internal/style"
+)
+
+// scenario is one registered screen state. Every page and component the
+// TUI can show must appear here: the transparent-render test and the
+// goldens iterate this registry (spec 08). Add new pages when you add them.
+type scenario struct {
+	name  string
+	setup func(m *Model)
+}
+
+var scenarios = func() []scenario {
+	s := []scenario{}
+	for _, id := range PageIDs {
+		s = append(s, scenario{"page-" + string(id), func(m *Model) { m.navigate(id) }})
+	}
+	return append(s,
+		scenario{"playing", func(m *Model) {
+			m.Update(PlayerEventMsg{playerState(playing)})
+			m.Update(NowPlayingMsg{VideoID: "abc", Title: "Instant Crush", Artist: "Daft Punk, Julian Casablancas", Album: "Random Access Memories"})
+		}},
+		scenario{"paused-line-progress", func(m *Model) {
+			st := playing
+			st.Status, st.Paused = player.Paused, true
+			m.bar.style = "line"
+			m.Update(PlayerEventMsg{playerState(st)})
+		}},
+		scenario{"error-and-toasts", func(m *Model) {
+			st := playing
+			st.Status, st.Err = player.Error, "loading failed"
+			m.Update(PlayerEventMsg{playerState(st)})
+			m.Update(Toast{Severity: SevError, Text: "Couldn't play this track: loading failed"})
+			m.Update(Toast{Severity: SevWarn, Text: "Playback engine restarted"})
+			m.Update(Toast{Severity: SevSuccess, Text: "Saved"})
+		}},
+		scenario{"lyrics-pending-chord", func(m *Model) {
+			m.lyrics = true
+			press(m, ch('g'))
+		}},
+		scenario{"help-filtering", func(m *Model) {
+			m.navigate(PageHelp)
+			press(m, ch('/'), ch('v'), ch('o'), ch('l'))
+		}},
+		scenario{"no-sidebar-muted", func(m *Model) {
+			m.sidebar = false
+			st := playing
+			st.Muted = true
+			m.Update(PlayerEventMsg{playerState(st)})
+		}},
+	)
+}()
+
+var sizes = [][2]int{{80, 24}, {140, 40}}
+
+func TestTransparentRender(t *testing.T) {
+	for _, sc := range scenarios {
+		for _, sz := range sizes {
+			for _, sel := range []string{"bar", "reverse", "underline"} {
+				m, _ := newTestModel(t, sz[0], sz[1], func(o *Options) {
+					o.Config.Theme.Transparent = true
+					o.Config.Theme.TransparentSelection = sel
+				})
+				sc.setup(m)
+				v := m.View()
+				if bg := style.BackgroundSGRs(v.Content); len(bg) > 0 {
+					t.Errorf("%s %dx%d sel=%s: background SGRs %q", sc.name, sz[0], sz[1], sel, bg)
+				}
+				if v.BackgroundColor != nil {
+					t.Errorf("%s: transparent view sets the terminal background", sc.name)
+				}
+				if m.Styles().PaintsBackground() {
+					t.Errorf("%s: styles claim to paint backgrounds", sc.name)
+				}
+			}
+		}
+	}
+}
+
+func TestOpaqueSetsRootBackground(t *testing.T) {
+	m, _ := newTestModel(t, 80, 24)
+	if m.View().BackgroundColor == nil || m.View().ForegroundColor == nil {
+		t.Error("opaque mode must set the terminal default colors")
+	}
+}
+
+func TestNoColor(t *testing.T) {
+	for _, sc := range scenarios {
+		m, _ := newTestModel(t, 80, 24, func(o *Options) { o.NoColor = true })
+		sc.setup(m)
+		v := m.View()
+		if strings.Contains(v.Content, "38;") || len(style.BackgroundSGRs(v.Content)) > 0 {
+			t.Errorf("%s: colors emitted under NO_COLOR", sc.name)
+		}
+		if v.BackgroundColor != nil || v.ForegroundColor != nil {
+			t.Errorf("%s: terminal colors set under NO_COLOR", sc.name)
+		}
+	}
+}
+
+// TestGoldens snapshots every scenario, plain text plus the styled form
+// in opaque and transparent mode. Update with: go test ./internal/ui -update
+func TestGoldens(t *testing.T) {
+	for _, sc := range scenarios {
+		for _, sz := range sizes {
+			t.Run(fmt.Sprintf("%s-%dx%d", sc.name, sz[0], sz[1]), func(t *testing.T) {
+				m, _ := newTestModel(t, sz[0], sz[1])
+				sc.setup(m)
+				golden.RequireEqual(t, plain(m))
+			})
+		}
+		for _, mode := range []string{"opaque", "transparent"} {
+			t.Run(sc.name+"-styled-"+mode, func(t *testing.T) {
+				m, _ := newTestModel(t, 80, 24, func(o *Options) { o.Config.Theme.Transparent = mode == "transparent" })
+				sc.setup(m)
+				golden.RequireEqual(t, m.View().Content)
+			})
+		}
+	}
+}
+
+func TestEveryLineFitsWidth(t *testing.T) {
+	for _, sc := range scenarios {
+		for _, sz := range [][2]int{{80, 24}, {140, 40}, {59, 20}, {79, 11}, {99, 30}, {20, 5}} {
+			m, _ := newTestModel(t, sz[0], sz[1])
+			sc.setup(m)
+			lines := strings.Split(plain(m), "\n")
+			if len(lines) != sz[1] {
+				t.Errorf("%s %v: %d lines", sc.name, sz, len(lines))
+			}
+			for i, l := range lines {
+				if w := len([]rune(l)); w != sz[0] {
+					t.Errorf("%s %v: line %d is %d cells: %q", sc.name, sz, i, w, l)
+					break
+				}
+			}
+		}
+	}
+}
+
+func TestLayoutBreakpoints(t *testing.T) {
+	tests := []struct {
+		w, h                int
+		lyrics              bool
+		side, overlay, comp bool
+		header              bool
+	}{
+		{w: 140, h: 40, lyrics: true, side: true, header: true},
+		{w: 99, h: 30, lyrics: true, side: true, overlay: true, header: true},
+		{w: 79, h: 30, side: false, header: true},
+		{w: 59, h: 30, comp: true, header: true},
+		{w: 100, h: 11, side: true, comp: true},
+	}
+	for _, tt := range tests {
+		m, _ := newTestModel(t, tt.w, tt.h)
+		m.lyrics = tt.lyrics
+		l := m.layout()
+		if (l.sideW > 0) != tt.side || l.lyricsOverlay != tt.overlay || l.compactBar != tt.comp || l.header != tt.header {
+			t.Errorf("%dx%d: %+v", tt.w, tt.h, l)
+		}
+	}
+}
+
+func TestNavigation(t *testing.T) {
+	m, _ := newTestModel(t, 80, 24)
+	press(m, ch('g'), ch('s'))
+	if m.Current() != PageSearch {
+		t.Fatalf("g s → %s", m.Current())
+	}
+	press(m, ch('z'))
+	press(m, tea.Key{Code: tea.KeyBackspace})
+	if m.Current() != PageSearch {
+		t.Errorf("back → %s", m.Current())
+	}
+	press(m, tea.Key{Code: tea.KeyBackspace, Mod: tea.ModShift})
+	if m.Current() != PageQueue {
+		t.Errorf("forward → %s", m.Current())
+	}
+	press(m, ch('g'), ch('l')) // new navigation clears forward
+	if len(m.forward) != 0 {
+		t.Errorf("forward not cleared: %v", m.forward)
+	}
+	for i := range 50 {
+		m.navigate(PageIDs[i%len(PageIDs)])
+	}
+	if len(m.back) != MaxHistory {
+		t.Errorf("history = %d, want %d", len(m.back), MaxHistory)
+	}
+}
+
+func TestChordTimeoutAndPendingHeader(t *testing.T) {
+	m, _ := newTestModel(t, 80, 24)
+	cmd := press(m, ch('g'))
+	if cmd == nil {
+		t.Fatal("pending chord must arm a timeout")
+	}
+	if !strings.Contains(plain(m), "g-") {
+		t.Error("pending chord not shown in header")
+	}
+	m.Update(chordTimeoutMsg{m.disp.Seq()}) // what the armed tea.Tick delivers
+	if strings.Contains(plain(m), "g-") {
+		t.Error("timeout did not clear the chord")
+	}
+	press(m, ch('l'))
+	if m.Current() != PageLibrary {
+		t.Errorf("after timeout l went to %s", m.Current())
+	}
+}
+
+func TestPlaybackActions(t *testing.T) {
+	m, fp := newTestModel(t, 80, 24)
+	press(m, tea.Key{Code: tea.KeySpace, Text: " "})
+	if len(fp.Calls()) != 0 {
+		t.Errorf("toggled with nothing loaded: %v", fp.Calls())
+	}
+	m.Update(PlayerEventMsg{playerState(playing)})
+	press(m, tea.Key{Code: tea.KeySpace, Text: " "})
+	press(m, ch('3'), ch('+'))
+	press(m, ch('2'), ch('>'))
+	press(m, ch('<'))
+	press(m, ch('^'))
+	press(m, ch('_'))
+	want := []string{"toggle_pause", "volume", "seek", "seek", "seek", "mute"}
+	if got := fp.Calls(); !slices.Equal(got, want) {
+		t.Fatalf("calls %v, want %v", got, want)
+	}
+	if fp.st.Volume != 95 {
+		t.Errorf("volume = %d, want 95 (80 + 3×5)", fp.st.Volume)
+	}
+	step := time.Duration(m.o.Config.Playback.SeekStep) * time.Second
+	wantSeeks := []time.Duration{2 * step, -step, 0}
+	if !slices.Equal(fp.seeks, wantSeeks) || fp.modes[2] != player.SeekAbsolute {
+		t.Errorf("seeks %v %v", fp.seeks, fp.modes)
+	}
+	press(m, ch('+'), ch('+'), ch('+'), ch('+'))
+	if fp.st.Volume != 100 {
+		t.Errorf("volume not clamped: %d", fp.st.Volume)
+	}
+}
+
+func TestNoPlayerToasts(t *testing.T) {
+	m, _ := newTestModel(t, 80, 24, func(o *Options) { o.Player = nil })
+	press(m, tea.Key{Code: tea.KeySpace, Text: " "})
+	if !strings.Contains(plain(m), "mpv not found") {
+		t.Error("missing mpv not reported")
+	}
+}
+
+func TestNotYetToast(t *testing.T) {
+	m, _ := newTestModel(t, 100, 24)
+	press(m, ch('n'))
+	if !strings.Contains(plain(m), "Not available yet") {
+		t.Error("no feedback for an action from a later milestone")
+	}
+}
+
+func TestToastsExpireAndCap(t *testing.T) {
+	m, _ := newTestModel(t, 100, 24)
+	for i := range 5 {
+		if _, c := m.Update(Toast{Text: fmt.Sprintf("toast %d", i)}); c == nil {
+			t.Fatal("toast without expiry timer")
+		}
+	}
+	out := plain(m)
+	if strings.Contains(out, "toast 1") || !strings.Contains(out, "toast 4") || !strings.Contains(out, "toast 2") {
+		t.Errorf("want the newest 3 toasts:\n%s", out)
+	}
+	m.Update(toastExpiredMsg{m.toasts.items[2].id}) // what the armed tea.Tick delivers
+	if strings.Contains(plain(m), "toast 4") {
+		t.Error("toast did not expire")
+	}
+}
+
+func TestHelpFollowsKeymapAndFilters(t *testing.T) {
+	km, _ := keys.Load([]byte("[keys]\nlike_toggle = [\"C-l\"]\n"), "k.toml")
+	m, _ := newTestModel(t, 140, 40, func(o *Options) { o.Keymap = km })
+	press(m, ch('?'))
+	out := plain(m)
+	if !strings.Contains(out, "C-l") || !strings.Contains(out, "~/.config/ytm-go/keymap.toml") {
+		t.Errorf("help ignores the live keymap:\n%s", out)
+	}
+	press(m, ch('/'), ch('s'), ch('h'), ch('u'))
+	out = plain(m)
+	if !strings.Contains(out, "Toggle shuffle") || strings.Contains(out, "Volume up") {
+		t.Errorf("filter not applied:\n%s", out)
+	}
+	press(m, ch('q')) // captured by the filter, must not quit
+	if m.quiting {
+		t.Fatal("q quit while typing in the filter")
+	}
+	press(m, tea.Key{Code: tea.KeyEscape})
+	if strings.Contains(plain(m), "/shu") {
+		t.Error("escape did not leave the filter")
+	}
+}
+
+func TestMouse(t *testing.T) {
+	m, fp := newTestModel(t, 100, 24)
+	m.Update(PlayerEventMsg{playerState(playing)})
+	_ = plain(m) // layout + geometry
+	g := m.geom
+	y := m.barTop + g.progressRow
+	m.Update(tea.MouseClickMsg{X: g.progressX + g.progressW/2, Y: y, Button: tea.MouseLeft})
+	if len(fp.seeks) != 1 || fp.modes[0] != player.SeekAbsolute {
+		t.Fatalf("click on progress: %v %v", fp.seeks, fp.modes)
+	}
+	if d := fp.seeks[0] - playing.Duration/2; d < -5*time.Second || d > 5*time.Second {
+		t.Errorf("seek to %v, want ~half of %v", fp.seeks[0], playing.Duration)
+	}
+	m.Update(tea.MouseWheelMsg{X: g.volumeX + 1, Y: m.barTop + g.volumeRow, Button: tea.MouseWheelDown})
+	if fp.st.Volume != 75 {
+		t.Errorf("wheel volume = %d", fp.st.Volume)
+	}
+	m.navigate(PageQueue)
+	m.Update(tea.MouseClickMsg{X: 2, Y: 0, Button: tea.MouseLeft})
+	if m.Current() != PageLibrary {
+		t.Errorf("click on Back → %s", m.Current())
+	}
+}
+
+func TestPlayerEventToasts(t *testing.T) {
+	for _, ev := range []player.Event{
+		player.TrackEnded{Reason: player.EndError, Err: "loading failed"},
+		player.EngineCrashed{GaveUp: true},
+		player.Restarted{},
+		player.EngineError{Err: fmt.Errorf("boom")},
+	} {
+		m, _ := newTestModel(t, 100, 24)
+		if _, cmd := m.Update(PlayerEventMsg{ev}); cmd == nil || len(m.toasts.items) != 1 {
+			t.Errorf("%T: no toast", ev)
+		}
+	}
+}
+
+// TestProgram runs the real Bubble Tea program loop via teatest.
+func TestProgram(t *testing.T) {
+	m, _ := newTestModel(t, 80, 24)
+	tm := teatest.NewTestModel(t, m, teatest.WithInitialTermSize(80, 24))
+	tm.Send(tea.KeyPressMsg(ch('g')))
+	tm.Send(tea.KeyPressMsg(ch('b')))
+	tm.Send(tea.KeyPressMsg(ch('q')))
+	fm, ok := tm.FinalModel(t, teatest.WithFinalTimeout(5*time.Second)).(*Model)
+	if !ok || fm.Current() != PageBrowse || !fm.quiting {
+		t.Errorf("final model: %v", fm)
+	}
+}
+
+func BenchmarkViewHelp(b *testing.B) {
+	m, _ := newTestModel(b, 140, 40)
+	m.navigate(PageHelp)
+	b.ReportAllocs()
+	for b.Loop() {
+		_ = m.View()
+	}
+}
+
+func BenchmarkPlaybackBarTick(b *testing.B) {
+	m, _ := newTestModel(b, 140, 40)
+	st := playing
+	b.ReportAllocs()
+	for i := 0; b.Loop(); i++ {
+		st.Position = time.Duration(i%300) * time.Second
+		m.Update(PlayerEventMsg{playerState(st)})
+		_ = m.View()
+	}
+}
+
+func BenchmarkKeypressRepaint(b *testing.B) {
+	m, _ := newTestModel(b, 140, 40)
+	m.navigate(PageHelp)
+	b.ReportAllocs()
+	for b.Loop() {
+		m.Update(tea.KeyPressMsg(ch('j')))
+		_ = m.View()
+	}
+}
