@@ -1,6 +1,6 @@
 # 04 — Config, keymap, theme files
 
-Status: **draft** · Milestones: M0 (loader), M4 (keymap engine, static themes), M4b (theme sources)
+Status: **M4 keymap engine implemented** · Milestones: M0 (loader), M4 (keymap engine, static themes), M4b (theme sources)
 
 ## Goals
 
@@ -170,7 +170,16 @@ toggle_transparency = []        # empty list = unbound
 - Conflicts: a binding that is a strict prefix of another (e.g. `g` vs `g l`) → the longer wins,
   load emits a warning. Duplicate key across actions → later action in file wins, warning.
 
-Implementation: trie over normalized key tokens in `internal/keys`; the TUI root dispatches
+Implementation (M4): canonical tokens put modifiers in the order `C-`, `M-`, `S-`; shifted
+printables are written as the character (`S-a` → `A`, `S-/` is just `?`), and `C-A` becomes
+`C-S-a`. A user entry for an action **replaces** its defaults (an empty list unbinds); a user
+binding that takes a default key of another action is an info diagnostic, a duplicate between two
+user entries is a warning (later in file wins), a strict prefix is dropped with a warning. Counts
+apply only to counted actions (`move_*`, `page_*`, `go_top/bottom`, `reorder_*`, `seek_*`,
+`volume_*`); `5 g g` = go to row 5 (open question 3 resolved: yes). The dispatcher has no clock: the
+TUI arms the timeout and passes back a sequence number, so stale timers are ignored.
+
+Trie over normalized key tokens in `internal/keys`; the TUI root dispatches
 `Action{Name, Count}` to the focused page, then to global handlers. Text inputs (search box, filter)
 capture keys first; `escape` leaves them.
 

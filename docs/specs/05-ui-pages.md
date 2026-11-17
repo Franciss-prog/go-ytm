@@ -1,6 +1,6 @@
 # 05 — UI pages, components, layout
 
-Status: **draft** · Milestones: M4 (shell, bar, help), M5, M6, M8
+Status: **M4 implemented** (shell, bar, help, toasts) · Milestones: M4 (shell, bar, help), M5, M6, M8
 
 ## Goals
 
@@ -169,6 +169,35 @@ Bottom-right above bar, max 3 stacked, 4 s, severity tokens (error/warn/success)
 - Benchmarks: `BenchmarkTrackTableView1000`, `BenchmarkScroll1000`, `BenchmarkPlaybackBarTick`.
 - Transparent-render test registry: each page registers a constructor; test renders every page and
   asserts no `48;` SGR (see 08).
+
+## Implementation notes (M4)
+
+- Packages: `internal/ui` (root model, layout, header, bar, toasts, Help, placeholder pages),
+  `internal/keys` (grammar, trie, dispatcher), `internal/app` (composition root, shutdown, crash
+  guard, `--trace-frames` wrapper). `internal/ui/components` and `pages` subpackages are deferred
+  until M5 has more than one real page.
+- Layout rows: header (1) · main · selection info (1) · rule (1) · bar (3). Breakpoints as above;
+  the lyrics sidebar below 100 columns overlays the right side of the main area.
+- **Root background:** opaque mode sets `tea.View.BackgroundColor/ForegroundColor` (terminal default
+  colors via OSC 10/11, restored on exit) instead of painting cells: nested spans end in SGR reset,
+  which cuts a parent fill short. Only single-line strips (header, info bar), solid selection and
+  popups/toasts paint backgrounds. Transparent and NO_COLOR leave the terminal colors alone.
+- Help is plain Lip Gloss text generated from the live keymap, filterable with `/`. **Glamour is not
+  used** (no dependency added): the prose is three lines, and Glamour's built-in styles paint code
+  backgrounds that the transparent test would have to exempt. Revisit if Help grows real prose.
+- Actions whose features arrive later (queue, likes, radio, Settings, palette, theme picker, album
+  art, lyrics) show an info toast "Not available yet: … arrives in a later version".
+- `toggle_transparency` flips for the session only; persisting it needs the comment-preserving
+  `config.Patch` (M4b, with Settings).
+- Timers (toast expiry, chord timeout) use a context-aware `after` Cmd instead of `tea.Tick`, whose
+  goroutine outlives the program by up to the tick length (found by goleak).
+- Mouse in M4: header ← Back / Forward →, click on the progress bar seeks, wheel over the volume
+  changes it by 5. Volume step 5 per `+`/`-` (× count).
+- Tests: a scenario registry (`internal/ui/ui_test.go`) drives the transparent-render test (2 sizes ×
+  3 selection modes), NO_COLOR test, width/height fit test (6 sizes) and goldens (plain text at 80×24
+  and 140×40, styled opaque/transparent at 80×24, `testdata/TestGoldens/`). Goldens snapshot
+  `View().Content` directly; one `teatest` test runs the real program loop. New pages must be added
+  to the registry.
 
 ## Open questions
 

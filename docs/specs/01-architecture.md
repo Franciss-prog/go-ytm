@@ -23,7 +23,7 @@ Status: **draft** · Depends on: 00
 | Components | `charm.land/bubbles/v2` | v2.2.1 | list/table/viewport/textinput/spinner/progress (API checked per-milestone) |
 | Forms | `charm.land/huh/v2` | v2.0.3 | checked in M2 |
 | Cobra styling | `charm.land/fang/v2` | v2.0.1 | `Execute(ctx, root, ...Option)`, `WithVersion`, `WithCommit`, `WithColorSchemeFunc`, `WithErrorHandler` exist |
-| Markdown | `charm.land/glamour/v2` | v2.0.1 | checked in M4 |
+| Markdown | `charm.land/glamour/v2` | v2.0.1 | **not added in M4** (Help prose is 3 lines; see 05) |
 | Human logs | `charm.land/log/v2` | v2.0.1 | checked in M0 |
 | Color profile | `github.com/charmbracelet/colorprofile` | v0.4.3 | `Detect(w, env)`, `Env(env)`, TrueColor/ANSI256/ANSI/Ascii/NoTTY |
 | CLI | `github.com/spf13/cobra` | v1.10.2 | |
@@ -34,7 +34,8 @@ Status: **draft** · Depends on: 00
 | Color math | `github.com/lucasb-eyer/go-colorful` | v1.4.1 | OKLCH conversion is implemented in-house (~60 LOC) if not present; checked in M4b |
 | D-Bus (M10) | `github.com/godbus/dbus/v5` | v5.2.4 | |
 | Windows pipes | `github.com/Microsoft/go-winio` | v0.6.4 | named pipes for mpv IPC + ytm IPC |
-| UI test harness | `github.com/charmbracelet/x/exp/teatest/v2` | (pseudo-version) | exists on proxy; API checked in M4 |
+| UI test harness | `github.com/charmbracelet/x/exp/teatest/v2` | v2.0.0-20261101151554-27ecf3e4d454 | test-only; `NewTestModel`, `WithInitialTermSize`, `FinalModel` (M4); requires `charm.land/bubbletea/v2` |
+| Golden files | `github.com/charmbracelet/x/exp/golden` | v0.0.0-20251109135125-8916d276318f | test-only, already required by teatest; `RequireEqual` + `-update` |
 
 Rejected / deferred: `github.com/charmbracelet/bubbletea` v1 (v2 is stable and has bg-color
 queries we need); `raitonoberu/ytmusic` (search only, last push 2024-03); `kkdai/youtube`

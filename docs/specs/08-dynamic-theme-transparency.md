@@ -261,7 +261,8 @@ see 04); `esc` reverts to the values at open. Also reachable from Help and comma
 - Transparent render test: registry of every page/component (+ popups); render at 2 sizes; assert
   `style.BackgroundSGRs(out)` is empty (a real SGR parameter parser — a regex mis-reads the `107`
   inside `38;2;255;107;107` as a background code; found in M0) except in registered exemptions (album art box; `solid`
-  selection; `popup_fill`). Opaque mode: assert root bg SGR present.
+  selection; `popup_fill`). Opaque mode: assert the view sets the terminal background
+  (`tea.View.BackgroundColor`; see 05 implementation notes for why the root is not an SGR fill).
 - Color depth: table tests truecolor → 256 → 16 → none, known nearest results.
 - `config.Patch` tests for every Settings key.
 - Benchmark: `BenchmarkThemeApplyAndRepaint` (build Styles + render full screen at 200×60) < 50 ms;

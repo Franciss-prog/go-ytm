@@ -11,7 +11,7 @@ Last updated: 2026-11-17
 | M1 | player-core | **in review** | [#3](https://github.com/Franciss-prog/go-ytm/pull/3) (stacked on #2) | mpv launcher, JSON IPC, controller, crash restore, fakempv |
 | M2 | ytmusic-auth-search | **in review** | [#4](https://github.com/Franciss-prog/go-ytm/pull/4) (stacked on #3) | InnerTube client, search, setup, auth store, doctor Auth |
 | M3 | stream-resolve | **in review** | [#5](https://github.com/Franciss-prog/go-ytm/pull/5) (stacked on #4) | yt-dlp resolver, URL cache, prefetcher, doctor mpv version |
-| M4 | tui-shell | not started | | |
+| M4 | tui-shell | **in review** | branch `feat/tui-shell` (stacked on #5) | keymap engine, root model, header, bar, toasts, Help, app wiring |
 | M4b | dynamic-theme | not started | | |
 | M5 | tui-library-search-queue | not started | | |
 | M6 | browse-liked-history | not started | | |
@@ -57,6 +57,13 @@ Last updated: 2026-11-17
 | 2026-11-17 | Every URL handed to mpv waits for `available_at` (`Cache.Playable`) | 03 |
 | 2026-11-17 | Fake yt-dlp = re-executed test binary, not a shell script (Windows CI) | 03 |
 | 2026-11-17 | `doctor` warns on mpv < 0.33 (deferred from M1) | 02 |
+| 2026-11-17 | Opaque root background via `tea.View.BackgroundColor` (terminal default bg), not SGR fills | 05, 08 |
+| 2026-11-17 | Glamour not added: Help is Lip Gloss text from the live keymap | 01, 05 |
+| 2026-11-17 | Keymap: user entry replaces an action's defaults; prefix bindings dropped; `5 g g` = row 5 | 04 |
+| 2026-11-17 | Timers via ctx-aware Cmd, not `tea.Tick` (its goroutine outlives the program) | 05 |
+| 2026-11-17 | `toggle_transparency` is session-only until `config.Patch` lands (M4b) | 05 |
+| 2026-11-17 | Root `ytm` without a TTY exits 2 with a hint; `--trace-frames` added (spec 00) | 06 |
+| 2026-11-17 | Deps added (test-only): `x/exp/teatest/v2`, `x/exp/golden`; `bubbletea/v2` v2.1.1 promoted to direct | 01 |
 
 ## Verified facts (with how)
 
@@ -101,6 +108,13 @@ Last updated: 2026-11-17
   `extractor/youtube/_video.py` (`raise_no_formats(reason)`, "sign in" → login hint, rate-limit note).
 - Real mpv 0.41.0 plays a resolved googlevideo URL at an offset and advances gaplessly into an
   appended prefetched URL (`TestLiveGapless`, live).
+- Bubble Tea v2.1.1 `Key.Keystroke()` names: `space`, `enter`, `esc`, `pgup`/`pgdown`,
+  `shift+tab`, `shift+backspace`, `ctrl+a`, `alt+x`; shifted printables arrive as `Text` ("A", "?")
+  (probed in a test). `Program.Send` blocks before start and is a no-op after exit (`go doc`).
+- `tea.Tick`'s goroutine waits out its full duration after the program exits (goleak in
+  `internal/app`), hence the ctx-aware timer.
+- Real binary in a PTY (110×30): renders, `?`/`j`/`g s`/backspace/`3+`/`q` work, alt screen
+  entered and left, OSC 11 sets the root bg, exit 0, `--trace-frames` logs every frame.
 
 ## Measurements (M0, local, Linux amd64, Go 1.27.4)
 
@@ -138,6 +152,15 @@ Last updated: 2026-11-17
 | Parse `-O` output | 7.5 µs/op, 15 allocs |
 | Cache hit | 497 ns/op, 0 allocs |
 | Coverage | stream 93 % |
+
+## Measurements (M4, local, Linux amd64)
+
+| What | Result | Budget |
+|---|---|---|
+| Cold start → first frame (`ytm` in a PTY, fork to "Nothing playing" on screen) | 23 ms median (15 runs) | 150 ms |
+| Keypress → repaint (`j` on Help, 140×40, Update + View) | 0.38 ms/op | 16 ms |
+| Playback bar tick (StateChanged + full View, 140×40) | 0.15 ms/op | — |
+| Idle CPU (no playback, 10 s) | 0.5 % | 1 % |
 
 ## Approved by owner (2026-11-16)
 
