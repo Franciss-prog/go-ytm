@@ -14,6 +14,7 @@ import (
 	"github.com/Franciss-Prog/go-ytm/internal/keys"
 	"github.com/Franciss-Prog/go-ytm/internal/player"
 	"github.com/Franciss-Prog/go-ytm/internal/style"
+	"github.com/Franciss-Prog/go-ytm/internal/theme"
 )
 
 // scenario is one registered screen state. Every page and component the
@@ -56,6 +57,10 @@ var scenarios = func() []scenario {
 			m.navigate(PageHelp)
 			press(m, ch('/'), ch('v'), ch('o'), ch('l'))
 		}},
+		scenario{"settings-popup", func(m *Model) {
+			m.navigate(PageHelp)
+			press(m, ch(','), tea.Key{Code: tea.KeyDown})
+		}},
 		scenario{"no-sidebar-muted", func(m *Model) {
 			m.sidebar = false
 			st := playing
@@ -70,10 +75,14 @@ var sizes = [][2]int{{80, 24}, {140, 40}}
 func TestTransparentRender(t *testing.T) {
 	for _, sc := range scenarios {
 		for _, sz := range sizes {
-			for _, sel := range []string{"bar", "reverse", "underline"} {
+			for _, sel := range []string{"bar", "reverse", "underline", "ansi-theme"} {
 				m, _ := newTestModel(t, sz[0], sz[1], func(o *Options) {
 					o.Config.Theme.Transparent = true
 					o.Config.Theme.TransparentSelection = sel
+					if sel == "ansi-theme" {
+						o.Config.Theme.TransparentSelection = "bar"
+						o.Theme = theme.ANSITheme(4)
+					}
 				})
 				sc.setup(m)
 				v := m.View()

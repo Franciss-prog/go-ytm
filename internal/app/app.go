@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"image/color"
 	"io"
 	"log/slog"
 	"os"
@@ -17,6 +18,7 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/colorprofile"
 
 	"github.com/Franciss-Prog/go-ytm/internal/config"
 	"github.com/Franciss-Prog/go-ytm/internal/keys"
@@ -34,9 +36,14 @@ type Options struct {
 	Config      config.Config
 	ConfigDiags config.Diagnostics
 	Paths       platform.Paths
-	Theme       theme.Theme
-	NoColor     bool
-	Log         *slog.Logger
+	// Theme is the theme resolved at startup from ThemeSpec (so the first
+	// frame is themed); the theme manager takes over from there.
+	Theme     theme.Result
+	ThemeSpec theme.Spec
+	// Profile is the color depth styles are built for.
+	Profile colorprofile.Profile
+	NoColor bool
+	Log     *slog.Logger
 	// TraceFrames logs per-frame Update/View timings at debug level.
 	TraceFrames bool
 
@@ -91,9 +98,19 @@ func Run(ctx context.Context, o Options) error {
 		})
 	}
 
+	if t := themeToast(o.Theme, o.ThemeSpec); t != nil {
+		toasts = append(toasts, *t)
+	}
+	// The manager's sends go through prog, created below; send is only
+	// called from the manager goroutine, started after prog exists.
+	var prog *tea.Program
+	themes := theme.NewManager(o.ThemeSpec, func(r theme.Result) { prog.Send(ui.ThemeChangedMsg{Result: r}) }, nil, o.Log)
+
 	var model tea.Model = ui.New(ui.Options{
 		Config: o.Config, Keymap: km, KeymapPath: o.Paths.KeymapFile(),
-		Theme: o.Theme, NoColor: o.NoColor, Player: pl, Log: o.Log, Toasts: toasts, Context: ctx,
+		Theme: o.Theme.Theme, NoColor: o.NoColor, Player: pl, Log: o.Log, Toasts: toasts, Context: ctx,
+		Themes:     themeService{m: themes, configDir: o.ThemeSpec.ConfigDir, home: o.ThemeSpec.Home},
+		ConfigPath: o.Paths.ConfigFile(), PatchConfig: config.Patch, Profile: o.Profile,
 	})
 	if o.TraceFrames {
 		model = &tracer{inner: model, log: o.Log, start: start}
@@ -109,7 +126,7 @@ func Run(ctx context.Context, o Options) error {
 		opts = append(opts, tea.WithEnvironment(o.Env))
 	}
 	opts = append(opts, o.ProgramOptions...)
-	prog := tea.NewProgram(model, opts...)
+	prog = tea.NewProgram(model, opts...)
 
 	// Player events → program. Send blocks until the program starts and
 	// is a no-op after it exits (tea docs), so this cannot deadlock.
@@ -124,6 +141,10 @@ func Run(ctx context.Context, o Options) error {
 			})
 		})
 	}
+
+	wg.Go(func() { guard(o, "theme-manager", func() { themes.Run(ctx, o.Theme) }) })
+	stopSignals := reloadOnSignal(ctx, themes.Reload)
+	defer stopSignals()
 
 	_, runErr := prog.Run()
 	if errors.Is(runErr, tea.ErrProgramKilled) && ctx.Err() != nil {
@@ -152,6 +173,29 @@ func Run(ctx context.Context, o Options) error {
 		return fmt.Errorf("tui: %w", runErr)
 	}
 	return nil
+}
+
+// themeService adapts the theme manager to the UI's [theme] settings.
+type themeService struct {
+	m               *theme.Manager
+	configDir, home string
+}
+
+func (s themeService) Set(c config.Theme)          { s.m.Set(theme.SpecFromConfig(c, s.configDir, s.home)) }
+func (s themeService) Reload()                     { s.m.Reload() }
+func (s themeService) SetTerminalBg(c color.Color) { s.m.SetTerminalBg(c) }
+
+// themeToast reports a theme source that failed at startup (spec 08,
+// "Fallback").
+func themeToast(r theme.Result, spec theme.Spec) *ui.Toast {
+	if r.Err == nil {
+		return nil
+	}
+	text := fmt.Sprintf("Theme: %v — using %s", r.Err, r.Theme.Name)
+	if spec.Watch && r.Path != "" {
+		text += "; will switch when it appears"
+	}
+	return &ui.Toast{Severity: ui.SevWarn, Text: text}
 }
 
 // startupToasts summarizes config and keymap diagnostics in one toast each.

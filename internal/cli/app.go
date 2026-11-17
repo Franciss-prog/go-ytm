@@ -107,7 +107,10 @@ type App struct {
 	Config config.Config
 	Diags  config.Diagnostics
 	Theme  theme.Theme
-	Log    *slog.Logger
+	// ThemeSpec and ThemeResult are how Theme was resolved ([theme]).
+	ThemeSpec   theme.Spec
+	ThemeResult theme.Result
+	Log         *slog.Logger
 
 	closeMu sync.Mutex
 	closers []func() error
@@ -177,12 +180,11 @@ func (a *App) load() error {
 	}
 	a.Paths = p
 	a.Config, a.Diags = config.LoadFile(p.ConfigFile())
-	if t, err := theme.Builtin(a.Config.Theme.Name); err == nil && a.Config.Theme.Source == "static" {
-		a.Theme = t
-	} else if t, err := theme.Builtin(a.Config.Theme.Fallback); err == nil {
-		// Dynamic sources arrive in M4b; until then use the fallback.
-		a.Theme = t
-	}
+	home, _ := a.platformEnv().HomeDir()
+	a.ThemeSpec = theme.SpecFromConfig(a.Config.Theme, p.Config, home)
+	a.ThemeSpec.TerminalBg = theme.ParseCOLORFGBG(a.getenv("COLORFGBG"))
+	a.ThemeResult = theme.Resolve(a.ThemeSpec)
+	a.Theme = a.ThemeResult.Theme
 
 	logger, closer, lerr := logging.Setup(logging.Options{
 		File:        p.LogFile(),

@@ -57,10 +57,11 @@ func testOptions(t *testing.T, in io.Reader) (Options, *eventPlayer) {
 	dir := t.TempDir()
 	fp := newEventPlayer()
 	return Options{
-		Config: config.Default(),
-		Paths:  platform.Paths{Config: dir, State: dir, Runtime: dir},
-		Theme:  theme.Fallback(),
-		In:     in, Out: io.Discard, Env: []string{"TERM=xterm-256color"},
+		Config:    config.Default(),
+		Paths:     platform.Paths{Config: dir, State: dir, Runtime: dir},
+		Theme:     theme.Result{Theme: theme.Fallback()},
+		ThemeSpec: theme.Spec{Source: "static", Name: "ytm-dark", ConfigDir: dir, Watch: true},
+		In:        in, Out: io.Discard, Env: []string{"TERM=xterm-256color"},
 		LookPath:       func(string) (string, error) { return "/usr/bin/mpv", nil },
 		NewPlayer:      func(context.Context, player.Options) player.Player { return fp },
 		ProgramOptions: []tea.ProgramOption{tea.WithWindowSize(80, 24)},
@@ -156,3 +157,14 @@ func TestGuardWritesCrashFile(t *testing.T) {
 }
 
 func discard() *slog.Logger { return slog.New(slog.DiscardHandler) }
+
+func TestThemeToast(t *testing.T) {
+	if themeToast(theme.Result{Theme: theme.Fallback()}, theme.Spec{}) != nil {
+		t.Error("toast without error")
+	}
+	r := theme.Result{Theme: theme.Fallback(), Err: errors.New("pywal colors not found at /x"), Path: "/x"}
+	got := themeToast(r, theme.Spec{Watch: true})
+	if got == nil || got.Text != "Theme: pywal colors not found at /x — using ytm-dark; will switch when it appears" {
+		t.Errorf("toast = %+v", got)
+	}
+}

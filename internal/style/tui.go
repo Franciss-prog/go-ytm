@@ -3,6 +3,8 @@ package style
 import (
 	"image/color"
 
+	"github.com/charmbracelet/colorprofile"
+
 	"charm.land/lipgloss/v2"
 
 	"github.com/Franciss-Prog/go-ytm/internal/theme"
@@ -27,6 +29,10 @@ type UIOptions struct {
 	// NoColor (NO_COLOR or --no-color): attributes only; selection by reverse.
 	NoColor bool
 	Icons   IconSet
+	// Profile is the terminal's color depth ([theme] color_depth or
+	// detected); RGB tokens are downsampled to it once per build.
+	// Unknown/TrueColor keep them.
+	Profile colorprofile.Profile
 }
 
 // UI is every lipgloss style the TUI uses, built from a theme. It is the
@@ -91,6 +97,7 @@ func NewUI(t theme.Theme, o UIOptions, version uint64) *UI {
 	if o.Selection == "" {
 		o.Selection = SelBar
 	}
+	t = theme.Downsample(t, o.Profile)
 	u := &UI{Opts: o, Theme: t, Version: version}
 	n := lipgloss.NewStyle
 	if o.NoColor {
@@ -124,6 +131,9 @@ func NewUI(t theme.Theme, o UIOptions, version uint64) *UI {
 	u.InfoBar = fill(fg(t.Muted), t.Surface)
 
 	switch {
+	case t.IsReverseSelection():
+		// ansi source: no selected_bg to fill with.
+		u.Selected = n().Reverse(true)
 	case !o.Transparent || o.Selection == SelSolid:
 		u.Selected = n().Foreground(t.SelectedFg).Background(t.SelectedBg).Bold(true)
 	case o.Selection == SelReverse:

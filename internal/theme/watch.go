@@ -101,6 +101,10 @@ func (w *Watcher) Run(ctx context.Context) error {
 	var fire <-chan time.Time
 	reload := func(force bool) {
 		r := w.Reload()
+		r.Cause = CauseFile
+		if force {
+			r.Cause = CauseReload
+		}
 		k := resultKey(r)
 		if !force && k == last {
 			w.Log.Debug("theme: unchanged after file event")

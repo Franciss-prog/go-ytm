@@ -8,6 +8,7 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/colorprofile"
 	"github.com/charmbracelet/x/ansi"
 
 	"github.com/Franciss-Prog/go-ytm/internal/config"
@@ -44,6 +45,15 @@ type Options struct {
 	Toasts []Toast
 	// Context ends timers when the program stops (default Background).
 	Context context.Context
+
+	// Themes re-resolves the theme on settings changes (nil: styles only).
+	Themes ThemeService
+	// ConfigPath and PatchConfig persist Settings and toggle_transparency
+	// (config.Patch in production; nil = session only).
+	ConfigPath  string
+	PatchConfig func(path string, changes []config.Change) error
+	// Profile is the color depth styles are built for.
+	Profile colorprofile.Profile
 }
 
 // PlayerEventMsg carries a player event into Update (sent by the app's
@@ -70,7 +80,9 @@ type Model struct {
 	forward []PageID
 
 	sidebar, lyrics bool
-	transparent     bool
+
+	settings *settings // open Settings popup, or nil
+	themeErr string    // last theme problem toasted (toast once)
 
 	bar     barState
 	barTop  int // first screen row of the bar, for mouse hits
@@ -92,13 +104,12 @@ func New(o Options) *Model {
 	}
 	m := &Model{
 		o: o, log: o.Log,
-		disp:        keys.NewDispatcher(o.Keymap),
-		pages:       newPages(),
-		current:     PageID(o.Config.General.StartupPage),
-		sidebar:     true,
-		transparent: o.Config.Theme.Transparent,
-		bar:         barState{style: o.Config.UI.ProgressStyle, repeat: "off"},
-		toasts:      toasts{ctx: o.Context},
+		disp:    keys.NewDispatcher(o.Keymap),
+		pages:   newPages(),
+		current: PageID(o.Config.General.StartupPage),
+		sidebar: true,
+		bar:     barState{style: o.Config.UI.ProgressStyle, repeat: "off"},
+		toasts:  toasts{ctx: o.Context},
 	}
 	m.pages[PageHelp] = &help{keymap: o.Keymap, path: o.KeymapPath}
 	if _, ok := m.pages[m.current]; !ok {
@@ -120,11 +131,12 @@ func (m *Model) restyle() {
 		v = m.st.Version + 1
 	}
 	m.st = style.NewUI(m.o.Theme, style.UIOptions{
-		Transparent: m.transparent,
+		Transparent: m.o.Config.Theme.Transparent,
 		Selection:   style.Selection(m.o.Config.Theme.TransparentSelection),
 		PopupFill:   m.o.Config.Theme.PopupFill,
 		NoColor:     m.o.NoColor,
 		Icons:       style.ResolveIcons(m.o.Config.UI.Icons, true, true),
+		Profile:     m.o.Profile,
 	}, v)
 }
 
@@ -135,7 +147,19 @@ func (m *Model) Styles() *style.UI { return m.st }
 func (m *Model) Current() PageID { return m.current }
 
 // Init implements tea.Model.
-func (m *Model) Init() tea.Cmd { return m.toasts.armAll() }
+//
+// In transparent mode it asks the terminal for its background (OSC 11):
+// contrast is then checked against what is really behind the text. Only
+// at start, while no root background has been set by us.
+func (m *Model) Init() tea.Cmd {
+	if m.o.Config.Theme.Transparent && m.o.Themes != nil && !m.o.NoColor {
+		return tea.Batch(m.toasts.armAll(), tea.RequestBackgroundColor)
+	}
+	return m.toasts.armAll()
+}
+
+// SettingsOpen reports whether the Settings popup is open (tests).
+func (m *Model) SettingsOpen() bool { return m.settings != nil }
 
 func (m *Model) ctx() *Context {
 	return &Context{Keymap: m.o.Keymap, KeymapPath: m.o.KeymapPath, Height: m.layout().mainH}
@@ -170,11 +194,27 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case NowPlayingMsg:
 		m.bar.now = NowPlaying(msg)
 		return m, nil
+	case ThemeChangedMsg:
+		return m, m.themeChanged(msg.Result)
+	case tea.BackgroundColorMsg:
+		if m.o.Themes != nil && msg.Color != nil {
+			m.o.Themes.SetTerminalBg(msg.Color)
+		}
+		return m, nil
+	case settingsSavedMsg:
+		if msg.err != nil {
+			m.log.Error("ui: saving settings failed", "err", msg.err)
+			return m, m.toasts.push(Toast{Severity: SevError, Text: "Couldn't save settings; see the log"})
+		}
+		return m, m.toasts.push(Toast{Severity: SevSuccess, Text: "Settings saved"})
 	}
 	return m, nil
 }
 
 func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
+	if m.settings != nil {
+		return m.settingsKey(msg)
+	}
 	page := m.pages[m.current]
 	if page.Capturing() {
 		p, cmd := page.Key(msg, m.ctx())
@@ -210,7 +250,7 @@ var notYet = map[string]string{
 	"next_track": "the queue", "previous_track": "the queue", "play_random": "the queue",
 	"cycle_repeat": "the queue", "toggle_shuffle": "the queue", "like_toggle": "likes",
 	"discovery_mix": "radio", "current_context": "pages", "jump_to_current": "the queue",
-	"settings": "Settings", "command_palette": "the command palette", "theme_picker": "the theme picker",
+	"command_palette": "the command palette", "theme_picker": "the theme picker",
 	"toggle_album_art": "album art", "toggle_transliteration": "lyrics",
 }
 
@@ -232,13 +272,9 @@ func (m *Model) global(a keys.Action) tea.Cmd {
 	case "lyrics":
 		m.lyrics = !m.lyrics
 	case "toggle_transparency":
-		m.transparent = !m.transparent
-		m.restyle()
-		state := "off"
-		if m.transparent {
-			state = "on"
-		}
-		return m.toasts.push(Toast{Severity: SevInfo, Text: "Transparent background " + state + " (this session)"})
+		return m.toggleTransparency()
+	case "settings":
+		m.openSettings()
 	case "play_pause", "volume_up", "volume_down", "mute", "seek_forward", "seek_backward", "seek_start":
 		return m.playback(a)
 	default:
@@ -435,6 +471,9 @@ func (m *Model) render() string {
 			b.WriteString(sep + lyr[i])
 		}
 		rows[i] = b.String()
+	}
+	if m.settings != nil {
+		m.overlaySettings(rows, m.width, st)
 	}
 	m.toasts.overlay(rows, m.width, st)
 	out = append(out, rows...)

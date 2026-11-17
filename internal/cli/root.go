@@ -8,7 +8,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"github.com/charmbracelet/colorprofile"
+
 	"github.com/Franciss-Prog/go-ytm/internal/app"
+	"github.com/Franciss-Prog/go-ytm/internal/theme"
 )
 
 var execCommand = exec.CommandContext
@@ -89,12 +92,24 @@ func (a *App) runTUI(cmd *cobra.Command, _ []string) error {
 		Config:      a.Config,
 		ConfigDiags: a.Diags,
 		Paths:       a.Paths,
-		Theme:       a.Theme,
+		Theme:       a.ThemeResult,
+		ThemeSpec:   a.ThemeSpec,
+		Profile:     a.tuiProfile(),
 		NoColor:     a.noColor || a.getenv("NO_COLOR") != "",
 		Log:         a.Log,
 		TraceFrames: a.traceFrames,
 		Env:         a.IO.Env,
 	})
+}
+
+// tuiProfile is the color depth the TUI builds styles for: [theme]
+// color_depth, or what the terminal reports.
+func (a *App) tuiProfile() colorprofile.Profile {
+	detected := colorprofile.TrueColor
+	if a.IO.Profile != nil {
+		detected = a.IO.Profile(a.IO.Out)
+	}
+	return theme.ParseDepth(a.Config.Theme.ColorDepth, detected)
 }
 
 // TUIRunner starts the player UI; tests replace it.

@@ -28,6 +28,8 @@ type Spec struct {
 
 	EnforceContrast bool
 	Transparent     bool
+	// Watch enables live reload of the source and theme.toml files.
+	Watch bool
 	// TerminalBg is the terminal's background if known (OSC 11 answer or
 	// COLORFGBG); used for contrast in transparent mode.
 	TerminalBg color.Color
@@ -50,7 +52,20 @@ type Result struct {
 	Against string
 	// Pywal metadata, for `ytm theme show`.
 	Wallpaper, Alpha string
+	// Cause says what produced this result (set by Watcher and Manager).
+	Cause Cause
 }
+
+// Cause is why a theme was (re)resolved.
+type Cause int
+
+// Causes.
+const (
+	CauseInitial  Cause = iota
+	CauseFile           // a watched file changed
+	CauseReload         // manual reload (SIGUSR1, palette, IPC)
+	CauseSettings       // [theme] settings changed (Settings popup, C-t)
+)
 
 // PalettePath is the file the source reads ("" for static and ansi).
 func (s Spec) PalettePath() string {
