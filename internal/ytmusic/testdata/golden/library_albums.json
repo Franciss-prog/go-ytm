@@ -1,0 +1,89 @@
+[
+  {
+    "name": "Text 55",
+    "id": "MPREb_fake0000059",
+    "playlist_id": "OLAK5uy_fake00000000000000000000000000053",
+    "kind": "Album",
+    "artists": [
+      {
+        "name": "Text 54",
+        "id": "UCfake000000000000000057"
+      }
+    ],
+    "year": "2009",
+    "thumbnail_url": "https://example.invalid/thumb/2.jpg"
+  },
+  {
+    "name": "Text 56",
+    "id": "MPREb_fake0000063",
+    "playlist_id": "OLAK5uy_fake00000000000000000000000000061",
+    "kind": "Album",
+    "artists": [
+      {
+        "name": "Text 54",
+        "id": "UCfake000000000000000057"
+      }
+    ],
+    "year": "2014",
+    "thumbnail_url": "https://example.invalid/thumb/4.jpg",
+    "explicit": true
+  },
+  {
+    "name": "Text 58",
+    "id": "MPREb_fake0000067",
+    "playlist_id": "OLAK5uy_fake00000000000000000000000000071",
+    "kind": "Album",
+    "artists": [
+      {
+        "name": "Text 57",
+        "id": "UCfake000000000000000069"
+      }
+    ],
+    "year": "2001",
+    "thumbnail_url": "https://example.invalid/thumb/6.jpg"
+  },
+  {
+    "name": "Text 59",
+    "id": "MPREb_fake0000077",
+    "playlist_id": "OLAK5uy_fake00000000000000000000000000075",
+    "kind": "Album",
+    "artists": [
+      {
+        "name": "Text 57",
+        "id": "UCfake000000000000000069"
+      }
+    ],
+    "year": "1997",
+    "thumbnail_url": "https://example.invalid/thumb/8.jpg"
+  },
+  {
+    "name": "Text 61",
+    "id": "MPREb_fake0000085",
+    "playlist_id": "OLAK5uy_fake00000000000000000000000000083",
+    "kind": "Album",
+    "artists": [
+      {
+        "name": "Text 60",
+        "id": "UCfake000000000000000081"
+      }
+    ],
+    "year": "2001",
+    "thumbnail_url": "https://example.invalid/thumb/10.jpg",
+    "explicit": true
+  },
+  {
+    "name": "Text 63",
+    "id": "MPREb_fake0000089",
+    "playlist_id": "OLAK5uy_fake00000000000000000000000000093",
+    "kind": "Album",
+    "artists": [
+      {
+        "name": "Text 62",
+        "id": "UCfake000000000000000091"
+      }
+    ],
+    "year": "2005",
+    "thumbnail_url": "https://example.invalid/thumb/12.jpg",
+    "explicit": true
+  }
+]

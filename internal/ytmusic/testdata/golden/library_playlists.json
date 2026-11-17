@@ -1,0 +1,37 @@
+[
+  {
+    "title": "Liked Music",
+    "id": "LM",
+    "author": "Auto playlist",
+    "thumbnail_url": "https://example.invalid/thumb/5.jpg"
+  },
+  {
+    "title": "Text 19",
+    "id": "PLfake0000003",
+    "author": "Text 28",
+    "count": "1 track",
+    "thumbnail_url": "https://example.invalid/thumb/7.jpg",
+    "owned": true
+  },
+  {
+    "title": "Text 29",
+    "id": "PLfake0000000000000000000000000009",
+    "author": "Text 32",
+    "count": "63 tracks",
+    "thumbnail_url": "https://example.invalid/thumb/9.jpg"
+  },
+  {
+    "title": "Text 33",
+    "id": "PLfake0000000000000000000000000015",
+    "author": "Text 34",
+    "count": "39 tracks",
+    "thumbnail_url": "https://example.invalid/thumb/11.jpg"
+  },
+  {
+    "title": "Text 36",
+    "id": "PLfake0000000000000000000000000021",
+    "author": "Text 35",
+    "count": "139 tracks",
+    "thumbnail_url": "https://example.invalid/thumb/13.jpg"
+  }
+]

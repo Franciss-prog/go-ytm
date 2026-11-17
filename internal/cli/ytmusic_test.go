@@ -17,8 +17,10 @@ import (
 	"github.com/Franciss-Prog/go-ytm/internal/ytmusic"
 )
 
-// fakeYT implements ytmusic.Client for CLI tests.
+// fakeYT implements the ytmusic.Client calls the CLI makes; the embedded
+// nil interface panics if a test reaches any other.
 type fakeYT struct {
+	ytmusic.Client
 	creds *ytmusic.Credentials
 	world *fakeWorld
 }

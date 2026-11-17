@@ -153,9 +153,10 @@ func (p *parser) parseSearchContinuation(resp node, f SearchFilter) SearchResult
 
 // Page types from browseEndpointContextMusicConfig.
 const (
-	pageAlbum    = "MUSIC_PAGE_TYPE_ALBUM"
-	pageArtist   = "MUSIC_PAGE_TYPE_ARTIST"
-	pagePlaylist = "MUSIC_PAGE_TYPE_PLAYLIST"
+	pageAlbum       = "MUSIC_PAGE_TYPE_ALBUM"
+	pageArtist      = "MUSIC_PAGE_TYPE_ARTIST"
+	pagePlaylist    = "MUSIC_PAGE_TYPE_PLAYLIST"
+	pageUserChannel = "MUSIC_PAGE_TYPE_USER_CHANNEL"
 )
 
 // Music video types (watchEndpointMusicConfig.musicVideoType).

@@ -34,7 +34,7 @@ func parseAccount(resp node) (AccountInfo, bool) {
 			}
 			b := link.get("navigationEndpoint", "browseEndpoint")
 			id := b.get("browseId").str()
-			if channelIDRE.MatchString(id) && pageType(b) == "MUSIC_PAGE_TYPE_USER_CHANNEL" {
+			if channelIDRE.MatchString(id) && pageType(b) == pageUserChannel {
 				found = append(found, id)
 			}
 		}

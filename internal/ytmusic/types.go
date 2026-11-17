@@ -95,6 +95,7 @@ type PlaylistRef struct {
 	Author       string `json:"author,omitempty"`
 	Count        string `json:"count,omitempty"` // as displayed: "35 songs", "676 views"
 	ThumbnailURL string `json:"thumbnail_url,omitempty"`
+	Owned        bool   `json:"owned,omitempty"` // the signed-in account can edit it (library lists)
 }
 
 // ResultType names the kind of a search result.
@@ -186,4 +187,58 @@ type AccountInfo struct {
 	Handle    string `json:"handle,omitempty"`
 	ChannelID string `json:"channel_id,omitempty"` // empty when the menu has no unique "Your channel" link
 	PhotoURL  string `json:"photo_url,omitempty"`
+}
+
+// Album is an album page (browse MPREb_…).
+type Album struct {
+	AlbumRef
+	Description string     `json:"description,omitempty"`
+	TrackCount  int        `json:"track_count,omitempty"`
+	Duration    string     `json:"duration,omitempty"` // as displayed: "1 hour, 14 minutes"
+	LikeStatus  LikeStatus `json:"like_status"`
+	Tracks      []Track    `json:"tracks"`
+}
+
+// Playlist privacy values (playlist/create privacyStatus, edit header).
+const (
+	PrivacyPrivate  = "PRIVATE"
+	PrivacyUnlisted = "UNLISTED"
+	PrivacyPublic   = "PUBLIC"
+)
+
+// Playlist is a playlist page. Tracks holds the first page; Continuation
+// fetches the next one with PlaylistMore.
+type Playlist struct {
+	PlaylistRef
+	AuthorID     string  `json:"author_id,omitempty"`
+	Privacy      string  `json:"privacy,omitempty"`
+	Description  string  `json:"description,omitempty"`
+	Year         string  `json:"year,omitempty"`
+	Views        string  `json:"views,omitempty"`
+	TrackCount   int     `json:"track_count,omitempty"` // as announced by the header; may exceed len(Tracks)
+	Duration     string  `json:"duration,omitempty"`
+	Tracks       []Track `json:"tracks"`
+	Continuation string  `json:"-"`
+}
+
+// Shelf is a preview list on an artist page; BrowseID/Params open the
+// full list (ArtistAlbums for albums and singles, Playlist for songs).
+type Shelf[T any] struct {
+	Items    []T    `json:"items"`
+	BrowseID string `json:"browse_id,omitempty"`
+	Params   string `json:"params,omitempty"`
+}
+
+// ArtistPage is an artist channel page.
+type ArtistPage struct {
+	ArtistRef
+	Description string          `json:"description,omitempty"`
+	Subscribers string          `json:"subscribers,omitempty"`
+	Subscribed  bool            `json:"subscribed"`
+	ShuffleID   string          `json:"shuffle_id,omitempty"` // watch playlist for "Shuffle"
+	RadioID     string          `json:"radio_id,omitempty"`   // watch playlist for "Radio"
+	TopSongs    Shelf[Track]    `json:"top_songs"`
+	Albums      Shelf[AlbumRef] `json:"albums"`
+	Singles     Shelf[AlbumRef] `json:"singles"`
+	Videos      Shelf[Track]    `json:"videos"`
 }

@@ -1,0 +1,358 @@
+{
+  "name": "Daft Punk",
+  "id": "UCtest",
+  "audience": "65.9M",
+  "thumbnail_url": "https://lh3.googleusercontent.com/qLhu6Py_4_xoBsoubKQsXlhOQGqU9YU1ZRAbFusF0LlrPkXbbpu7bEh-k_ZtE4JwLgubvucAQqcK1hRk=w1080-h450-p-l90-rj",
+  "subscribers": "7.22M",
+  "subscribed": false,
+  "shuffle_id": "RDAOni3jl65KF37F9JYsJM8DGg",
+  "radio_id": "RDEMni3jl65KF37F9JYsJM8DGg",
+  "top_songs": {
+    "items": [
+      {
+        "video_id": "khnokW3Mw24",
+        "title": "Instant Crush (feat. Julian Casablancas)",
+        "artists": [
+          {
+            "name": "Daft Punk",
+            "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+          },
+          {
+            "name": "Julian Casablancas",
+            "id": "UCWhpbdGLnR8XtXLr0yl2nYA"
+          }
+        ],
+        "album": {
+          "name": "Random Access Memories",
+          "id": "MPREb_K8qWMWVqXGi"
+        },
+        "thumbnail_url": "https://yt3.googleusercontent.com/N55arCGj69gtw6thXK8JUPisxoVYiwuIEQ7I6SGlkEyNcSJ7xIWPe76Vuu1SiUqRyx5w9qvR_zV8fV3CWQ=w120-h120-l90-rj",
+        "is_video": false,
+        "like_status": "indifferent",
+        "explicit": false,
+        "available": true,
+        "views": "1.2B",
+        "video_type": "MUSIC_VIDEO_TYPE_ATV",
+        "duration_seconds": 0
+      },
+      {
+        "video_id": "Rgrt_8mXrK8",
+        "title": "Get Lucky (Radio Edit - feat. Pharrell Williams and Nile Rodgers)",
+        "artists": [
+          {
+            "name": "Daft Punk",
+            "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+          },
+          {
+            "name": "Pharrell Williams",
+            "id": "UCJw8VyO6e3v6S0327AsgwcQ"
+          },
+          {
+            "name": "Nile Rodgers",
+            "id": "UCThde8ccpEr6sP8dIHZ-ceQ"
+          }
+        ],
+        "album": {
+          "name": "Get Lucky (Radio Edit - feat. Pharrell Williams and Nile Rodgers)",
+          "id": "MPREb_yw4jv9byKCr"
+        },
+        "thumbnail_url": "https://yt3.googleusercontent.com/HqegqT4tr2u0IsOqAmUgILJunBwHHkjl9s5L7t02ZFcGsRQpqKtmM7YlkeqzDdXi926mNvAn2UJu48s=w120-h120-l90-rj",
+        "is_video": false,
+        "like_status": "indifferent",
+        "explicit": false,
+        "available": true,
+        "views": "1.9B",
+        "video_type": "MUSIC_VIDEO_TYPE_ATV",
+        "duration_seconds": 0
+      },
+      {
+        "video_id": "wU26xVT_vBU",
+        "title": "One More Time (Radio Edit)",
+        "artists": [
+          {
+            "name": "Daft Punk",
+            "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+          }
+        ],
+        "album": {
+          "name": "One More Time",
+          "id": "MPREb_uWQeJO6Z53u"
+        },
+        "thumbnail_url": "https://yt3.googleusercontent.com/_pY9BvNbeIpT2PUw_hQszOM3PZzmBRdi5uGNL8U6ZVE8AvApw7WqgMotzoGg7kk_ip8yj9VBkAJlgwv7_A=w120-h120-l90-rj",
+        "is_video": false,
+        "like_status": "indifferent",
+        "explicit": false,
+        "available": true,
+        "views": "859M",
+        "video_type": "MUSIC_VIDEO_TYPE_ATV",
+        "duration_seconds": 0
+      },
+      {
+        "video_id": "Jb6gcoR266U",
+        "title": "Around the World",
+        "artists": [
+          {
+            "name": "Daft Punk",
+            "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+          }
+        ],
+        "album": {
+          "name": "Homework",
+          "id": "MPREb_dMHztPsrDgN"
+        },
+        "thumbnail_url": "https://yt3.googleusercontent.com/1gXa4i8m_NecS7xNqLqzxy6rdOWBh_L6U91YYv5ULNdmvvYT1Pr6ld7_SyUs5L52pEQheVyfU9SnXUm9=w120-h120-l90-rj",
+        "is_video": false,
+        "like_status": "indifferent",
+        "explicit": false,
+        "available": true,
+        "views": "303M",
+        "video_type": "MUSIC_VIDEO_TYPE_ATV",
+        "duration_seconds": 0
+      },
+      {
+        "video_id": "JhulBGMA7G4",
+        "title": "Harder, Better, Faster, Stronger",
+        "artists": [
+          {
+            "name": "Daft Punk",
+            "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+          }
+        ],
+        "album": {
+          "name": "Discovery",
+          "id": "MPREb_7ltM34kr0mH"
+        },
+        "thumbnail_url": "https://yt3.googleusercontent.com/qrY7xjdjqL0FEneZKHk845JeeFjdWOgexUa_BhsUxskJ2iflhzpbofqGJZBcPHDGU9JjoZflE4yn3P74=w120-h120-l90-rj",
+        "is_video": false,
+        "like_status": "indifferent",
+        "explicit": false,
+        "available": true,
+        "views": "401M",
+        "video_type": "MUSIC_VIDEO_TYPE_ATV",
+        "duration_seconds": 0
+      }
+    ],
+    "browse_id": "VLOLAK5uy_lNVBcjNtiCwq-n95uoxJ-Gd4vsfMkyZNs"
+  },
+  "albums": {
+    "items": [
+      {
+        "name": "Random Access Memories (Drumless Edition)",
+        "id": "MPREb_OgeEnoHTsCm",
+        "playlist_id": "OLAK5uy_k47QV7r7DblltHRB-1yRp-ZyrKYN4gkt0",
+        "kind": "Album",
+        "year": "2023",
+        "thumbnail_url": "https://yt3.googleusercontent.com/wm1nkwlINP48XhoI_M_m5Z7IWIw742yukaiKKxqQGcskmB6TdcKZqTsBNChGW_I1BphPt7OkBwu9kRE=w544-h544-l90-rj"
+      },
+      {
+        "name": "Random Access Memories",
+        "id": "MPREb_K8qWMWVqXGi",
+        "playlist_id": "OLAK5uy_kNhM2yaBTOVwrcZJepB1C9P3-n5_Sfy5c",
+        "kind": "Album",
+        "year": "2013",
+        "thumbnail_url": "https://yt3.googleusercontent.com/N55arCGj69gtw6thXK8JUPisxoVYiwuIEQ7I6SGlkEyNcSJ7xIWPe76Vuu1SiUqRyx5w9qvR_zV8fV3CWQ=w544-h544-l90-rj"
+      },
+      {
+        "name": "TRON: Legacy",
+        "id": "MPREb_BQHrCwSBM37",
+        "playlist_id": "OLAK5uy_k8XkxQFGZhSX8gENqaH6pg1xz8vOTnzQs",
+        "kind": "Album",
+        "year": "2010",
+        "thumbnail_url": "https://yt3.googleusercontent.com/wY7kATQ2X8UkxWku6-JuLMCfjoIP4V5Mc9B24wV_bNcombU5iOTEPIgRax9iuIpgGcBbsTuF2lhsSyPO=w544-h544-l90-rj"
+      },
+      {
+        "name": "Human After All",
+        "id": "MPREb_MD3Idh7KEhP",
+        "playlist_id": "OLAK5uy_kyBLbpI5BRf2wHsxpI8MM_WwF3epmn7U0",
+        "kind": "Album",
+        "year": "2005",
+        "thumbnail_url": "https://yt3.googleusercontent.com/de_LGA6dRsGlm0NI9KgQ-wiqDVqBldUYx6ALEmETACSS0Da6Ae2UOIs1aIh-7HAAa-br8QskT9G1gP-i=w544-h544-s-l90-rj"
+      },
+      {
+        "name": "Discovery",
+        "id": "MPREb_7ltM34kr0mH",
+        "playlist_id": "OLAK5uy_mz6eafmqdRHSaR4IwG0ll6J6rgv0_ZpGw",
+        "kind": "Album",
+        "year": "2001",
+        "thumbnail_url": "https://yt3.googleusercontent.com/qrY7xjdjqL0FEneZKHk845JeeFjdWOgexUa_BhsUxskJ2iflhzpbofqGJZBcPHDGU9JjoZflE4yn3P74=w544-h544-l90-rj"
+      },
+      {
+        "name": "Homework (25th Anniversary Edition)",
+        "id": "MPREb_DysYPhLwfgT",
+        "playlist_id": "OLAK5uy_mfg6NA2Q6rWf2THgxCy4kLKAu7gSy0OrA",
+        "kind": "Album",
+        "year": "1997",
+        "thumbnail_url": "https://yt3.googleusercontent.com/lLzvUfGK8pyp2a-lvc56yEETq5OajUCeFGO2N0XQ4Qo0pKw34-mMn0NplkjPXg62rTLKNw6TB7aepE7oxg=w544-h544-l90-rj"
+      }
+    ],
+    "browse_id": "MPADUCRr1xG_2WIDs18a6cIiCxeA",
+    "params": "ggMIegYIARoCAQI%3D"
+  },
+  "singles": {
+    "items": [
+      {
+        "name": "GLBTM (Studio Outtakes)",
+        "id": "MPREb_X1DQ1j0PPrX",
+        "playlist_id": "OLAK5uy_k29fGfk85tfMcdDEJPdinu2E9VgdHuCIU",
+        "kind": "Single",
+        "year": "2023",
+        "thumbnail_url": "https://yt3.googleusercontent.com/fgqj_3-DKrpBQNAoK9RmUAbW6-JaDbcPRF4ZsWjsLa1U-3m6X7pvg2QF5QrZLvs6HfTFS-d8DlKzYANK=w544-h544-l90-rj"
+      },
+      {
+        "name": "The Writing of Fragments of Time",
+        "id": "MPREb_7VGCTgAVWt7",
+        "playlist_id": "OLAK5uy_kZSZ7JthhPSEh7UDM4impL-zOFvT6o_bk",
+        "kind": "Single",
+        "year": "2023",
+        "thumbnail_url": "https://yt3.googleusercontent.com/zeR-DsNueuj68BJ2ORGyBYBmQ4OcDew557-nkYwoR2yIE9LEZBh5R4I-yTTXoT-Qux5tVnsOIXvvK9w=w544-h544-l90-rj"
+      },
+      {
+        "name": "Get Lucky (feat. Pharrell Williams \u0026 Nile Rodgers)",
+        "id": "MPREb_Ho8dXDZrVQ1",
+        "playlist_id": "OLAK5uy_nY4z4bS8dlaq_WJQjjRnGI91qzf_ehw6E",
+        "kind": "Single",
+        "year": "2013",
+        "thumbnail_url": "https://yt3.googleusercontent.com/rrUL5g-tx62qytZg5wy9TUKCqc_uEOXhTvtIEvvGw-3NwPoAecah6ZtNlahITr3lcCIfYOdxxL8LjuHM=w544-h544-l90-rj"
+      },
+      {
+        "name": "Derezzed ((From “TRON: Legacy”) [Avicii \"So Amazing Mix\"] ) (feat. Negin)",
+        "id": "MPREb_iHsLW7vJI2m",
+        "playlist_id": "OLAK5uy_lqUYZzdPlRBEeU-m4ZraMxAxg-pZsIE-Q",
+        "kind": "Single",
+        "year": "2010",
+        "thumbnail_url": "https://yt3.googleusercontent.com/rTVzNWFTCGiiVYQ2YcYEYlFU4l_lYNZO1aYyd7s3zZF7AmtXNOEvFk8LSSKQqoWND9RNr4PPzR6vjXkVAQ=w544-h544-l90-rj"
+      },
+      {
+        "name": "Harder Better Faster Stronger (Alive Radio Edit 2007)",
+        "id": "MPREb_wNhKTKb809x",
+        "playlist_id": "OLAK5uy_mmwJ9iJnYG7t2xKxzoAsCGJefR5LJ2C-Y",
+        "kind": "Single",
+        "year": "2007",
+        "thumbnail_url": "https://yt3.googleusercontent.com/hHuoJPsbg_KQp3Yw2HfoWB5aP6zAesZZcnGPzpww83JZoIOcyihaJ_ACMqzrBv4neKwrmD6i0blE1rK8=w544-h544-l90-rj"
+      },
+      {
+        "name": "prime time of your life",
+        "id": "MPREb_AkAwWpvJOOS",
+        "playlist_id": "OLAK5uy_kfLjsN6XRwlpJliAIcxsg4D2uVKHATCeY",
+        "kind": "Single",
+        "year": "2006",
+        "thumbnail_url": "https://yt3.googleusercontent.com/bRs3yvqydxT3RU0rL_shEk6hfo65Z3NwY-bcXQbIiCSmCL2UmFiGUlHWZKzrHtzP091skVzcb-jVYmc=w544-h544-l90-rj"
+      }
+    ],
+    "browse_id": "MPADUCRr1xG_2WIDs18a6cIiCxeA",
+    "params": "ggMIegYIAhoCAQI%3D"
+  },
+  "videos": {
+    "items": [
+      {
+        "video_id": "a5uQMwRMHcs",
+        "title": "Instant Crush (feat. Julian Casablancas)",
+        "artists": [
+          {
+            "name": "Daft Punk",
+            "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+          }
+        ],
+        "thumbnail_url": "https://i.ytimg.com/vi/a5uQMwRMHcs/hq720.jpg?sqp=-oaymwEKCKAGEMIDIABIWg\u0026rs=AMzJL3mMF8u_kf2VXzn-4p35M9wt-eNzUA",
+        "is_video": true,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "views": "915M",
+        "video_type": "MUSIC_VIDEO_TYPE_OMV",
+        "duration_seconds": 0
+      },
+      {
+        "video_id": "IT27gX6vbkU",
+        "title": "Get Lucky (Drumless Edition) (Audio)",
+        "artists": [
+          {
+            "name": "Daft Punk",
+            "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+          }
+        ],
+        "thumbnail_url": "https://i.ytimg.com/vi/IT27gX6vbkU/hq720.jpg?sqp=-oaymwEKCKAGEMIDIABIWg\u0026rs=AMzJL3mzSgjfdjKRRq_jPn8EQuxQcTlEDQ",
+        "is_video": true,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "views": "707K",
+        "video_type": "MUSIC_VIDEO_TYPE_OMV",
+        "duration_seconds": 0
+      },
+      {
+        "video_id": "FGBhQbmPwH8",
+        "title": "One More Time",
+        "artists": [
+          {
+            "name": "Daft Punk",
+            "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+          }
+        ],
+        "thumbnail_url": "https://i.ytimg.com/vi/FGBhQbmPwH8/hq720.jpg?sqp=-oaymwEKCKAGEMIDIABIWg\u0026rs=AMzJL3kkO-1yipseFU6gvv7RYXwGeDzUlQ",
+        "is_video": true,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "views": "624M",
+        "video_type": "MUSIC_VIDEO_TYPE_OMV",
+        "duration_seconds": 0
+      },
+      {
+        "video_id": "K0HSD_i2DvA",
+        "title": "Around the World",
+        "artists": [
+          {
+            "name": "Daft Punk",
+            "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+          }
+        ],
+        "thumbnail_url": "https://i.ytimg.com/vi/K0HSD_i2DvA/hq720.jpg?sqp=-oaymwEKCKAGEMIDIABIWg\u0026rs=AMzJL3m2FmHWTE17u-UvTs6Wtccx1IYZXw",
+        "is_video": true,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "views": "141M",
+        "video_type": "MUSIC_VIDEO_TYPE_OMV",
+        "duration_seconds": 0
+      },
+      {
+        "video_id": "gAjR4_CbPpQ",
+        "title": "Harder, Better, Faster, Stronger",
+        "artists": [
+          {
+            "name": "Daft Punk",
+            "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+          }
+        ],
+        "thumbnail_url": "https://i.ytimg.com/vi/gAjR4_CbPpQ/hq720.jpg?sqp=-oaymwEKCKAGEMIDIABIWg\u0026rs=AMzJL3mfB8dHqxi5njmGR4IHVHJ24mVgiw",
+        "is_video": true,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "views": "164M",
+        "video_type": "MUSIC_VIDEO_TYPE_OMV",
+        "duration_seconds": 0
+      },
+      {
+        "video_id": "HhZaHf8RP6g",
+        "title": "Veridis Quo",
+        "artists": [
+          {
+            "name": "Daft Punk",
+            "id": "UCRr1xG_2WIDs18a6cIiCxeA"
+          }
+        ],
+        "thumbnail_url": "https://i.ytimg.com/vi/HhZaHf8RP6g/hq720.jpg?sqp=-oaymwEKCKAGEMIDIABIWg\u0026rs=AMzJL3m4EtcCVxdGx3YrkYekkhWkLm8Z-A",
+        "is_video": true,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "views": "39M",
+        "video_type": "MUSIC_VIDEO_TYPE_OMV",
+        "duration_seconds": 0
+      }
+    ],
+    "browse_id": "VLOLAK5uy_mvGpNqcAglCR8WbCLLHnIitRBdLjho0ZI"
+  }
+}

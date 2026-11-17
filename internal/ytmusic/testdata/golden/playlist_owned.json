@@ -1,0 +1,37 @@
+{
+  "title": "Text 19",
+  "id": "PLfake0000003",
+  "author": "Text 28",
+  "count": "1 track",
+  "thumbnail_url": "https://example.invalid/thumb/7.jpg",
+  "owned": true,
+  "author_id": "UCfake000000000000000007",
+  "privacy": "PRIVATE",
+  "year": "2026",
+  "track_count": 1,
+  "duration": "4 minutes, 25 seconds",
+  "tracks": [
+    {
+      "video_id": "fake0000133",
+      "title": "Text 69",
+      "artists": [
+        {
+          "name": "Text 60",
+          "id": "UCfake000000000000000081"
+        }
+      ],
+      "album": {
+        "name": "Text 61",
+        "id": "MPREb_fake0000135"
+      },
+      "thumbnail_url": "https://example.invalid/thumb/4.jpg",
+      "is_video": false,
+      "like_status": "indifferent",
+      "set_video_id": "fake000000000139",
+      "explicit": true,
+      "available": true,
+      "video_type": "MUSIC_VIDEO_TYPE_ATV",
+      "duration_seconds": 265
+    }
+  ]
+}

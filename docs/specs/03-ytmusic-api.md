@@ -218,6 +218,28 @@ type Resolver interface {
   to EOF before extracting (`yt_dlp.get_urls` → `read_batch_urls`), so it cannot serve requests
   one at a time. Prefetch hides the latency instead.
 
+## Browse, library and edits (M5)
+
+- `Album`, `Playlist` + `PlaylistMore` (2025 `continuationItemRenderer` tokens, body
+  `{"continuation": token}` with no browseId), `Artist` (top songs, Albums / Singles & EPs / Videos
+  shelves matched by their English titles, as ytmusicapi does), `ArtistAlbums` (grid +
+  `gridContinuation`), `LibraryPlaylists/Albums/Artists` (old-style `continuations` paging,
+  `&ctoken=…&continuation=…&type=next`), and writes `CreatePlaylist`, `DeletePlaylist`,
+  `AddPlaylistItems` (`DEDUPE_OPTION_SKIP` only when duplicates are allowed), `RemovePlaylistItems`
+  (needs `SetVideoID`), `Rate`. Paths, column rules and bodies ported from ytmusicapi at the pinned
+  commit. Writes are not retried or shared; a non-`SUCCEEDED` `status` → `ErrEditFailed`.
+- Track rows: the column holding title/artist/album is found from its navigation target (album
+  pages use fixed columns); `SetVideoID` falls back to `playlistItemData.playlistSetVideoId`.
+- **Fixtures** (2026-11-17, signed in, read-only calls): `record_test.go` (`-tags record`,
+  `YTM_RECORD_DIR`) writes raw responses outside the repo; `scripts/scrubfixtures` drops tracking
+  keys, cuts lists to 6 entries (menus kept whole), replaces account name/handle/channel id, and
+  fully anonymizes library and owned-playlist captures (free text → `Text N`, ids → same-prefix
+  fakes, thumbnails → example.invalid). It refuses to write a file in which an account value or an
+  original id survives.
+- **Not verified live:** the write calls (no edits were made to the owner's account); bodies are
+  checked against ytmusicapi in `TestWriteRequestBodies`. Server response to a duplicate add is
+  assumed to be a non-success `status`.
+
 ## Edge cases
 
 - Free tier: some tracks are video-only (OMV) → still audio-only stream via yt-dlp.

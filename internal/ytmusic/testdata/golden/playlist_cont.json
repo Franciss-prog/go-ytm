@@ -1,0 +1,110 @@
+[
+  {
+    "video_id": "qxZInIyOBXk",
+    "title": "We Belong (Official Music Video)",
+    "artists": [
+      {
+        "name": "Pat Benatar",
+        "id": "UC2kQ55vxVaZqFPmefRlX5yg"
+      }
+    ],
+    "thumbnail_url": "https://i.ytimg.com/vi/qxZInIyOBXk/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg\u0026rs=AMzJL3m7gIP3fowG6syt9IfMACJ_vEL2mA",
+    "is_video": true,
+    "like_status": "indifferent",
+    "set_video_id": "A77DC64DD3A127E7",
+    "explicit": false,
+    "available": true,
+    "video_type": "MUSIC_VIDEO_TYPE_OMV",
+    "duration_seconds": 218
+  },
+  {
+    "video_id": "ZwAERaRUsp0",
+    "title": "Strangers In The Night",
+    "artists": [
+      {
+        "name": "Frank Sinatra",
+        "id": "UC1zsfp3OD8qWQ0HfLbz2TXg"
+      }
+    ],
+    "thumbnail_url": "https://i.ytimg.com/vi/ZwAERaRUsp0/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg\u0026rs=AMzJL3kVQnDLx5bsUQ8rkymLlAVU1S4jMg",
+    "is_video": true,
+    "like_status": "indifferent",
+    "set_video_id": "7D8732C14E16E900",
+    "explicit": false,
+    "available": true,
+    "video_type": "MUSIC_VIDEO_TYPE_OMV",
+    "duration_seconds": 129
+  },
+  {
+    "video_id": "2sAHiR0rkJg",
+    "title": "Why Do Fools Fall In Love-Frankie Lymon+The Teenagers-1956",
+    "artists": [
+      {
+        "name": "AK47bandit",
+        "id": "UCPvtIAnAekrNoe6WBqzs-rg"
+      }
+    ],
+    "thumbnail_url": "https://i.ytimg.com/vi/2sAHiR0rkJg/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg\u0026rs=AMzJL3khwGKQ2JCfCaEfMR0aTVmt4V8Juw",
+    "is_video": true,
+    "like_status": "indifferent",
+    "set_video_id": "86216799D0BBA849",
+    "explicit": false,
+    "available": true,
+    "video_type": "MUSIC_VIDEO_TYPE_UGC",
+    "duration_seconds": 151
+  },
+  {
+    "video_id": "Q11ium_-Lv8",
+    "title": "Scott Walker: The Walker Brothers - The Sun Ain't Gonna Shine Anymore",
+    "artists": [
+      {
+        "name": "annikapc",
+        "id": "UC1mqfZJysQvPuVw6_c1gP0w"
+      }
+    ],
+    "thumbnail_url": "https://i.ytimg.com/vi/Q11ium_-Lv8/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg\u0026rs=AMzJL3mdNxy6rsIaQki6CAc9WFTdzNJ2Bg",
+    "is_video": true,
+    "like_status": "indifferent",
+    "set_video_id": "0FEA5F89937BB506",
+    "explicit": false,
+    "available": true,
+    "video_type": "MUSIC_VIDEO_TYPE_UGC",
+    "duration_seconds": 198
+  },
+  {
+    "video_id": "hSofzQURQDk",
+    "title": "Build Me Up Buttercup (Mono)",
+    "artists": [
+      {
+        "name": "THE FOUNDATIONS",
+        "id": "UC8ZwA0BwA-kxTyNEdC6ltSA"
+      }
+    ],
+    "thumbnail_url": "https://i.ytimg.com/vi/hSofzQURQDk/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg\u0026rs=AMzJL3ma8OuYOaXemuwVguWz3F6kX4FehA",
+    "is_video": true,
+    "like_status": "indifferent",
+    "set_video_id": "6D2CEDBD71381D34",
+    "explicit": false,
+    "available": true,
+    "video_type": "MUSIC_VIDEO_TYPE_OMV",
+    "duration_seconds": 193
+  },
+  {
+    "video_id": "BTCfQ6Bb8QE",
+    "title": "Lyrics~Stand By Me-Ben E. King",
+    "artists": [
+      {
+        "name": "Riahsha",
+        "id": "UC-5ki6T7NVCRds2T31jNBxw"
+      }
+    ],
+    "thumbnail_url": "https://i.ytimg.com/vi/BTCfQ6Bb8QE/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg\u0026rs=AMzJL3nKbE65Z-ayFXcx2CZzcDn3A-QbEg",
+    "is_video": true,
+    "like_status": "indifferent",
+    "set_video_id": "D4A29206F871F2D6",
+    "explicit": false,
+    "available": true,
+    "video_type": "MUSIC_VIDEO_TYPE_UGC",
+    "duration_seconds": 176
+  }
+]

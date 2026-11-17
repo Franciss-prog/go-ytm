@@ -29,7 +29,8 @@ import (
 
 // Client is the YouTube Music API used by the rest of the app. It grows
 // per milestone (docs/specs/03-ytmusic-api.md); M2 covers search and the
-// account lookup used by `ytm setup`.
+// account lookup used by `ytm setup`; M5 adds browse pages, the library
+// and playlist edits.
 type Client interface {
 	// Search returns up to limit results. Filtered searches follow
 	// continuation pages until limit is reached.
@@ -38,6 +39,37 @@ type Client interface {
 	SearchSuggestions(ctx context.Context, q string) ([]string, error)
 	// Account returns the signed-in account, or ErrUnauthenticated.
 	Account(ctx context.Context) (AccountInfo, error)
+
+	// Album returns an album page (browse id MPREb_…).
+	Album(ctx context.Context, browseID string) (Album, error)
+	// Playlist returns a playlist with its first page of tracks; pass
+	// Playlist.Continuation to PlaylistMore for the next pages.
+	Playlist(ctx context.Context, id string) (Playlist, error)
+	// PlaylistMore returns the next page of tracks and the token after it
+	// ("" at the end).
+	PlaylistMore(ctx context.Context, token string) ([]Track, string, error)
+	// Artist returns an artist page (channel id UC…).
+	Artist(ctx context.Context, channelID string) (ArtistPage, error)
+	// ArtistAlbums returns an artist's full album or singles list from a
+	// shelf's BrowseID and Params (limit <= 0: all).
+	ArtistAlbums(ctx context.Context, browseID, params string, limit int) ([]AlbumRef, error)
+
+	// LibraryPlaylists, LibraryAlbums and LibraryArtists list the signed-in
+	// library (limit <= 0: all); ErrUnauthenticated when signed out.
+	LibraryPlaylists(ctx context.Context, limit int) ([]PlaylistRef, error)
+	LibraryAlbums(ctx context.Context, limit int) ([]AlbumRef, error)
+	LibraryArtists(ctx context.Context, limit int) ([]ArtistRef, error)
+
+	// CreatePlaylist creates a playlist and returns its id.
+	CreatePlaylist(ctx context.Context, title, description, privacy string, videoIDs []string) (string, error)
+	// DeletePlaylist deletes a playlist the account owns.
+	DeletePlaylist(ctx context.Context, playlistID string) error
+	// AddPlaylistItems appends videos to a playlist.
+	AddPlaylistItems(ctx context.Context, playlistID string, videoIDs []string, allowDuplicates bool) error
+	// RemovePlaylistItems removes tracks (by SetVideoID) from a playlist.
+	RemovePlaylistItems(ctx context.Context, playlistID string, tracks []Track) error
+	// Rate likes, dislikes or clears the rating of a video.
+	Rate(ctx context.Context, videoID string, s LikeStatus) error
 }
 
 // Sentinel errors. Match with errors.Is.
