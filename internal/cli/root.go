@@ -3,11 +3,12 @@ package cli
 import (
 	"errors"
 	"os/exec"
+	"os/signal"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/Franciss-Prog/go-ytm/internal/style"
+	"github.com/Franciss-Prog/go-ytm/internal/app"
 )
 
 var execCommand = exec.CommandContext
@@ -38,6 +39,7 @@ func NewRootCmd(a *App) *cobra.Command {
 	pf.StringVar(&a.configDir, "config-dir", "", "config directory (default: platform config dir; env YTM_GO_CONFIG_DIR)")
 	pf.StringVar(&a.pprofAddr, "pprof", "", "serve net/http/pprof on `addr` (default 127.0.0.1:6060)")
 	pf.Lookup("pprof").NoOptDefVal = "127.0.0.1:6060"
+	root.Flags().BoolVar(&a.traceFrames, "trace-frames", false, "log per-frame Update/View timings to the debug log (player UI only)")
 
 	root.AddCommand(newDoctorCmd(a), newConfigCmd(a), newSearchCmd(a), newSetupCmd(a))
 	return root
@@ -74,13 +76,29 @@ func (a *App) preRun(cmd *cobra.Command, _ []string) error {
 }
 
 func (a *App) runTUI(cmd *cobra.Command, _ []string) error {
-	m := a.modeFor(a.IO.Err, false)
-	r := a.Renderer(m)
-	msg := r.Message(style.StatusInfo, "The player UI is not built yet (milestone M4).") +
-		r.Hint("Check your setup with", "ytm doctor")
-	_, err := m.Writer(cmd.ErrOrStderr()).Write([]byte(msg))
-	return err
+	tty := a.IO.IsTTY != nil && a.IO.IsTTY(a.IO.Out) && a.IO.InTTY != nil && a.IO.InTTY()
+	if !tty {
+		return &ExitError{Code: ExitUsage, Err: errors.New("the player needs an interactive terminal; use a subcommand (see `ytm --help`) when piping")}
+	}
+	if a.debug {
+		a.Log.Warn("--debug also logs to stderr, which draws over the player; redirect it: ytm --debug 2>debug.log")
+	}
+	ctx, stop := signal.NotifyContext(cmd.Context(), shutdownSignals...)
+	defer stop()
+	return TUIRunner(ctx, app.Options{
+		Config:      a.Config,
+		ConfigDiags: a.Diags,
+		Paths:       a.Paths,
+		Theme:       a.Theme,
+		NoColor:     a.noColor || a.getenv("NO_COLOR") != "",
+		Log:         a.Log,
+		TraceFrames: a.traceFrames,
+		Env:         a.IO.Env,
+	})
 }
+
+// TUIRunner starts the player UI; tests replace it.
+var TUIRunner = app.Run
 
 // addJSONFlag registers the standard --json flag.
 func addJSONFlag(fs *pflag.FlagSet, p *bool) {

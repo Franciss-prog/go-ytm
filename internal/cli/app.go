@@ -95,10 +95,11 @@ type App struct {
 	IO IO
 
 	// flags
-	debug     bool
-	noColor   bool
-	configDir string
-	pprofAddr string
+	debug       bool
+	noColor     bool
+	traceFrames bool
+	configDir   string
+	pprofAddr   string
 
 	// resolved lazily by load()
 	loaded bool

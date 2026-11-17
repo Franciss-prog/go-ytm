@@ -14,6 +14,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Franciss-Prog/go-ytm/internal/app"
+
 	"github.com/charmbracelet/colorprofile"
 
 	"github.com/Franciss-Prog/go-ytm/internal/buildinfo"
@@ -234,10 +236,32 @@ func TestNoColorFlag(t *testing.T) {
 	}
 }
 
-func TestRootWithoutTUI(t *testing.T) {
+func TestRootNeedsTerminal(t *testing.T) {
+	called := false
+	prev := TUIRunner
+	TUIRunner = func(context.Context, app.Options) error { called = true; return nil }
+	t.Cleanup(func() { TUIRunner = prev })
 	r := run(t, runOpts{})
-	if r.code != ExitOK || r.stdout != "" || !strings.Contains(r.stderr, "ytm doctor") {
-		t.Fatalf("root: code %d stdout %q stderr %q", r.code, r.stdout, r.stderr)
+	if r.code != ExitUsage || called || !strings.Contains(r.stderr, "interactive terminal") {
+		t.Fatalf("root piped: code %d called %v stderr %q", r.code, called, r.stderr)
+	}
+}
+
+func TestRootStartsTUI(t *testing.T) {
+	var got app.Options
+	prev := TUIRunner
+	TUIRunner = func(_ context.Context, o app.Options) error { got = o; return nil }
+	t.Cleanup(func() { TUIRunner = prev })
+	r := run(t, runOpts{tty: true, inTTY: true, config: "[playback]\ndefault_volume = 150\n"}, "--trace-frames")
+	if r.code != ExitOK {
+		t.Fatalf("code %d stderr %q", r.code, r.stderr)
+	}
+	if !got.TraceFrames || got.Config.Playback.DefaultVolume != 100 || len(got.ConfigDiags) == 0 || got.Paths.Config == "" {
+		t.Errorf("options not passed through: %+v", got)
+	}
+	r = run(t, runOpts{tty: true, inTTY: true, env: []string{"NO_COLOR=1"}})
+	if r.code != ExitOK || !got.NoColor {
+		t.Errorf("NO_COLOR not passed: code %d, %v", r.code, got.NoColor)
 	}
 }
 
