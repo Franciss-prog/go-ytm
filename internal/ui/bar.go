@@ -28,6 +28,24 @@ type barState struct {
 	shuffle bool
 	repeat  string // "off" | "all" | "one"
 	style   string // [ui] progress_style: block|line
+
+	// Wheel scrubbing: the bar previews scrubPos until the seek commits.
+	scrubbing bool
+	scrubPos  time.Duration
+}
+
+// pos is the position to draw: the scrub preview while scrubbing.
+func (b barState) pos() time.Duration {
+	if b.scrubbing {
+		return b.scrubPos
+	}
+	return b.st.Position
+}
+
+// barButton is a clickable glyph on the bar's first row.
+type barButton struct {
+	x, w   int
+	action string
 }
 
 // barGeom records where the progress bar and volume were drawn, for mouse
@@ -35,6 +53,8 @@ type barState struct {
 type barGeom struct {
 	progressRow, progressX, progressW int
 	volumeRow, volumeX, volumeW       int
+	buttonRow                         int
+	buttons                           []barButton
 }
 
 func fmtDur(d time.Duration) string {
@@ -83,7 +103,7 @@ func (b barState) progress(width int, u *style.UI) string {
 	}
 	frac := 0.0
 	if b.st.Duration > 0 {
-		frac = min(max(float64(b.st.Position)/float64(b.st.Duration), 0), 1)
+		frac = min(max(float64(b.pos())/float64(b.st.Duration), 0), 1)
 	}
 	filled := int(frac * float64(width))
 	if b.style == "line" {
@@ -117,7 +137,7 @@ func (b barState) view(width int, compact bool, u *style.UI) (string, barGeom) {
 	}
 	title, sub := b.title()
 	icon := u.BarIconActive.Render(b.playIcon(ic))
-	pos, dur := fmtDur(b.st.Position), fmtDur(b.st.Duration)
+	pos, dur := fmtDur(b.pos()), fmtDur(b.st.Duration)
 
 	if compact {
 		left := " " + icon + " " + u.BarTitle.Render(title)
@@ -135,8 +155,32 @@ func (b barState) view(width int, compact bool, u *style.UI) (string, barGeom) {
 	if b.repeat == "one" {
 		rep += "1"
 	}
-	controls := flag(b.liked, ic.Heart) + "  " + flag(b.shuffle, ic.Shuffle) + "  " + flag(b.repeat != "off" && b.repeat != "", rep) + "  " + icon + " "
+	glyphs := []struct {
+		s      string
+		action string
+	}{
+		{flag(b.liked, ic.Heart), "like_toggle"},
+		{flag(b.shuffle, ic.Shuffle), "toggle_shuffle"},
+		{flag(b.repeat != "off" && b.repeat != "", rep), "cycle_repeat"},
+		{icon, "play_pause"},
+	}
+	controls := ""
+	for i, gl := range glyphs {
+		if i > 0 {
+			controls += "  "
+		}
+		controls += gl.s
+	}
+	controls += " "
 	cw := ansi.StringWidth(controls)
+	if cw < width {
+		x := width - cw
+		for _, gl := range glyphs {
+			w := ansi.StringWidth(gl.s)
+			g.buttons = append(g.buttons, barButton{x: x, w: w, action: gl.action})
+			x += w + 2
+		}
+	}
 	row1 := fit(" "+u.BarTitle.Render(title), width-cw) + controls
 	row2 := " " + u.BarArtist.Render(sub)
 	if b.st.Status == player.Error && b.st.Err != "" {

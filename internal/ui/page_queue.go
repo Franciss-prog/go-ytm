@@ -164,3 +164,16 @@ func (p *queuePage) View(width, height int, st *style.UI) string {
 	}
 	return components.Fit(head, width) + "\n" + components.Fit("", width) + "\n" + p.table.View(width, height-2, st)
 }
+
+// Click implements mouser (the table sits below the title and a blank row).
+func (p *queuePage) Click(ev mouseEv, ctx *Context) (Page, tea.Cmd) {
+	if ev.y < 2 {
+		return p, nil
+	}
+	name := tableClick(p.table.Click(ev.x, ev.y-2, ev.right, ev.ctrl, ev.shift))
+	if name == "" {
+		return p, nil
+	}
+	_, cmd, _ := p.Action(keys.Action{Name: name}, ctx)
+	return p, cmd
+}

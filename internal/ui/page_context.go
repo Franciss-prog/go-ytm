@@ -48,6 +48,9 @@ type contextPage struct {
 	releases    *components.List
 	releaseRefs []ytmusic.AlbumRef
 	focus       int // 0 table, 1 releases
+
+	// Rows of the table and the releases list at the last View (mouse).
+	tableY, relY int
 }
 
 func newContextPage(kind contextKind, id, name string, cols components.Columns) *contextPage {
@@ -294,6 +297,7 @@ func (p *contextPage) View(width, height int, st *style.UI) string {
 	lines = append(lines, "")
 	headH := len(lines)
 	body := max(height-headH, 0)
+	p.tableY, p.relY = headH, -1
 	var main string
 	switch p.state {
 	case stateIdle, stateLoading:
@@ -313,6 +317,8 @@ func (p *contextPage) body(width, height int, st *style.UI) string {
 	// Artist: songs on top, releases below (about a third), tab switches.
 	relH := max(min(height/3, p.releases.Len()+1), 2)
 	songsH := max(height-relH, 0)
+	p.tableY++
+	p.relY = p.tableY + max(songsH-1, 0) + 1
 	label := func(s string, on bool) string {
 		if on {
 			return " " + st.Section.Render(s)
@@ -323,4 +329,29 @@ func (p *contextPage) body(width, height int, st *style.UI) string {
 		p.table.View(width, max(songsH-1, 0), st) + "\n" +
 		label("Albums & singles (tab)", p.focus == 1) + "\n" +
 		p.releases.View(width, max(relH-1, 0), st, p.focus == 1)
+}
+
+// Click implements mouser: the table, or on artist pages the releases
+// list, takes the click and becomes the focused panel.
+func (p *contextPage) Click(ev mouseEv, ctx *Context) (Page, tea.Cmd) {
+	if p.state != stateLoaded {
+		return p, nil
+	}
+	if p.relY >= 0 && ev.y >= p.relY {
+		p.focus = 1
+		return p.clickAction(listClick(p.releases.Click(ev.y-p.relY, ev.right)), ctx)
+	}
+	if ev.y < p.tableY {
+		return p, nil
+	}
+	p.focus = 0
+	return p.clickAction(tableClick(p.table.Click(ev.x, ev.y-p.tableY, ev.right, ev.ctrl, ev.shift)), ctx)
+}
+
+func (p *contextPage) clickAction(name string, ctx *Context) (Page, tea.Cmd) {
+	if name == "" {
+		return p, nil
+	}
+	_, cmd, _ := p.Action(keys.Action{Name: name}, ctx)
+	return p, cmd
 }

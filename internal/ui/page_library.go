@@ -245,3 +245,25 @@ func (p *libraryPage) View(width, height int, st *style.UI) string {
 	}
 	return components.Fit(head, width) + "\n" + components.Fit("", width) + "\n" + main
 }
+
+// Click implements mouser: the tab row switches tabs, the list below the
+// blank row takes clicks (click the selected row to open it).
+func (p *libraryPage) Click(ev mouseEv, ctx *Context) (Page, tea.Cmd) {
+	if ev.y == 0 {
+		if t := tabHit(libraryTabs, ev.x); t >= 0 && t != p.tab && !ev.right {
+			p.tab = t
+			cmd := p.Activate(ctx)
+			return p, cmd
+		}
+		return p, nil
+	}
+	if ev.y < 2 || p.state[p.tab] != stateLoaded {
+		return p, nil
+	}
+	name := listClick(p.lists[p.tab].Click(ev.y-2, ev.right))
+	if name == "" {
+		return p, nil
+	}
+	_, cmd, _ := p.Action(keys.Action{Name: name}, ctx)
+	return p, cmd
+}

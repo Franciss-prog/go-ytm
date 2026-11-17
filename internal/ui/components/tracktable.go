@@ -79,7 +79,8 @@ type TrackTable struct {
 	cols  Columns
 	cache []rowCache
 	dataV uint64
-	lastH int // body height of the last View, for paging
+	lastH int    // body height of the last View, for paging
+	lastL layout // column geometry of the last View, for header clicks
 }
 
 type rowKey struct {
@@ -644,6 +645,83 @@ func (t *TrackTable) InGutter(x int, st *style.UI) bool {
 	return x >= 0 && x < ansi.StringWidth(st.SelectedGutter)+2
 }
 
+// ClickResult says what a mouse click did.
+type ClickResult int
+
+// Click results.
+const (
+	ClickNone     ClickResult = iota // missed every row
+	ClickMoved                       // moved the cursor
+	ClickActivate                    // clicked the row under the cursor: the owner runs select
+	ClickMenu                        // right click on a row (cursor moved): the owner opens actions
+	ClickMarked                      // toggled or extended marks
+	ClickSorted                      // header click changed the sort
+)
+
+// Click applies a mouse click at (x, y) inside the table as last drawn
+// (y 0 = header), like the original: a plain click moves the cursor (and
+// sets the range anchor), a click on the cursor row activates it, Ctrl-click
+// or a click in the mark gutter toggles the row's mark, Shift-click marks
+// from the anchor, right click asks for the actions menu and a header click
+// sorts by that column (again: reverses).
+func (t *TrackTable) Click(x, y int, right, ctrl, shift bool) ClickResult {
+	if y == 0 {
+		if right || len(t.rows) == 0 {
+			return ClickNone
+		}
+		if name := t.headerHit(x); name != "" {
+			t.Action(keys.Action{Name: name})
+			return ClickSorted
+		}
+		return ClickNone
+	}
+	v := t.HitRow(y)
+	if v < 0 {
+		return ClickNone
+	}
+	switch {
+	case right:
+		t.SetCursor(v)
+		return ClickMenu
+	case shift && !ctrl:
+		t.MarkRange(v)
+	case ctrl || x < t.lastL.gutter:
+		t.ToggleMark(v)
+	case v == t.cursor:
+		return ClickActivate
+	default:
+		t.anchor = t.view[v]
+		t.SetCursor(v)
+		return ClickMoved
+	}
+	t.SetCursor(v)
+	return ClickMarked
+}
+
+// headerHit maps a header column x to its sort action ("" for none); "#"
+// sorts by source order.
+func (t *TrackTable) headerHit(x int) string {
+	l := t.lastL
+	at := l.gutter
+	cols := []struct {
+		w    int
+		name string
+	}{
+		{l.index + 1, "sort_date"},
+		{l.title + 1, "sort_title"},
+		{l.artist + min(l.artist, 1), "sort_artist"},
+		{l.album + min(l.album, 1), "sort_album"},
+		{l.dur, "sort_duration"},
+	}
+	for _, c := range cols {
+		if x >= at && x < at+c.w {
+			return c.name
+		}
+		at += c.w
+	}
+	return ""
+}
+
 // Wheel scrolls the cursor by n rows (negative: up).
 func (t *TrackTable) Wheel(n int) { t.SetCursor(t.cursor + n) }
 
@@ -669,6 +747,7 @@ func (t *TrackTable) View(width, height int, st *style.UI) string {
 	t.scroll(t.lastH)
 
 	l := t.layout(width, st)
+	t.lastL = l
 	lines := make([]string, 0, height)
 	lines = append(lines, t.header(l, width, st))
 	if len(t.view) == 0 {

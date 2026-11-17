@@ -57,6 +57,10 @@ type searchPage struct {
 	albums   []ytmusic.AlbumRef
 	artists  []ytmusic.ArtistRef
 	playlist []ytmusic.PlaylistRef
+
+	// Rows of the panel tabs and the panel body at the last View (mouse);
+	// -1 when not drawn.
+	tabY, bodyY int
 }
 
 func newSearchPage(cols components.Columns) *searchPage {
@@ -384,6 +388,7 @@ func (p *searchPage) View(width, height int, st *style.UI) string {
 	in := " " + st.Section.Render("Search ▸ ") + st.Text.Render(string(p.input)+cur)
 	right := st.Muted.Render("mode: " + mode + " ")
 	lines := []string{components.Fit(in, max(width-components.Width(right), 0)) + right}
+	p.tabY, p.bodyY = -1, -1
 
 	if p.editing && len(p.suggest) > 0 {
 		for i, s := range p.suggest {
@@ -413,6 +418,7 @@ func (p *searchPage) View(width, height int, st *style.UI) string {
 		lines = append(lines, " "+st.Muted.Render("Top result: ")+st.Text.Render(p.top.Title())+st.Muted.Render(" · "+typeLabel(p.top.Type)))
 	}
 	lines = append(lines, tabBar(panelNames[:p.panels()], p.panel, st))
+	p.tabY, p.bodyY = len(lines)-1, len(lines)
 	head := components.Block(lines, width, min(len(lines), height))
 	body := height - len(lines)
 	if body <= 0 {
@@ -435,4 +441,37 @@ func typeLabel(t ytmusic.ResultType) string {
 		return ""
 	}
 	return strings.ToUpper(string(t[:1])) + string(t[1:])
+}
+
+// Click implements mouser: the input row starts editing, the panel tabs
+// switch panels, the panel body takes clicks (leaving the input).
+func (p *searchPage) Click(ev mouseEv, ctx *Context) (Page, tea.Cmd) {
+	switch {
+	case ev.y == 0 && !ev.right:
+		p.editing = true
+		return p, nil
+	case p.tabY >= 0 && ev.y == p.tabY:
+		if t := tabHit(panelNames[:p.panels()], ev.x); t >= 0 && !ev.right {
+			p.editing, p.panel = false, t
+		}
+		return p, nil
+	case p.bodyY < 0 || ev.y < p.bodyY:
+		return p, nil
+	}
+	p.editing = false
+	y := ev.y - p.bodyY
+	var name string
+	switch p.panel {
+	case panelSongs:
+		name = tableClick(p.songs.Click(ev.x, y, ev.right, ev.ctrl, ev.shift))
+	case panelVideos:
+		name = tableClick(p.videos.Click(ev.x, y, ev.right, ev.ctrl, ev.shift))
+	default:
+		name = listClick(p.lists[p.panel].Click(y, ev.right))
+	}
+	if name == "" {
+		return p, nil
+	}
+	_, cmd, _ := p.Action(keys.Action{Name: name}, ctx)
+	return p, cmd
 }

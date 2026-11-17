@@ -13,7 +13,7 @@ Last updated: 2026-11-17
 | M3 | stream-resolve | **in review** | [#5](https://github.com/Franciss-prog/go-ytm/pull/5) (stacked on #4) | yt-dlp resolver, URL cache, prefetcher, doctor mpv version |
 | M4 | tui-shell | **in review** | [#6](https://github.com/Franciss-prog/go-ytm/pull/6) (stacked on #5) | keymap engine, root model, header, bar, toasts, Help, app wiring |
 | M4b | dynamic-theme | **in review** | [#7](https://github.com/Franciss-prog/go-ytm/pull/7) (stacked on #6) | sources, contrast, depth, watcher, Patch, Settings, `theme show` |
-| M5 | tui-library-search-queue | **in progress** | branch `feat/tui-library-search-queue` | done: queue pkg, ytmusic browse/library/edit calls, TrackTable, playback owner (resolve/gapless/retry), Queue page, Library, Context pages, Search page, popups (actions, playlist picker, create, confirm), playlist sidebar. Next: mouse |
+| M5 | tui-library-search-queue | **in progress** | branch `feat/tui-library-search-queue` | done: queue pkg, ytmusic browse/library/edit calls, TrackTable, playback owner (resolve/gapless/retry), Queue page, Library, Context pages, Search page, popups (actions, playlist picker, create, confirm), playlist sidebar, mouse. Next: M5 PR |
 | M6 | browse-liked-history | not started | | |
 | M7 | session-cache-offline | not started | | |
 | M8 | lyrics | not started | | |
@@ -78,6 +78,7 @@ Last updated: 2026-11-17
 | 2026-11-17 | `V` marks from the last toggled row to the cursor; with no anchor it marks the cursor and anchors | 05 |
 | 2026-11-17 | Playlist sidebar ported from ytm-player 2.2.0 `playlist_sidebar.py`: pinned nav rows, Liked Music left out, mouse-only pinned rows; enter keeps focus in the sidebar | 05 |
 | 2026-11-17 | Sidebar loads its own `LibraryPlaylists` (not shared with the Library page): one extra call at start, simpler ownership | 05 |
+| 2026-11-17 | Mouse semantics from ytm-player 2.2.0 `track_table.py` / `progress_bar.py`: click cursor row = select, scrub 3 s/tick, commit after 0.6 s; wheel moves the cursor (not the viewport) | 05 |
 | 2026-11-17 | Nerd icons for Recent/Mix = Font Awesome `f017`/`f001` (same codepoints in Nerd Fonts) | 05 |
 
 ## Verified facts (with how)
@@ -248,7 +249,10 @@ Last updated: 2026-11-17
   the ytmusic write bodies were never sent live (see 03).
 - M5: picker has no recently-used ordering yet; actions popup has no Start radio (M6) / Download (M7).
 - M5: Search page not driven live in a terminal yet; covered by fake-API tests and goldens.
-- M5: sidebar pinned rows do nothing yet (mouse lands next); `sidebar_overflow = "wrap"` only
+- M5: mouse driven live (tmux SGR events, signed in): sidebar click opens, row click / right-click
+  popup / wheel / Back work. **Bar glyph clicks and wheel scrubbing not run live** (nothing was
+  playing); fake-player tests only. Ctrl/Shift-click depend on the terminal passing modifiers.
+- M5: `sidebar_overflow = "wrap"` only
   tested with goldens/unit tests, not live. The main page keeps drawing its cursor while the
   sidebar has focus (only the sidebar title/cursor show focus).
 - `TestRestartBackoffAndGiveUp` (player) failed once under `make test` (its state-after-give-up

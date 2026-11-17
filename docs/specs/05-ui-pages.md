@@ -1,6 +1,6 @@
 # 05 — UI pages, components, layout
 
-Status: **M4 implemented** (shell, bar, help, toasts), **M5 in progress** (pages, popups, playlist sidebar) · Milestones: M4 (shell, bar, help), M5, M6, M8
+Status: **M4 implemented** (shell, bar, help, toasts), **M5 in progress** (pages, popups, playlist sidebar, mouse) · Milestones: M4 (shell, bar, help), M5, M6, M8
 
 ## Goals
 
@@ -240,6 +240,26 @@ Bottom-right above bar, max 3 stacked, 4 s, severity tokens (error/warn/success)
   once. Stale load answers are dropped (request sequence).
 - `sidebar_overflow = "wrap"` wraps long names onto more rows (List `SetWrap`), the count on the
   last row when it fits; `truncate` cuts with "…" like before.
+
+## Implementation notes (M5 mouse)
+
+- Clicks route by region: header (← Back / Forward →), sidebar, main area, playback bar. Clicking
+  a pane gives it keyboard focus. Popups own input: clicks and wheel behind them are ignored.
+- Track tables, as the original's `track_table.py`: a click moves the cursor (and sets the range
+  anchor); a click on the cursor row runs `select` (Textual raises RowSelected there); Ctrl-click or
+  a click in the mark gutter toggles the mark; Shift-click marks from the anchor; right click moves
+  the cursor and opens the actions popup; a header click sorts by that column (again: reverses;
+  `#` = source order). Lists (library tabs, search panels, artist releases) work the same without
+  marks; tab rows switch tabs; the search input row starts editing.
+- Sidebar: a playlist click opens it at once (the original's `instant_select`), right click opens
+  its actions; pinned rows navigate (Discovery Mix still toasts "not available yet").
+- Bar: click on progress seeks; ♥ / ⤮ / ⟳ / ▶ glyphs run `like_toggle` / `toggle_shuffle` /
+  `cycle_repeat` / `play_pause`; wheel on the volume ±5; wheel on progress scrubs 3 s per tick
+  (up = forward), previewed on the bar and seeked 0.6 s after the last tick (original's
+  `progress_bar.py` constants). A new track cancels a pending scrub.
+- Wheel over the sidebar or main area moves that pane's cursor one row per event (terminals send
+  several events per notch).
+- The bar draws no ◁◁ / ▷▷ glyphs yet (the mock above has them); `n` / `p` remain the route.
 
 ## Open questions
 

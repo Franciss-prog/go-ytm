@@ -107,6 +107,8 @@ type Model struct {
 	quiting bool
 
 	pb playback
+
+	scrubSeq uint64 // bumps per wheel tick on the progress bar
 }
 
 // New builds the root model.
@@ -211,6 +213,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.MouseClickMsg:
 		cmd := m.click(msg.Mouse())
 		return m, cmd
+	case scrubCommitMsg:
+		m.commitScrub(msg.seq)
+		return m, nil
 	case tea.MouseWheelMsg:
 		cmd := m.wheel(msg.Mouse())
 		return m, cmd
@@ -421,6 +426,7 @@ func (m *Model) playerEvent(ev player.Event) tea.Cmd {
 	case player.StateChanged:
 		m.bar.st = e.State
 	case player.TrackStarted:
+		m.bar.scrubbing = false
 		return m.trackStarted(e.Item)
 	case player.TrackEnded:
 		return m.trackEnded(e)
@@ -704,49 +710,6 @@ func (m *Model) sidebarView(w, h int) string {
 func (m *Model) lyricsView(w, h int) string {
 	st := m.st
 	return block([]string{" " + st.Section.Render("Lyrics"), "", " " + st.Muted.Render("No lyrics yet.")}, w, h)
-}
-
-func (m *Model) click(ms tea.Mouse) tea.Cmd {
-	if ms.Button != tea.MouseLeft || m.modal() {
-		return nil
-	}
-	l := m.layout()
-	if l.header && ms.Y == 0 {
-		backW, fwdW := ansi.StringWidth(backLabel), ansi.StringWidth(forwardLabel)
-		switch {
-		case ms.X >= 1 && ms.X < 1+backW:
-			m.goBack()
-		case ms.X >= m.width-1-fwdW && ms.X < m.width-1:
-			m.goForward()
-		}
-		return nil
-	}
-	g := m.geom
-	if ms.Y == m.barTop+g.progressRow && g.progressW > 0 && ms.X >= g.progressX && ms.X < g.progressX+g.progressW &&
-		m.o.Player != nil && m.bar.st.Duration > 0 {
-		frac := float64(ms.X-g.progressX) / float64(g.progressW)
-		if err := m.o.Player.Seek(time.Duration(frac*float64(m.bar.st.Duration)), player.SeekAbsolute); err != nil {
-			m.log.Warn("ui: seek failed", "err", err)
-		}
-	}
-	return nil
-}
-
-func (m *Model) wheel(ms tea.Mouse) tea.Cmd {
-	if m.modal() {
-		return nil
-	}
-	g := m.geom
-	if ms.Y != m.barTop+g.volumeRow || ms.X < g.volumeX || ms.X >= g.volumeX+g.volumeW {
-		return nil
-	}
-	switch ms.Button {
-	case tea.MouseWheelUp:
-		return m.playback(keys.Action{Name: "volume_up"})
-	case tea.MouseWheelDown:
-		return m.playback(keys.Action{Name: "volume_down"})
-	}
-	return nil
 }
 
 // modal reports that a popup (or Settings) owns input.

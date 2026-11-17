@@ -82,6 +82,24 @@ func (l *List) SetCursor(v int) {
 	l.scroll()
 }
 
+// Click applies a click at row y inside the list as last drawn: a click
+// moves the cursor, a click on the cursor row returns ClickActivate, a
+// right click moves the cursor and returns ClickMenu.
+func (l *List) Click(y int, right bool) ClickResult {
+	v := l.HitRow(y)
+	switch {
+	case v < 0:
+		return ClickNone
+	case right:
+		l.SetCursor(v)
+		return ClickMenu
+	case v == l.cursor:
+		return ClickActivate
+	}
+	l.SetCursor(v)
+	return ClickMoved
+}
+
 // SelectKey moves the cursor to the visible item with key k and reports
 // whether there is one.
 func (l *List) SelectKey(k string) bool {

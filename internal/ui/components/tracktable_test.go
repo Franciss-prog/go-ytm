@@ -361,3 +361,27 @@ func BenchmarkScroll1000(b *testing.B) {
 		tt.View(140, 40, st)
 	}
 }
+
+func TestTrackTableHeaderClickHitsLabels(t *testing.T) {
+	tt := NewTrackTable(Columns{}, "")
+	tt.SetRows(daftPunk())
+	st := testStyles(false, style.SelBar)
+	head := strings.Split(ansi.Strip(tt.View(100, 10, st)), "\n")[0]
+	for label, want := range map[string]SortKey{"Title": SortTitle, "Artist": SortArtist, "Album": SortAlbum, "Time": SortDuration} {
+		tt.Action(keys.Action{Name: "sort_date"}) // reset to a different key
+		i := strings.Index(head, label)
+		if i < 0 {
+			t.Fatalf("no %q in header %q", label, head)
+		}
+		x := ansi.StringWidth(head[:i])
+		if r := tt.Click(x, 0, false, false, false); r != ClickSorted {
+			t.Fatalf("%s: result %v", label, r)
+		}
+		if k, _ := tt.Sort(); k != want {
+			t.Errorf("click on %q sorted by %v", label, k)
+		}
+	}
+	if r := tt.Click(99, 0, true, false, false); r != ClickNone {
+		t.Fatalf("right click on header: %v", r)
+	}
+}
