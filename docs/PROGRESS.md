@@ -13,7 +13,7 @@ Last updated: 2026-11-17
 | M3 | stream-resolve | **in review** | [#5](https://github.com/Franciss-prog/go-ytm/pull/5) (stacked on #4) | yt-dlp resolver, URL cache, prefetcher, doctor mpv version |
 | M4 | tui-shell | **in review** | [#6](https://github.com/Franciss-prog/go-ytm/pull/6) (stacked on #5) | keymap engine, root model, header, bar, toasts, Help, app wiring |
 | M4b | dynamic-theme | **in review** | [#7](https://github.com/Franciss-prog/go-ytm/pull/7) (stacked on #6) | sources, contrast, depth, watcher, Patch, Settings, `theme show` |
-| M5 | tui-library-search-queue | not started | | |
+| M5 | tui-library-search-queue | **in progress** | branch `feat/tui-library-search-queue` | done: queue pkg, ytmusic browse/library/edit calls, TrackTable, playback owner (resolve/gapless/retry), Queue page. Next: ytmusic in UI, Library, Search, Context, popups, sidebar, mouse |
 | M6 | browse-liked-history | not started | | |
 | M7 | session-cache-offline | not started | | |
 | M8 | lyrics | not started | | |
@@ -71,6 +71,11 @@ Last updated: 2026-11-17
 | 2026-11-17 | `config.Patch` writes basic strings, refuses keys inside inline tables, re-parses before rename | 04 |
 | 2026-11-17 | `ytm theme reload` deferred to M9 (IPC); SIGUSR1 reloads now | 06, 08 |
 | 2026-11-17 | OSC 11 queried only at startup in transparent mode; then COLORFGBG; else black | 08 |
+| 2026-11-17 | Queue owner lives in the root UI model (`ui/playback.go`); pages send `PlayMsg`/`EnqueueMsg` | 05 |
+| 2026-11-17 | Pages stay in package `ui` (a `pages` subpackage would need the root's message types in a third package) | 01, 05 |
+| 2026-11-17 | TrackTable filter is fuzzy per field (title, artist, album), not over the joined string (too loose) | 05 |
+| 2026-11-17 | `sort_date` = source order (playlist order / playback order); no date-added field in responses | 05 |
+| 2026-11-17 | `V` marks from the last toggled row to the cursor; with no anchor it marks the cursor and anchors | 05 |
 
 ## Verified facts (with how)
 
