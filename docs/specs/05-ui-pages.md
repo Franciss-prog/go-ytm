@@ -1,6 +1,6 @@
 # 05 — UI pages, components, layout
 
-Status: **M4 implemented** (shell, bar, help, toasts), **M5 in progress** (pages, popups) · Milestones: M4 (shell, bar, help), M5, M6, M8
+Status: **M4 implemented** (shell, bar, help, toasts), **M5 in progress** (pages, popups, playlist sidebar) · Milestones: M4 (shell, bar, help), M5, M6, M8
 
 ## Goals
 
@@ -219,6 +219,27 @@ Bottom-right above bar, max 3 stacked, 4 s, severity tokens (error/warn/success)
   Created with the selected video ids (deduplicated) in one `CreatePlaylist` call.
 - `delete_item` on an owned playlist page and on a library playlist asks to confirm. Edits never
   change the screen before YouTube Music confirms; the library list and an open playlist reload after.
+
+## Implementation notes (M5 playlist sidebar)
+
+- Layout as the original's `PlaylistSidebar`: pinned rows ♥ Liked Songs · ⏱ Recently Played ·
+  ♫ Discovery Mix (highlighted when that page is shown; mouse targets — keyboard reaches them with
+  `g y` / `g r` / `D`), a rule, the "Playlists" title, the library playlists **without Liked Music**
+  (`LM`, pinned above), and a footer "N playlists" or "shown/total" while filtered. Pinned rows
+  and the rule are dropped below 8 rows. Counts show the number only ("87"), the full count is on
+  the selection info line.
+- Focus: `C-w h` focuses the sidebar (showing it if hidden, toast when the window is < 80 columns),
+  `C-w l` returns to the main area, `C-w w` cycles. While focused it takes `j/k`, paging,
+  `g g`/`G`, `/` filter (fuzzy, owns raw keys while typing), `escape` clears the filter, `enter`
+  opens the playlist (focus stays in the sidebar; the playlist already shown is not reopened),
+  `a` actions popup, `delete`/`d d` delete (owned only, with confirm), `r` retry after an error.
+  Everything else falls through to the page and then the global keys, as in the original.
+  `C-e` hiding the sidebar returns focus to the main area.
+- Loads once at start when shown (or when first shown), keeps the cursor on the same playlist
+  across reloads, reloads after playlist creates/adds/removes, and drops a deleted playlist at
+  once. Stale load answers are dropped (request sequence).
+- `sidebar_overflow = "wrap"` wraps long names onto more rows (List `SetWrap`), the count on the
+  last row when it fits; `truncate` cuts with "…" like before.
 
 ## Open questions
 

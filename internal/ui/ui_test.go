@@ -138,6 +138,11 @@ var scenarios = func() []scenario {
 			m.action(keys.Action{Name: "toggle_search_mode"})
 			press(m, tea.Key{Code: tea.KeyTab}, tea.Key{Code: tea.KeyTab}, tea.Key{Code: tea.KeyTab})
 		}},
+		scenario{"sidebar-focused-wrap", func(m *Model) {
+			m.side.list.SetWrap(true)
+			drain(m, m.focusAction("focus_pane_left"))
+			drain(m, m.action(keys.Action{Name: "move_down"}))
+		}},
 		scenario{"no-sidebar-muted", func(m *Model) {
 			m.sidebar = false
 			st := playing

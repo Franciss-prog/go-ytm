@@ -93,6 +93,8 @@ type Model struct {
 	forward []navEntry
 
 	sidebar, lyrics bool
+	side            *playlistSidebar
+	focus           pane
 
 	settings *settings // open Settings popup, or nil
 	popup    popup     // open popup (actions, picker, confirm, …), or nil
@@ -127,6 +129,7 @@ func New(o Options) *Model {
 		pages:   newPages(),
 		current: PageID(o.Config.General.StartupPage),
 		sidebar: true,
+		side:    newPlaylistSidebar(o.Config.UI.SidebarOverflow == "wrap"),
 		bar:     barState{style: o.Config.UI.ProgressStyle, repeat: "off"},
 		toasts:  toasts{ctx: o.Context},
 		pb:      playback{q: o.Queue},
@@ -177,6 +180,9 @@ func (m *Model) Current() PageID { return m.current }
 // at start, while no root background has been set by us.
 func (m *Model) Init() tea.Cmd {
 	cmds := []tea.Cmd{m.toasts.armAll(), m.activate()}
+	if m.sidebar {
+		cmds = append(cmds, m.side.ensure(m.ctx()))
+	}
 	if m.o.Config.Theme.Transparent && m.o.Themes != nil && !m.o.NoColor {
 		cmds = append(cmds, tea.RequestBackgroundColor)
 	}
@@ -245,6 +251,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case appendReadyMsg:
 		cmd := m.appendReady(msg)
 		return m, cmd
+	case sidebarLoadedMsg:
+		m.side.receive(msg)
+		return m, nil
 	case pageMsg:
 		cmd := m.deliver(msg)
 		return m, cmd
@@ -292,6 +301,10 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	if m.popup != nil {
 		return m.popupKey(msg)
 	}
+	if m.sideFocused() && m.side.list.Filtering() {
+		m.side.list.Key(msg)
+		return nil
+	}
 	page := m.pages[m.current]
 	if page.Capturing() {
 		p, cmd := page.Key(msg, m.ctx())
@@ -314,6 +327,11 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 }
 
 func (m *Model) action(a keys.Action) tea.Cmd {
+	if m.sideFocused() {
+		if cmd, ok := m.sidebarAction(a); ok {
+			return cmd
+		}
+	}
 	p, cmd, handled := m.pages[m.current].Action(a, m.ctx())
 	m.pages[m.current] = p
 	if handled {
@@ -342,8 +360,8 @@ func (m *Model) global(a keys.Action) tea.Cmd {
 		m.goBack()
 	case "go_forward":
 		m.goForward()
-	case "toggle_sidebar":
-		m.sidebar = !m.sidebar
+	case "toggle_sidebar", "focus_pane_left", "focus_pane_right", "focus_pane_cycle":
+		return m.focusAction(a.Name)
 	case "lyrics":
 		m.lyrics = !m.lyrics
 	case "toggle_transparency":
@@ -642,7 +660,11 @@ func (m *Model) render() string {
 	out = append(out, rows...)
 
 	if l.info {
-		out = append(out, st.InfoBar.Render(fit(" "+page.Info(), m.width)))
+		info := page.Info()
+		if m.sideFocused() {
+			info = m.side.info()
+		}
+		out = append(out, st.InfoBar.Render(fit(" "+info, m.width)))
 	}
 	if l.rule {
 		out = append(out, st.Border.Render(strings.Repeat("─", m.width)))
@@ -676,8 +698,7 @@ func (m *Model) header() string {
 }
 
 func (m *Model) sidebarView(w, h int) string {
-	st := m.st
-	return block([]string{" " + st.Section.Render("Playlists"), "", " " + st.Muted.Render("Your playlists will appear here.")}, w, h)
+	return m.side.view(w, h, m.st, m.sideFocused(), m.current)
 }
 
 func (m *Model) lyricsView(w, h int) string {

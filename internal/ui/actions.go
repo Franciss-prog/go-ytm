@@ -368,15 +368,18 @@ func (m *Model) playlistEdited(id string) tea.Cmd {
 // playlistsChanged makes the library's playlist list reload (now when it
 // is on screen, else when next shown).
 func (m *Model) playlistsChanged() tea.Cmd {
-	lib, ok := m.pages[PageLibrary].(*libraryPage)
-	if !ok {
-		return nil
+	var cmds []tea.Cmd
+	m.side.state = stateIdle
+	if m.sidebar {
+		cmds = append(cmds, m.side.load(m.ctx()))
 	}
-	lib.state[0] = stateIdle
-	if m.current == PageLibrary && lib.tab == 0 {
-		return lib.load(m.ctx())
+	if lib, ok := m.pages[PageLibrary].(*libraryPage); ok {
+		lib.state[0] = stateIdle
+		if m.current == PageLibrary && lib.tab == 0 {
+			cmds = append(cmds, lib.load(m.ctx()))
+		}
 	}
-	return nil
+	return tea.Batch(cmds...)
 }
 
 func samePlaylist(a, b string) bool {
@@ -405,6 +408,7 @@ func deletePlaylistConfirm(pl ytmusic.PlaylistRef) popup {
 					if lib, ok := m.pages[PageLibrary].(*libraryPage); ok {
 						lib.dropPlaylist(pl.ID)
 					}
+					m.side.drop(pl.ID)
 					return m.toasts.push(Toast{Severity: SevSuccess, Text: "Deleted “" + pl.Title + "”"})
 				}, nil)
 		},

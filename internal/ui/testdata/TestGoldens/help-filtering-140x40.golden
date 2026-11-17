@@ -1,13 +1,11 @@
  ← Back  Help                                                                                                                     Forward → 
- Playlists                    │ Keys                                                                                                        
-                              │                                                                                                             
- Your playlists will appear h…│ Playback                                                                                                    
-                              │   +                Volume up                                                                                
-                              │   -                Volume down                                                                              
-                              │                                                                                                             
-                              │                                                                                                             
-                              │                                                                                                             
-                              │                                                                                                             
+ ♥ Liked Songs                │ Keys                                                                                                        
+ ⏱ Recently Played            │                                                                                                             
+ ♫ Discovery Mix              │ Playback                                                                                                    
+ ──────────────────────────── │   +                Volume up                                                                                
+ Playlists                    │   -                Volume down                                                                              
+ Late night drives         87 │                                                                                                             
+ Focus                     43 │                                                                                                             
                               │                                                                                                             
                               │                                                                                                             
                               │                                                                                                             
@@ -32,7 +30,9 @@
                               │                                                                                                             
                               │                                                                                                             
                               │                                                                                                             
-                              │ /vol█                                                                                                       
+                              │                                                                                                             
+                              │                                                                                                             
+ 2 playlists                  │ /vol█                                                                                                       
  filter: vol                                                                                                                                
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
  Nothing playing                                                                                                                            

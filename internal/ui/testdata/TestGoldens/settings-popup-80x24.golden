@@ -1,11 +1,11 @@
  ← Back  Help                                                         Forward → 
- Playlists                │ Keys                                                
-                          │ Chords are typed in sequence (g then l). Digits bef…
- Your playli╭─────────────────────────────────────────────────────╮— this page …
-            │ Settings                                            │             
-            │                                                     │             
-            │  Theme source      ‹ static ›                       │             
-            │  Theme name        ‹ ytm-dark ›                     │             
+ ♥ Liked Songs            │ Keys                                                
+ ⏱ Recently Played        │ Chords are typed in sequence (g then l). Digits bef…
+ ♫ Discovery╭─────────────────────────────────────────────────────╮— this page …
+ ───────────│ Settings                                            │             
+ Playlists  │                                                     │             
+ Late night │  Theme source      ‹ static ›                       │             
+ Focus      │  Theme name        ‹ ytm-dark ›                     │             
             │  Transparent       [ ]  C-t                         │             
             │  Selection style   ‹ bar ›  (transparent only)      │from the que…
             │  Popup fill        [ ]                              │ll, one)     
@@ -16,7 +16,7 @@
             │ ←/→ change · space toggle · enter save · esc cancel │             
             ╰─────────────────────────────────────────────────────╯             
                           │   ^                Restart track                    
-                          │   l                Like / unlike current track      
+ 2 playlists              │   l                Like / unlike current track      
                                                                                 
 ────────────────────────────────────────────────────────────────────────────────
  Nothing playing                                                                

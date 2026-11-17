@@ -13,7 +13,7 @@ Last updated: 2026-11-17
 | M3 | stream-resolve | **in review** | [#5](https://github.com/Franciss-prog/go-ytm/pull/5) (stacked on #4) | yt-dlp resolver, URL cache, prefetcher, doctor mpv version |
 | M4 | tui-shell | **in review** | [#6](https://github.com/Franciss-prog/go-ytm/pull/6) (stacked on #5) | keymap engine, root model, header, bar, toasts, Help, app wiring |
 | M4b | dynamic-theme | **in review** | [#7](https://github.com/Franciss-prog/go-ytm/pull/7) (stacked on #6) | sources, contrast, depth, watcher, Patch, Settings, `theme show` |
-| M5 | tui-library-search-queue | **in progress** | branch `feat/tui-library-search-queue` | done: queue pkg, ytmusic browse/library/edit calls, TrackTable, playback owner (resolve/gapless/retry), Queue page, Library, Context pages, Search page, popups (actions, playlist picker, create, confirm). Next: playlist sidebar, mouse |
+| M5 | tui-library-search-queue | **in progress** | branch `feat/tui-library-search-queue` | done: queue pkg, ytmusic browse/library/edit calls, TrackTable, playback owner (resolve/gapless/retry), Queue page, Library, Context pages, Search page, popups (actions, playlist picker, create, confirm), playlist sidebar. Next: mouse |
 | M6 | browse-liked-history | not started | | |
 | M7 | session-cache-offline | not started | | |
 | M8 | lyrics | not started | | |
@@ -76,6 +76,9 @@ Last updated: 2026-11-17
 | 2026-11-17 | TrackTable filter is fuzzy per field (title, artist, album), not over the joined string (too loose) | 05 |
 | 2026-11-17 | `sort_date` = source order (playlist order / playback order); no date-added field in responses | 05 |
 | 2026-11-17 | `V` marks from the last toggled row to the cursor; with no anchor it marks the cursor and anchors | 05 |
+| 2026-11-17 | Playlist sidebar ported from ytm-player 2.2.0 `playlist_sidebar.py`: pinned nav rows, Liked Music left out, mouse-only pinned rows; enter keeps focus in the sidebar | 05 |
+| 2026-11-17 | Sidebar loads its own `LibraryPlaylists` (not shared with the Library page): one extra call at start, simpler ownership | 05 |
+| 2026-11-17 | Nerd icons for Recent/Mix = Font Awesome `f017`/`f001` (same codepoints in Nerd Fonts) | 05 |
 
 ## Verified facts (with how)
 
@@ -135,6 +138,8 @@ Last updated: 2026-11-17
 - Real binary in a PTY (110×30, pywal source): wallpaper rename → recolored 116–118 ms; SIGUSR1 →
   "Theme reloaded"; half-written file keeps colors + toast, recovery toast; Settings save and `C-t`
   wrote `popup_fill`/`transparent` keeping comments.
+- Real binary in a PTY (110×30, signed in): sidebar lists the owner's library playlists, `C-w h`,
+  `j`, enter opens the playlist page, `C-e` hides the sidebar.
 - Real binary in a PTY (110×30): renders, `?`/`j`/`g s`/backspace/`3+`/`q` work, alt screen
   entered and left, OSC 11 sets the root bg, exit 0, `--trace-frames` logs every frame.
 
@@ -243,6 +248,11 @@ Last updated: 2026-11-17
   the ytmusic write bodies were never sent live (see 03).
 - M5: picker has no recently-used ordering yet; actions popup has no Start radio (M6) / Download (M7).
 - M5: Search page not driven live in a terminal yet; covered by fake-API tests and goldens.
+- M5: sidebar pinned rows do nothing yet (mouse lands next); `sidebar_overflow = "wrap"` only
+  tested with goldens/unit tests, not live. The main page keeps drawing its cursor while the
+  sidebar has focus (only the sidebar title/cursor show focus).
+- `TestRestartBackoffAndGiveUp` (player) failed once under `make test` (its state-after-give-up
+  check, `controller_test.go:412`); 20/20 passes on rerun. Timing flake, not investigated yet.
 - M4b: album-art transparency rules wait for album art (no art yet, no exemption registered).
 - fang queries the terminal background (OSC 11) when rendering help on a TTY; harmless on real
   terminals, visible as junk only under `script`-style captures.
