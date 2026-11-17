@@ -1,6 +1,6 @@
 # 05 — UI pages, components, layout
 
-Status: **M4 implemented** (shell, bar, help, toasts), **M5 in progress** (pages, popups, playlist sidebar, mouse) · Milestones: M4 (shell, bar, help), M5, M6, M8
+Status: **M4 implemented** (shell, bar, help, toasts), **M5 implemented** (pages, popups, playlist sidebar, mouse) · Milestones: M4 (shell, bar, help), M5, M6, M8
 
 ## Goals
 

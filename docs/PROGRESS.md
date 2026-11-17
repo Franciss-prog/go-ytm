@@ -13,7 +13,7 @@ Last updated: 2026-11-17
 | M3 | stream-resolve | **in review** | [#5](https://github.com/Franciss-prog/go-ytm/pull/5) (stacked on #4) | yt-dlp resolver, URL cache, prefetcher, doctor mpv version |
 | M4 | tui-shell | **in review** | [#6](https://github.com/Franciss-prog/go-ytm/pull/6) (stacked on #5) | keymap engine, root model, header, bar, toasts, Help, app wiring |
 | M4b | dynamic-theme | **in review** | [#7](https://github.com/Franciss-prog/go-ytm/pull/7) (stacked on #6) | sources, contrast, depth, watcher, Patch, Settings, `theme show` |
-| M5 | tui-library-search-queue | **in progress** | branch `feat/tui-library-search-queue` | done: queue pkg, ytmusic browse/library/edit calls, TrackTable, playback owner (resolve/gapless/retry), Queue page, Library, Context pages, Search page, popups (actions, playlist picker, create, confirm), playlist sidebar, mouse. Next: M5 PR |
+| M5 | tui-library-search-queue | **in review** | branch `feat/tui-library-search-queue` (stacked on #7) | queue pkg, ytmusic browse/library/edit calls, TrackTable, playback owner (resolve/gapless/retry), Queue, Library, Context, Search pages, popups, playlist sidebar, mouse |
 | M6 | browse-liked-history | not started | | |
 | M7 | session-cache-offline | not started | | |
 | M8 | lyrics | not started | | |
@@ -198,6 +198,15 @@ Last updated: 2026-11-17
 | `ThemeChangedMsg` + full repaint 200×60 | 1.1 ms/op | 50 ms |
 | Styles build (256-color downsample) | 45 µs/op | 1 ms |
 | `EnforceContrast` (worst-case palette) | 0.23 ms/op | — |
+
+## Measurements (M5, local, Linux amd64)
+
+| What | Result | Budget |
+|---|---|---|
+| `BenchmarkScroll1000` (TrackTable, 1,000 rows) | 0.13 ms/op, 96 allocs | 16 ms frame |
+| `BenchmarkTrackTableView1000` | 0.10 ms/op, 21 allocs | — |
+| Keypress → repaint (root model) | 0.41 ms/op | 16 ms |
+| Coverage | queue 91 %, ui 87 %, ui/components 75 %, ytmusic 85 % | — |
 
 ## Approved by owner (2026-11-16)
 
