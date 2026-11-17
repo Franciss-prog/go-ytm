@@ -24,6 +24,12 @@ type mouseEv struct {
 	right, ctrl, shift bool
 }
 
+// wheeler is a page that routes the wheel by pointer position (Library
+// columns); others get move_up/move_down on their focused part.
+type wheeler interface {
+	WheelAt(x, y int, a keys.Action, ctx *Context) tea.Cmd
+}
+
 // mouser is a page that takes clicks in the main area.
 type mouser interface {
 	Click(ev mouseEv, ctx *Context) (Page, tea.Cmd)
@@ -190,9 +196,13 @@ func (m *Model) wheel(ms tea.Mouse) tea.Cmd {
 		}
 		return nil
 	}
-	_, okX := l.mainX(ms.X)
-	if _, okY := l.mainY(ms.Y); !okX || !okY {
+	x, okX := l.mainX(ms.X)
+	y, okY := l.mainY(ms.Y)
+	if !okX || !okY {
 		return nil
+	}
+	if w, ok := m.pages[m.current].(wheeler); ok {
+		return w.WheelAt(x, y, a, m.ctx())
 	}
 	p, cmd, _ := m.pages[m.current].Action(a, m.ctx())
 	m.pages[m.current] = p

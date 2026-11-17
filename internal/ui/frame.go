@@ -492,3 +492,22 @@ func (m *Model) hintLine() string {
 
 // sideTitle is the sidebar panel's title.
 const sideTitle = "playlists"
+
+// tabBar renders an in-page tab strip, " songs · albums · artists ", with
+// the active tab marked (see tabHit).
+func tabBar(names []string, active int, st *style.UI) string {
+	var b strings.Builder
+	for i, n := range names {
+		if i > 0 {
+			b.WriteString(st.Border.Render("·"))
+		}
+		b.WriteString(" ")
+		if i == active {
+			b.WriteString(st.TabActive.Render(strings.ToLower(n)))
+		} else {
+			b.WriteString(st.Tab.Render(strings.ToLower(n)))
+		}
+		b.WriteString(" ")
+	}
+	return b.String()
+}

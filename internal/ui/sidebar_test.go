@@ -47,7 +47,7 @@ func TestSidebarFocusMoveAndOpen(t *testing.T) {
 		t.Fatal("C-w h did not focus the sidebar")
 	}
 	h.keys(ch('j'))
-	if lib.lists[0].Cursor() != 0 || !strings.Contains(plain(h.m), "Focus · 43 songs") {
+	if lib.cols[0].list.Cursor() != 0 || !strings.Contains(plain(h.m), "Focus · 43 songs") {
 		t.Fatalf("j moved the page, or info line wrong:\n%s", plain(h.m))
 	}
 	h.keys(kEnter)

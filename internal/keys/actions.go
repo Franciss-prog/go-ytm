@@ -33,6 +33,7 @@ var Actions = []ActionInfo{
 	{Name: "next_track", Category: CatPlayback, Help: "Next track", Defaults: []string{"n"}},
 	{Name: "previous_track", Category: CatPlayback, Help: "Previous track", Defaults: []string{"p"}},
 	{Name: "play_random", Category: CatPlayback, Help: "Play a random track from the queue", Defaults: []string{"."}},
+	{Name: "play_all", Category: CatPlayback, Help: "Play the focused list from the start", Defaults: []string{"P"}},
 	{Name: "cycle_repeat", Category: CatPlayback, Help: "Cycle repeat (off, all, one)", Defaults: []string{"C-r"}},
 	{Name: "toggle_shuffle", Category: CatPlayback, Help: "Toggle shuffle", Defaults: []string{"C-s"}},
 	{Name: "volume_up", Category: CatPlayback, Help: "Volume up", Defaults: []string{"+"}, Counted: true},
@@ -59,6 +60,8 @@ var Actions = []ActionInfo{
 	{Name: "retry", Category: CatNavigation, Help: "Retry a failed load", Defaults: []string{"r"}},
 	{Name: "go_back", Category: CatNavigation, Help: "Back", Defaults: []string{"backspace"}},
 	{Name: "go_forward", Category: CatNavigation, Help: "Forward", Defaults: []string{"S-backspace"}},
+	{Name: "column_left", Category: CatNavigation, Help: "Library: parent column", Defaults: []string{"h", "left"}},
+	{Name: "column_right", Category: CatNavigation, Help: "Library: open the next column", Defaults: []string{"right"}},
 
 	{Name: "library", Category: CatPages, Help: "Library", Defaults: []string{"g l"}},
 	{Name: "search", Category: CatPages, Help: "Search", Defaults: []string{"g s"}},

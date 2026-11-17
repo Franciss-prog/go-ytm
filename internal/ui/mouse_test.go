@@ -79,20 +79,25 @@ func TestRightClickOpensActionsAndPopupBlocksMouse(t *testing.T) {
 	}
 }
 
-func TestLibraryTabAndListClicks(t *testing.T) {
+func TestLibraryColumnClicks(t *testing.T) {
 	h := newPB(t)
 	lib := h.m.pages[PageLibrary].(*libraryPage)
-	h.left(mainX0+12, mainY0) // " Playlists " is 0–10, " Albums " 11–18
-	if lib.tab != 1 {
-		t.Fatalf("tab %d", lib.tab)
+	h.left(mainX0+2, mainY0+3) // root: Playlists
+	if c := lib.cols[0].list.Cursor(); c != 3 || lib.focus != 0 {
+		t.Fatalf("cursor %d focus %d", c, lib.focus)
 	}
-	h.left(mainX0+5, mainY0+3) // second album
-	if c := lib.lists[1].Cursor(); c != 1 || h.m.Current() != PageLibrary {
-		t.Fatalf("cursor %d page %s", c, h.m.Current())
+	h.left(mainX0+2, mainY0+3) // again: open it
+	if lib.focus != 1 || lib.col().key != "playlists" {
+		t.Fatalf("second click did not open: focus %d", lib.focus)
 	}
-	h.left(mainX0+5, mainY0+3)
-	if p, ok := h.m.pages[PageContext].(*contextPage); !ok || p.id != "MPREb_disc" {
-		t.Fatalf("second click did not open the album: %s", h.m.Current())
+	// A click in the preview column to the right focuses it.
+	h.keys(ch('j'))
+	libPreview(h)
+	h.m.View()
+	x := mainX0 + lib.colX[2] + 3
+	h.left(x, mainY0+1)
+	if lib.focus != 2 || lib.col().table.Cursor() != 1 {
+		t.Fatalf("track column click: focus %d", lib.focus)
 	}
 }
 
@@ -176,12 +181,12 @@ func TestWheelMovesPaneUnderPointer(t *testing.T) {
 	h := newPB(t)
 	lib := h.m.pages[PageLibrary].(*libraryPage)
 	h.wheel(mainX0+5, mainY0+5, tea.MouseWheelDown)
-	if lib.lists[0].Cursor() != 1 {
-		t.Fatalf("main cursor %d", lib.lists[0].Cursor())
+	if lib.cols[0].list.Cursor() != 1 {
+		t.Fatalf("main cursor %d", lib.cols[0].list.Cursor())
 	}
 	h.wheel(5, mainY0+8, tea.MouseWheelDown)
-	if h.m.side.list.Cursor() != 1 || lib.lists[0].Cursor() != 1 {
-		t.Fatalf("sidebar cursor %d main %d", h.m.side.list.Cursor(), lib.lists[0].Cursor())
+	if h.m.side.list.Cursor() != 1 || lib.cols[0].list.Cursor() != 1 {
+		t.Fatalf("sidebar cursor %d main %d", h.m.side.list.Cursor(), lib.cols[0].list.Cursor())
 	}
 }
 

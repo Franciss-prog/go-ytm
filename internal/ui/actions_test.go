@@ -13,7 +13,7 @@ import (
 // openNight opens "Late night drives" (owned, 7 rows) from the library.
 func openNight(t *testing.T, h pbHarness) *contextPage {
 	t.Helper()
-	h.keys(ch('j'), kEnter)
+	h.send(openMsg{newPlaylistPage("PLnight", "Late night drives", columns(h.m.o.Config))})
 	p, ok := h.m.pages[PageContext].(*contextPage)
 	if !ok || p.table.Len() != 7 {
 		t.Fatalf("playlist not open: %s", plain(h.m))
@@ -206,6 +206,7 @@ func TestAlbumRowsCannotBeRemoved(t *testing.T) {
 func TestDeleteLibraryPlaylist(t *testing.T) {
 	h := newPB(t)
 	lib := h.m.pages[PageLibrary].(*libraryPage)
+	h.keys(ch('j'), ch('j'), ch('j'), kRight) // the Playlists column
 	// Liked Music is not owned.
 	h.keys(tea.Key{Code: tea.KeyDelete})
 	if h.m.popup != nil || !strings.Contains(plain(h.m), "Only your own playlists") {
@@ -217,8 +218,8 @@ func TestDeleteLibraryPlaylist(t *testing.T) {
 		t.Fatalf("no confirm:\n%s", plain(h.m))
 	}
 	h.keys(kEnter)
-	if !slices.Contains(edits(h), "delete PLnight") || lib.lists[0].Len() != 2 {
-		t.Fatalf("edits %v rows %d", edits(h), lib.lists[0].Len())
+	if !slices.Contains(edits(h), "delete PLnight") || lib.col().list.Len() != 2 {
+		t.Fatalf("edits %v rows %d", edits(h), lib.col().list.Len())
 	}
 }
 

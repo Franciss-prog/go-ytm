@@ -10,21 +10,22 @@
 │   n                Next track                                                                                                            │
 │   p                Previous track                                                                                                        │
 │   .                Play a random track from the queue                                                                                    │
-│   C-r              Cycle repeat (off, all, one)                                                                                          │
-│   C-s              Toggle shuffle       ╭─────────────────────────────────────────────────────╮                                          │
-│   +                Volume up            │ Settings                                            │                                          │
-│   -                Volume down          │                                                     │                                          │
-│   _                Mute                 │  Theme source      ‹ static ›                       │                                          │
-│   >                Seek forward         │  Theme name        ‹ ytm-dark ›                     │                                          │
-│   <                Seek backward        │  Transparent       [ ]  C-t                         │                                          │
-│   ^                Restart track        │  Selection style   ‹ solid ›  (transparent on…      │                                          │
-│   l                Like / unlike current│  Popup fill        [ ]                              │                                          │
-│   D                Discovery mix        │  Album art         ‹ blocks ›                       │                                          │
-│                                         │  Enforce contrast  [x]                              │                                          │
-│ Navigation                              │  Live reload       [x]                              │                                          │
-│   j, down, C-n     Move down            │                                                     │                                          │
-│   k, up, C-p       Move up              │ ←/→ change · space toggle · enter save · esc cancel │                                          │
-│   C-f, page_down   Page down            ╰─────────────────────────────────────────────────────╯                                          │
+│   P                Play the focused list from the start                                                                                  │
+│   C-r              Cycle repeat (off, al╭─────────────────────────────────────────────────────╮                                          │
+│   C-s              Toggle shuffle       │ Settings                                            │                                          │
+│   +                Volume up            │                                                     │                                          │
+│   -                Volume down          │  Theme source      ‹ static ›                       │                                          │
+│   _                Mute                 │  Theme name        ‹ ytm-dark ›                     │                                          │
+│   >                Seek forward         │  Transparent       [ ]  C-t                         │                                          │
+│   <                Seek backward        │  Selection style   ‹ solid ›  (transparent on…      │                                          │
+│   ^                Restart track        │  Popup fill        [ ]                              │                                          │
+│   l                Like / unlike current│  Album art         ‹ blocks ›                       │                                          │
+│   D                Discovery mix        │  Enforce contrast  [x]                              │                                          │
+│                                         │  Live reload       [x]                              │                                          │
+│ Navigation                              │                                                     │                                          │
+│   j, down, C-n     Move down            │ ←/→ change · space toggle · enter save · esc cancel │                                          │
+│   k, up, C-p       Move up              ╰─────────────────────────────────────────────────────╯                                          │
+│   C-f, page_down   Page down                                                                                                             │
 │   C-b, page_up     Page up                                                                                                               │
 │   g g, home        Go to top (or row N with a count)                                                                                     │
 │   G, end           Go to bottom (or row N with a count)                                                                                  │
@@ -34,7 +35,6 @@
 │   C-w h            Focus pane to the left                                                                                                │
 │   C-w l            Focus pane to the right                                                                                               │
 │   C-w w            Cycle pane focus                                                                                                      │
-│   r                Retry a failed load                                                                                                   │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
  Nothing playing                                                                                                                            
  / filter · backspace back · , settings   ? help                                                                                            

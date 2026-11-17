@@ -1,24 +1,24 @@
  ytm  queue  library  search                                ⤮  ⟳  vol ▪▪▪▪▪ 80% 
 ────────────╯       ╰───────────────────────────────────────────────────────────
-╭│ library │───────────────────────────────────────────────────────────────────╮
-│ playlists · albums · artists                                                 │
-│                                                                              │
-│ Not signed in. Run `ytm setup` to see your library.                          │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
+╭│ library · Albums │──────────────────────────────────────────────────────────╮
+│ Liked Music            ▸ │ Not signed in. Run `ytm setup` to see your        │
+│ Artists                ▸ │ library.                                          │
+│ Albums                 ▸ │                                                   │
+│ Playlists              ▸ │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
 ╰──────────────────────────────────────────────────────────────────────────────╯
  Nothing playing                                                                
- enter open · tab tabs · a actions · / filter   ? help                          
+ enter open · h/right level · P play all · / filter   ? help                    

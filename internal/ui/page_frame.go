@@ -87,12 +87,35 @@ func (p *contextPage) Hints() []hint {
 
 // Library.
 
-// Count implements counter.
-func (p *libraryPage) Count() (int, int) { return listCount(p.lists[p.tab]) }
+// Count implements counter (the focused column).
+func (p *libraryPage) Count() (int, int) {
+	if c := p.col(); c.table != nil {
+		return tableCount(c.table)
+	} else if c.state == stateLoaded {
+		return listCount(c.list)
+	}
+	return 0, 0
+}
+
+// PanelTitle implements panelTitler: "library · Artists · John Mayer".
+func (p *libraryPage) PanelTitle() string {
+	parts := []string{"library"}
+	for _, c := range p.cols[1 : p.focus+1] {
+		parts = append(parts, c.title)
+	}
+	return strings.Join(parts, " · ")
+}
 
 // Hints implements hinter.
 func (p *libraryPage) Hints() []hint {
-	return []hint{hk("open", "select"), hk("tabs", "focus_next"), hk("actions", "track_actions"), hk("filter", "filter")}
+	if p.col().table != nil {
+		return []hint{
+			hk("play", "select"), hk("play all", "play_all"), hk("level", "column_left"),
+			hk("queue", "add_to_queue"), hk("playlist", "add_to_playlist"), hk("actions", "track_actions"),
+			hk("filter", "filter"),
+		}
+	}
+	return []hint{hk("open", "select"), hk("level", "column_left", "column_right"), hk("play all", "play_all"), hk("filter", "filter")}
 }
 
 // Search.

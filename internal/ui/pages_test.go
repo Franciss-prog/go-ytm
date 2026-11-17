@@ -11,33 +11,95 @@ import (
 	"github.com/Franciss-Prog/go-ytm/internal/keys"
 )
 
-func TestLibraryOpensPlaylistWithContinuation(t *testing.T) {
+// libPreview delivers the library's pending column preview: the debounce
+// timer never fires under the harness's cancelled context.
+func libPreview(h pbHarness) {
+	lib := h.m.pages[PageLibrary].(*libraryPage)
+	h.send(pageMsg{to: lib, msg: libraryPreviewMsg{lib.seq}})
+}
+
+func TestLibraryColumns(t *testing.T) {
 	h := newPB(t)
 	api := h.m.o.API.(*fakeAPI)
-	h.keys(ch('j'), tea.Key{Code: tea.KeyEnter}) // Late night drives
-	if h.m.Current() != PageContext || h.m.pageTitle() != "Playlist" {
-		t.Fatalf("on %s (%s)", h.m.Current(), h.m.pageTitle())
+	lib := h.m.pages[PageLibrary].(*libraryPage)
+	// Start: root column plus a preview of Liked Music.
+	if len(lib.cols) != 2 || lib.cols[1].key != "pl:LM" || !slices.Contains(api.Calls(), "Playlist:LM") {
+		t.Fatalf("start columns %d calls %v", len(lib.cols), api.Calls())
 	}
-	p := h.m.pages[PageContext].(*contextPage)
-	if p.table.Len() != 7 || !slices.Contains(api.Calls(), "PlaylistMore:PLnight@4") {
-		t.Fatalf("rows %d calls %v", p.table.Len(), api.Calls())
+	// Moving the cursor previews the next node only once it rests.
+	h.keys(ch('j'), ch('j'), ch('j')) // Playlists
+	if lib.cols[1].key != "pl:LM" {
+		t.Fatal("preview ran before the debounce")
 	}
-	if strings.Contains(plain(h.m), "Loading…") {
-		t.Fatal("loading footer left after the last page")
+	libPreview(h)
+	if lib.cols[1].key != "playlists" || lib.cols[1].list.Len() != 3 {
+		t.Fatalf("preview %s", lib.cols[1].key)
+	}
+	// A stale preview (older seq) is dropped.
+	stale := lib.seq
+	h.keys(ch('k'))
+	h.send(pageMsg{to: lib, msg: libraryPreviewMsg{stale}})
+	if lib.cols[1].key != "playlists" {
+		t.Fatal("stale preview applied")
+	}
+	h.keys(ch('j'))
+	libPreview(h)
+	// right / l-level descends; the new column previews its first node.
+	h.keys(kRight, ch('j')) // Late night drives
+	libPreview(h)
+	if lib.focus != 1 || len(lib.cols) != 3 || lib.cols[2].key != "pl:PLnight" {
+		t.Fatalf("focus %d cols %d", lib.focus, len(lib.cols))
+	}
+	h.keys(kRight)
+	tracks := lib.col()
+	if tracks.table == nil || tracks.table.Len() != 7 || !slices.Contains(api.Calls(), "PlaylistMore:PLnight@4") {
+		t.Fatalf("tracks column: calls %v", api.Calls())
+	}
+	if got := h.m.panelTitle(); got != "library · Playlists · Late night drives" {
+		t.Errorf("panel title %q", got)
 	}
 	// Enter plays from the cursor with the playlist as queue context.
-	h.keys(ch('j'), ch('j'), tea.Key{Code: tea.KeyEnter})
+	h.keys(ch('j'), ch('j'), kEnter)
 	if h.current() != "t3" || h.m.Queue().Context() != "PLnight" || h.m.Queue().Len() != 7 {
 		t.Fatalf("play: current %s ctx %s len %d", h.current(), h.m.Queue().Context(), h.m.Queue().Len())
 	}
-	// Back restores the library with its cursor; forward restores the page.
-	h.keys(tea.Key{Code: tea.KeyBackspace})
-	if h.m.Current() != PageLibrary || !strings.Contains(h.m.pages[PageLibrary].Info(), "Late night drives") {
-		t.Fatalf("back: %s %q", h.m.Current(), h.m.pages[PageLibrary].Info())
+	// P plays the column from the top.
+	h.keys(ch('P'))
+	if h.current() != "t1" {
+		t.Fatalf("play_all started %s", h.current())
 	}
-	h.keys(tea.Key{Code: tea.KeyBackspace, Mod: tea.ModShift})
-	if h.m.pages[PageContext] != p || p.table.Cursor() != 2 {
-		t.Fatal("forward did not restore the playlist page and cursor")
+	// Walking back and forth reuses the cache.
+	n := len(api.Calls())
+	h.keys(ch('h'), ch('k'))
+	libPreview(h)
+	h.keys(ch('j'))
+	libPreview(h)
+	if len(api.Calls()) != n || lib.focus != 1 {
+		t.Fatalf("cache missed: %v", api.Calls()[n:])
+	}
+	// g space opens the full playlist page; back returns to the columns.
+	h.keys(kRight, ch('g'), tea.Key{Code: tea.KeySpace})
+	if p, ok := h.m.pages[PageContext].(*contextPage); h.m.Current() != PageContext || !ok || p.id != "PLnight" {
+		t.Fatalf("current_context opened %s", h.m.Current())
+	}
+	h.keys(tea.Key{Code: tea.KeyBackspace})
+	if h.m.Current() != PageLibrary || lib.focus != 2 {
+		t.Fatalf("back: %s focus %d", h.m.Current(), lib.focus)
+	}
+}
+
+func TestLibraryArtistReleases(t *testing.T) {
+	h := newPB(t)
+	lib := h.m.pages[PageLibrary].(*libraryPage)
+	h.keys(ch('j'))
+	libPreview(h)
+	h.keys(kRight) // Artists → first artist previews its releases
+	if lib.focus != 1 || len(lib.cols) != 3 || lib.cols[2].kind != nodeArtist || lib.cols[2].list.Len() != 2 {
+		t.Fatalf("artist releases: cols %d", len(lib.cols))
+	}
+	h.keys(kRight, kRight) // releases → first album's tracks
+	if c := lib.col(); c.table == nil || c.table.Len() != 4 || c.src.queue != "OLAK5uy_ram" {
+		t.Fatalf("album tracks: focus %d", lib.focus)
 	}
 }
 
@@ -92,9 +154,15 @@ func TestArtistPage(t *testing.T) {
 func TestLibrarySignedOut(t *testing.T) {
 	h := newPB(t)
 	h.m.o.API.(*fakeAPI).errs["LibraryArtists"] = errUnauth()
-	h.keys(tea.Key{Code: tea.KeyTab, Mod: tea.ModShift})
+	h.keys(ch('j'), kRight)
 	if !strings.Contains(plain(h.m), "Run `ytm setup`") {
 		t.Fatalf("no signed-out state:\n%s", plain(h.m))
+	}
+	// r retries the failed column.
+	delete(h.m.o.API.(*fakeAPI).errs, "LibraryArtists")
+	h.keys(ch('r'))
+	if lib := h.m.pages[PageLibrary].(*libraryPage); lib.col().state != stateLoaded {
+		t.Fatal("retry did not reload")
 	}
 }
 

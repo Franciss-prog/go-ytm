@@ -76,6 +76,9 @@ type TrackTable struct {
 	loaded, total int // progressive loading; total 0 = done
 	empty         string
 
+	// compact draws "Artist — Title" and the time (Library columns).
+	compact bool
+
 	cols  Columns
 	cache []rowCache
 	dataV uint64
@@ -203,6 +206,13 @@ func (t *TrackTable) SetPlayingID(videoID string) {
 			return
 		}
 	}
+}
+
+// SetCompact draws rows as "Artist — Title" plus the time, for narrow
+// Library columns (spec 09).
+func (t *TrackTable) SetCompact(on bool) {
+	t.compact = on
+	t.invalidate()
 }
 
 // SetLoading shows "Loading… loaded/total" in the footer; total 0 hides
@@ -775,6 +785,9 @@ func (t *TrackTable) renderRow(i int, k rowKey, l layout, width int, st *style.U
 	}
 	gutter := Fit(sel, gw) + Fit(glyph, 1) + " "
 
+	if t.compact {
+		return t.compactRow(r, k, gw, sel, glyph, gutter, width, st)
+	}
 	// Spec 09 order: # · artist · title · album · time.
 	idx := FitRight(strconv.Itoa(i+1), l.index) + " "
 	title := " " + Fit(r.Title, l.title)
@@ -804,6 +817,34 @@ func (t *TrackTable) renderRow(i int, k rowKey, l layout, width int, st *style.U
 		ts = st.RowPlaying
 	}
 	return Fit(g+st.Muted.Render(idx+artist)+ts.Render(title)+st.Muted.Render(album+pad+dur), width)
+}
+
+// compactRow renders "Artist — Title" with the time when there is room.
+func (t *TrackTable) compactRow(r ytmusic.Track, k rowKey, gw int, sel, glyph, gutter string, width int, st *style.UI) string {
+	dur := ""
+	if width >= 40 {
+		dur = " " + FormatDuration(r.Duration)
+	}
+	text := r.Title
+	if a := ArtistNames(r.Artists); a != "" {
+		text = a + " — " + r.Title
+	}
+	text = Fit(text, max(width-ansi.StringWidth(gutter)-ansi.StringWidth(dur), 0))
+	if k.sel {
+		return Fit(st.Selected.Render(Fit(sel, gw))+st.Selected.Render(ansi.Strip(Fit(glyph, 1))+" "+text+dur), width)
+	}
+	g := gutter
+	if glyph != " " {
+		g = Fit(sel, gw) + st.MarkGlyph.Render(Fit(glyph, 1)) + " "
+	}
+	if !r.Available || r.VideoID == "" {
+		return Fit(g+st.RowDim.Render(text+dur), width)
+	}
+	ts := st.Text
+	if k.playing {
+		ts = st.RowPlaying
+	}
+	return Fit(g+ts.Render(text)+st.Muted.Render(dur), width)
 }
 
 func (t *TrackTable) loadingText() string {

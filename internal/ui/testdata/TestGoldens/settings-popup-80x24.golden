@@ -10,15 +10,15 @@
 │   n       │  Theme name        ‹ ytm-dark ›                     │            │
 │   p       │  Transparent       [ ]  C-t                         │            │
 │   .       │  Selection style   ‹ solid ›  (transparent on…      │            │
-│   C-r     │  Popup fill        [ ]                              │            │
-│   C-s     │  Album art         ‹ blocks ›                       │            │
-│   +       │  Enforce contrast  [x]                              │            │
-│   -       │  Live reload       [x]                              │            │
-│   _       │                                                     │            │
-│   >       │ ←/→ change · space toggle · enter save · esc cancel │            │
-│   <       ╰─────────────────────────────────────────────────────╯            │
+│   P       │  Popup fill        [ ]                              │            │
+│   C-r     │  Album art         ‹ blocks ›                       │            │
+│   C-s     │  Enforce contrast  [x]                              │            │
+│   +       │  Live reload       [x]                              │            │
+│   -       │                                                     │            │
+│   _       │ ←/→ change · space toggle · enter save · esc cancel │            │
+│   >       ╰─────────────────────────────────────────────────────╯            │
+│   <                Seek backward                                             │
 │   ^                Restart track                                             │
-│   l                Like / unlike current track                               │
 ╰──────────────────────────────────────────────────────────────────────────────╯
  Nothing playing                                                                
  / filter · backspace back · , settings   ? help                                

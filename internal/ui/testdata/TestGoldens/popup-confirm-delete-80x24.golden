@@ -1,24 +1,24 @@
  ytm  queue  library  search                                ⤮  ⟳  vol ▪▪▪▪▪ 80% 
 ────────────╯       ╰───────────────────────────────────────────────────────────
 ╭│ library │───────────────────────────────────────────────────────────────────╮
-│ playlists · albums · artists                                                 │
-│                                                                              │
-│ Liked Music                                                      1,204 songs │
-│ Late night drives                                                   87 songs │
-│ Focus                                                               43 songs │
-│                      ╭───────────────────────────────╮                       │
-│                      │ Delete playlist               │                       │
-│                      │                               │                       │
-│                      │ Delete “Late night drives”?   │                       │
-│                      │ This can't be undone.         │                       │
-│                      │                               │                       │
-│                      │ y/enter delete · n/esc cancel │                       │
-│                      ╰───────────────────────────────╯                       │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-╰ Late night drives · 87 songs ───────────────────────────────────────│ 2/3 │──╯
+│ Liked Music            ▸ │                                                   │
+│ Artists                ▸ │ No tracks here.                                   │
+│ Albums                 ▸ │                                                   │
+│ Playlists              ▸ │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+│                          │                                                   │
+╰ Artists ────────────────────────────────────────────────────────────│ 2/4 │──╯
  Nothing playing                                                                
- enter open · tab tabs · a actions · / filter   ? help                          
+ enter open · h/right level · P play all · / filter   ? help                    

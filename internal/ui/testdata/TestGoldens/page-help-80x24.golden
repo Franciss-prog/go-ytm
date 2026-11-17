@@ -10,6 +10,7 @@
 │   n                Next track                                                │
 │   p                Previous track                                            │
 │   .                Play a random track from the queue                        │
+│   P                Play the focused list from the start                      │
 │   C-r              Cycle repeat (off, all, one)                              │
 │   C-s              Toggle shuffle                                            │
 │   +                Volume up                                                 │
@@ -18,7 +19,6 @@
 │   >                Seek forward                                              │
 │   <                Seek backward                                             │
 │   ^                Restart track                                             │
-│   l                Like / unlike current track                               │
 ╰──────────────────────────────────────────────────────────────────────────────╯
  Nothing playing                                                                
  / filter · backspace back · , settings   ? help                                

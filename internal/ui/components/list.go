@@ -16,6 +16,9 @@ type Item struct {
 	Left, Right string
 	// Key identifies the item to the owning page (an id).
 	Key string
+	// Drill marks an item that opens a deeper level: a muted "▸" ends its
+	// row (spec 09).
+	Drill bool
 }
 
 // List is a cursor list with fuzzy filter, used for library playlists,
@@ -138,21 +141,28 @@ func (l *List) rowsOf(v int) int {
 
 // listRow is one screen row of an item: a label part and, on the row that
 // carries it, the right-aligned detail.
-type listRow struct{ left, right string }
+type listRow struct {
+	left, right string
+	drill       bool
+}
 
 // split lays item it out for width cells: one row when truncating, the
 // wrapped label (detail on its last row when it fits, else on its own row)
 // when wrapping.
 func (l *List) split(it Item, width int) []listRow {
 	inner := width - l.gutter - 2
+	if it.Drill {
+		inner -= 2
+	}
 	if !l.wrap || inner <= 0 {
-		return []listRow{{it.Left, it.Right}}
+		return []listRow{{it.Left, it.Right, it.Drill}}
 	}
 	lines := strings.Split(ansi.Wrap(it.Left, inner, ""), "\n")
 	rows := make([]listRow, len(lines))
 	for i, s := range lines {
 		rows[i].left = strings.TrimRight(s, " ")
 	}
+	rows[0].drill = it.Drill
 	if it.Right == "" {
 		return rows
 	}
@@ -292,19 +302,32 @@ func (l *List) View(width, height int, st *style.UI, focused bool) string {
 	}
 	l.lastH = max(body, 1)
 	gw := ansi.StringWidth(st.SelectedGutter)
-	l.lastW, l.gutter = width, gw
+	// The last column holds the ↑/↓ scroll arrows (spec 09).
+	rw := max(width-1, 1)
+	l.lastW, l.gutter = rw, gw
 	l.scroll()
 	lines := make([]string, 0, height)
 	if len(l.view) == 0 {
 		lines = append(lines, " "+st.Muted.Render("Nothing matches “"+l.filter+"”."))
 	}
+	lastV := -1
 	for v := l.top; v < len(l.view) && len(lines) < body; v++ {
 		sel := focused && v == l.cursor
-		for k, r := range l.split(l.items[l.view[v]], width) {
+		path := !focused && v == l.cursor // unfocused: keep the cursor visible, unfilled
+		for k, r := range l.split(l.items[l.view[v]], rw) {
 			if len(lines) == body {
 				break
 			}
-			lines = append(lines, l.renderRow(r, k == 0, sel, width, gw, st))
+			lines = append(lines, l.renderRow(r, k == 0, sel, path, rw, gw, st)+" ")
+		}
+		lastV = v
+	}
+	if n := len(lines); n > 0 && len(l.view) > 0 {
+		if l.top > 0 {
+			lines[0] = Fit(lines[0], rw) + st.Muted.Render("↑")
+		}
+		if lastV < len(l.view)-1 {
+			lines[n-1] = Fit(lines[n-1], rw) + st.Muted.Render("↓")
 		}
 	}
 	if body < height {
@@ -322,9 +345,27 @@ func (l *List) View(width, height int, st *style.UI, focused bool) string {
 
 // renderRow draws one item row: gutter (cursor marker on the item's first
 // row), label, and the muted detail aligned right.
-func (l *List) renderRow(r listRow, first, sel bool, width, gw int, st *style.UI) string {
+func (l *List) renderRow(r listRow, first, sel, path bool, width, gw int, st *style.UI) string {
+	drill := ""
+	if r.drill {
+		drill = " ▸"
+		width -= 2
+	}
+	ds := st.Muted
+	if sel {
+		ds = st.Selected
+	}
+	return l.renderText(r, first, sel, path, width, gw, st) + ds.Render(drill)
+}
+
+func (l *List) renderText(r listRow, first, sel, path bool, width, gw int, st *style.UI) string {
 	rw := ansi.StringWidth(r.right)
 	inner := width - gw - 2
+	// Truncating lists drop the detail when it would leave the label fewer
+	// than 16 cells (narrow Library columns); wrapping lists give it a row.
+	if !l.wrap && rw > 0 && inner-rw-1 < 16 {
+		r.right, rw = "", 0
+	}
 	leftW := max(inner, 0)
 	if rw > 0 {
 		leftW = max(inner-rw-1, 0)
@@ -341,8 +382,12 @@ func (l *List) renderRow(r listRow, first, sel bool, width, gw int, st *style.UI
 		return st.Selected.Render(Fit(g, gw)) + st.Selected.Render(Fit(text+" ", width-gw))
 	}
 	pad := strings.Repeat(" ", gw)
-	if rw > 0 {
-		return pad + st.Text.Render(" "+Fit(r.left, leftW)+" ") + st.Muted.Render(Fit(r.right+" ", width-gw-leftW-2))
+	ts := st.Text
+	if path {
+		ts = st.Accent
 	}
-	return pad + st.Text.Render(Fit(" "+Fit(r.left, leftW)+" ", width-gw))
+	if rw > 0 {
+		return pad + ts.Render(" "+Fit(r.left, leftW)+" ") + st.Muted.Render(Fit(r.right+" ", width-gw-leftW-2))
+	}
+	return pad + ts.Render(Fit(" "+Fit(r.left, leftW)+" ", width-gw))
 }

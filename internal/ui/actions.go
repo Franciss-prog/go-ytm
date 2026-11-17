@@ -374,10 +374,7 @@ func (m *Model) playlistsChanged() tea.Cmd {
 		cmds = append(cmds, m.side.load(m.ctx()))
 	}
 	if lib, ok := m.pages[PageLibrary].(*libraryPage); ok {
-		lib.state[0] = stateIdle
-		if m.current == PageLibrary && lib.tab == 0 {
-			cmds = append(cmds, lib.load(m.ctx()))
-		}
+		cmds = append(cmds, lib.playlistsChanged(m.ctx()))
 	}
 	return tea.Batch(cmds...)
 }

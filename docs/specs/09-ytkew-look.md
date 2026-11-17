@@ -215,4 +215,14 @@ Replaces the Playlists · Albums · Artists tabs.
   ↑/↓ scroll arrows. Duration is right-aligned with padding before it. In-page tab strips
   (search panels, library tabs) render as `songs · albums · artists`; the search input is
   `⌕ query`. `transparent_selection` defaults to `solid`.
+- **Phase 3 (Library columns), done.** `page_library.go` rewritten: a column path over a
+  per-session node cache (`playlists`, `albums`, `artists`, `ar:<id>`, `al:<id>`, `pl:<id>`;
+  Liked Music = `pl:LM`, never offered for row removal). Previews are debounced with the
+  ctx-aware `after` and dropped when a newer cursor move bumped `seq`. Track columns are a
+  TrackTable in a new compact mode (`Artist — Title  time`), so marks, filter, sort and every
+  track action work there. Artist releases come from the artist page's Albums + Singles
+  shelves (not the full discography; `g space` opens the artist page for that). Unfocused
+  lists keep their cursor row visible in `accent` (the path). Lists drop the right-hand detail
+  when it would leave the label fewer than 16 cells. Wheel goes to the column under the
+  pointer (`wheeler`). Driven live (signed in): Artists → artist → releases → album tracks.
 
