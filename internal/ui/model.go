@@ -126,6 +126,7 @@ func New(o Options) *Model {
 		pb:      playback{q: o.Queue},
 	}
 	m.pages[PageHelp] = &help{keymap: o.Keymap, path: o.KeymapPath}
+	m.pages[PageQueue] = newQueuePage(columns(o.Config), o.Queue)
 	if _, ok := m.pages[m.current]; !ok {
 		m.current = PageLibrary
 	}
@@ -231,6 +232,15 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, cmd
 	case appendReadyMsg:
 		cmd := m.appendReady(msg)
+		return m, cmd
+	case jumpMsg:
+		if _, ok := m.pb.q.JumpTo(msg.pos); !ok {
+			return m, nil
+		}
+		cmd := m.startCurrent(0)
+		return m, cmd
+	case queueEditedMsg:
+		cmd := m.queueEdited()
 		return m, cmd
 	case settingsSavedMsg:
 		if msg.err != nil {

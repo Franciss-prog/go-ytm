@@ -324,3 +324,59 @@ func TestPlaybackWithoutStreams(t *testing.T) {
 		t.Fatal("missing resolver not reported")
 	}
 }
+
+// keys presses keys through the full Update path, draining commands.
+func (h pbHarness) keys(ks ...tea.Key) {
+	for _, k := range ks {
+		h.send(tea.KeyPressMsg(k))
+	}
+}
+
+func queueIDs(q *queue.Queue) string {
+	var ids []string
+	for _, t := range q.Tracks() {
+		ids = append(ids, t.VideoID)
+	}
+	return strings.Join(ids, ",")
+}
+
+func TestQueuePage(t *testing.T) {
+	h := newPB(t)
+	h.send(EnqueueMsg{Tracks: tracks("a", "b", "c", "d", "e")})
+	h.started("a")
+	h.m.navigate(PageQueue)
+	q := h.m.Queue()
+
+	// 2J on row b moves it two down; the cursor follows.
+	h.keys(ch('j'), ch('2'), ch('J'))
+	if got := queueIDs(q); got != "a,c,d,b,e" {
+		t.Fatalf("2J: %s", got)
+	}
+	if !strings.Contains(h.m.pages[PageQueue].Info(), "Song b") {
+		t.Fatalf("cursor did not follow: %q", h.m.pages[PageQueue].Info())
+	}
+	h.keys(ch('K'))
+	if got := queueIDs(q); got != "a,c,b,d,e" {
+		t.Fatalf("K: %s", got)
+	}
+
+	// Mark c and d, delete both.
+	h.keys(ch('k'), ch('v'), ch('j'), ch('v'))
+	h.keys(ch('d'), ch('d'))
+	if got := queueIDs(q); got != "a,b,e" {
+		t.Fatalf("delete marked: %s", got)
+	}
+
+	// Enter plays the row under the cursor.
+	h.keys(ch('g'), ch('g'), ch('j'))
+	h.keys(tea.Key{Code: tea.KeyEnter})
+	if h.current() != q.Tracks()[1].VideoID || h.lastItem() != "url:"+q.Tracks()[1].VideoID {
+		t.Fatalf("enter: current %s last %s", h.current(), h.lastItem())
+	}
+
+	// Reordering a filtered view is refused with a hint.
+	h.keys(ch('/'), ch('s'), tea.Key{Code: tea.KeyEnter}, ch('J'))
+	if !strings.Contains(plain(h.m), "Clear the filter and sort to reorder") {
+		t.Fatal("no reorder hint")
+	}
+}

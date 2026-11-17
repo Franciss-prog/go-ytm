@@ -85,6 +85,9 @@ type Context struct {
 	Height int
 }
 
+// Toast returns a command that shows t.
+func (*Context) Toast(t Toast) tea.Cmd { return msgCmd(t) }
+
 // placeholder stands in for pages that later milestones build.
 type placeholder struct {
 	id   PageID

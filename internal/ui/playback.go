@@ -7,6 +7,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
+	"github.com/Franciss-Prog/go-ytm/internal/config"
 	"github.com/Franciss-Prog/go-ytm/internal/player"
 	"github.com/Franciss-Prog/go-ytm/internal/queue"
 	"github.com/Franciss-Prog/go-ytm/internal/stream"
@@ -415,6 +416,12 @@ func (m *Model) queueChanged() {
 			l.QueueChanged(m.pb.q, m.bar.now.VideoID)
 		}
 	}
+}
+
+// columns are the TrackTable widths from [ui] col_*.
+func columns(c config.Config) components.Columns {
+	u := c.UI
+	return components.Columns{Index: u.ColIndex, Title: u.ColTitle, Artist: u.ColArtist, Album: u.ColAlbum, Duration: u.ColDuration}
 }
 
 // queueListener is a page that shows queue state.

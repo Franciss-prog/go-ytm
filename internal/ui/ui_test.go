@@ -8,6 +8,7 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
 	"github.com/charmbracelet/x/exp/teatest/v2"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/Franciss-Prog/go-ytm/internal/player"
 	"github.com/Franciss-Prog/go-ytm/internal/style"
 	"github.com/Franciss-Prog/go-ytm/internal/theme"
+	"github.com/Franciss-Prog/go-ytm/internal/ytmusic"
 )
 
 // scenario is one registered screen state. Every page and component the
@@ -61,6 +63,23 @@ var scenarios = func() []scenario {
 			m.navigate(PageHelp)
 			press(m, ch(','), tea.Key{Code: tea.KeyDown})
 		}},
+		scenario{"queue-filled", func(m *Model) {
+			q := m.Queue()
+			ts := scenarioTracks()
+			q.AddMany(ts[:5])
+			q.AddRadio(ts[5:], true)
+			q.JumpTo(1)
+			m.syncQueueFlags()
+			m.queueChanged()
+			m.navigate(PageQueue)
+			press(m, ch('j'), ch('j'), ch('v'))
+		}},
+		scenario{"queue-filter-sort", func(m *Model) {
+			m.Queue().AddMany(scenarioTracks())
+			m.queueChanged()
+			m.navigate(PageQueue)
+			press(m, ch('s'), ch('d'), ch('/'), ch('d'), ch('a'))
+		}},
 		scenario{"no-sidebar-muted", func(m *Model) {
 			m.sidebar = false
 			st := playing
@@ -69,6 +88,22 @@ var scenarios = func() []scenario {
 		}},
 	)
 }()
+
+// scenarioTracks is a small fixed album for page scenarios: long titles,
+// several artists, CJK, a missing album, an unavailable row.
+func scenarioTracks() []ytmusic.Track {
+	ram := &ytmusic.AlbumRef{Name: "Random Access Memories", ID: "MPREb_ram"}
+	dp := []ytmusic.Artist{{Name: "Daft Punk", ID: "UCdp"}}
+	return []ytmusic.Track{
+		{VideoID: "t1", Title: "Get Lucky", Artists: dp, Album: ram, Duration: 369 * time.Second, Available: true},
+		{VideoID: "t2", Title: "Instant Crush", Artists: append(dp, ytmusic.Artist{Name: "Julian Casablancas"}), Album: ram, Duration: 337 * time.Second, Available: true},
+		{VideoID: "t3", Title: "Lose Yourself to Dance (feat. Pharrell Williams)", Artists: dp, Album: ram, Duration: 353 * time.Second, Available: true},
+		{VideoID: "t4", Title: "Giorgio by Moroder", Artists: dp, Album: ram, Duration: 544 * time.Second, Available: false},
+		{VideoID: "t5", Title: "夜に駆ける", Artists: []ytmusic.Artist{{Name: "YOASOBI"}}, Duration: 261 * time.Second, Available: true},
+		{VideoID: "t6", Title: "Around the World", Artists: dp, Album: &ytmusic.AlbumRef{Name: "Homework"}, Duration: 429 * time.Second, Available: true},
+		{VideoID: "t7", Title: "One More Time", Artists: dp, Album: &ytmusic.AlbumRef{Name: "Discovery"}, Duration: 320 * time.Second, Available: true},
+	}
+}
 
 var sizes = [][2]int{{80, 24}, {140, 40}}
 
@@ -152,7 +187,7 @@ func TestEveryLineFitsWidth(t *testing.T) {
 				t.Errorf("%s %v: %d lines", sc.name, sz, len(lines))
 			}
 			for i, l := range lines {
-				if w := len([]rune(l)); w != sz[0] {
+				if w := ansi.StringWidth(l); w != sz[0] {
 					t.Errorf("%s %v: line %d is %d cells: %q", sc.name, sz, i, w, l)
 					break
 				}
