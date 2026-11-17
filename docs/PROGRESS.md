@@ -11,7 +11,7 @@ Last updated: 2026-11-17
 | M1 | player-core | **in review** | [#3](https://github.com/Franciss-prog/go-ytm/pull/3) (stacked on #2) | mpv launcher, JSON IPC, controller, crash restore, fakempv |
 | M2 | ytmusic-auth-search | **in review** | [#4](https://github.com/Franciss-prog/go-ytm/pull/4) (stacked on #3) | InnerTube client, search, setup, auth store, doctor Auth |
 | M3 | stream-resolve | **in review** | [#5](https://github.com/Franciss-prog/go-ytm/pull/5) (stacked on #4) | yt-dlp resolver, URL cache, prefetcher, doctor mpv version |
-| M4 | tui-shell | **in review** | branch `feat/tui-shell` (stacked on #5) | keymap engine, root model, header, bar, toasts, Help, app wiring |
+| M4 | tui-shell | **in review** | [#6](https://github.com/Franciss-prog/go-ytm/pull/6) (stacked on #5) | keymap engine, root model, header, bar, toasts, Help, app wiring |
 | M4b | dynamic-theme | not started | | |
 | M5 | tui-library-search-queue | not started | | |
 | M6 | browse-liked-history | not started | | |
