@@ -219,7 +219,7 @@ func tabBar(names []string, active int, st *style.UI) string {
 	for i, n := range names {
 		b.WriteString(" ")
 		if i == active {
-			b.WriteString(st.HeaderActive.Render(n))
+			b.WriteString(st.TabActive.Render(n))
 		} else {
 			b.WriteString(st.Muted.Render(n))
 		}

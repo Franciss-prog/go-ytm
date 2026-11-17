@@ -90,6 +90,10 @@ type UI struct {
 	SidebarOverflow   string `toml:"sidebar_overflow" oneof:"truncate|wrap"`
 	ShowQueueSource   bool   `toml:"show_queue_source"`
 	Mouse             bool   `toml:"mouse"`
+	// ShowSidebar shows the playlist sidebar at start (spec 09).
+	ShowSidebar bool `toml:"show_sidebar"`
+	// ShowHints shows the key-hint footer (spec 09).
+	ShowHints bool `toml:"show_hints"`
 }
 
 // Theme holds [theme]. See docs/specs/08-dynamic-theme-transparency.md.
@@ -175,7 +179,7 @@ func Default() Config {
 			AlbumArtMode: "blocks", Icons: "unicode", ProgressStyle: "block", SidebarWidth: 30,
 			LyricsWidth: 36, ColIndex: 4, ColDuration: 8, BidiMode: "auto", Region: "ZZ",
 			HomeShelves: 3, ShowSelectionInfo: true, SidebarOverflow: "truncate",
-			ShowQueueSource: true, Mouse: true,
+			ShowQueueSource: true, Mouse: true, ShowHints: true,
 		},
 		Theme: Theme{
 			Source: "static", Name: "ytm-dark", TransparentSelection: "bar", EnforceContrast: true,

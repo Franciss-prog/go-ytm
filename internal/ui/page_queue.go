@@ -145,32 +145,12 @@ func (p *queuePage) remove(ctx *Context) tea.Cmd {
 
 func (p *queuePage) View(width, height int, st *style.UI) string {
 	p.sync(false)
-	head := " " + st.Title.Render("Queue")
-	if n := p.q.Len(); n > 0 {
-		head += st.Muted.Render("  " + plural(n, "track") + " · " + components.FormatDuration(p.total))
-		var flags []string
-		if p.q.Shuffle() {
-			flags = append(flags, "shuffle")
-		}
-		if r := p.q.Repeat(); r != queue.RepeatOff {
-			flags = append(flags, "repeat "+r.String())
-		}
-		for _, f := range flags {
-			head += st.Muted.Render(" · ") + st.Accent.Render(f)
-		}
-	}
-	if height <= 2 {
-		return components.Block([]string{head}, width, height)
-	}
-	return components.Fit(head, width) + "\n" + components.Fit("", width) + "\n" + p.table.View(width, height-2, st)
+	return p.table.View(width, height, st)
 }
 
-// Click implements mouser (the table sits below the title and a blank row).
+// Click implements mouser (the table fills the panel).
 func (p *queuePage) Click(ev mouseEv, ctx *Context) (Page, tea.Cmd) {
-	if ev.y < 2 {
-		return p, nil
-	}
-	name := tableClick(p.table.Click(ev.x, ev.y-2, ev.right, ev.ctrl, ev.shift))
+	name := tableClick(p.table.Click(ev.x, ev.y, ev.right, ev.ctrl, ev.shift))
 	if name == "" {
 		return p, nil
 	}

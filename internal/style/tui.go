@@ -51,11 +51,16 @@ type UI struct {
 	// Panel is a side pane (sidebars).
 	Panel lipgloss.Style
 
-	Header       lipgloss.Style // header row
-	HeaderActive lipgloss.Style // current page name
-	HeaderLink   lipgloss.Style // ← Back / Forward →, enabled
-	HeaderDim    lipgloss.Style // disabled nav arrows
-	Pending      lipgloss.Style // pending chord/count ("g-", "15")
+	// Frame (spec 09): tab bar, panels, key hints. Foreground only, so the
+	// frame never paints a background.
+	AppName    lipgloss.Style // "ytm" at the left of the tab bar
+	Tab        lipgloss.Style // inactive tab name
+	TabActive  lipgloss.Style // active tab name
+	Pending    lipgloss.Style // pending chord/count ("g-", "15")
+	PanelTitle lipgloss.Style // title of the focused panel
+	PanelDim   lipgloss.Style // title of an unfocused panel
+	HintKey    lipgloss.Style // key in the hint footer
+	HintText   lipgloss.Style // action in the hint footer
 
 	Title                            lipgloss.Style // page titles
 	Text                             lipgloss.Style
@@ -70,7 +75,7 @@ type UI struct {
 	Selected       lipgloss.Style
 	SelectedGutter string
 
-	InfoBar lipgloss.Style // selection info line
+	InfoBar lipgloss.Style // selection info (in the panel's bottom border)
 
 	// Track tables.
 	TableHeader lipgloss.Style // column titles
@@ -111,21 +116,16 @@ func NewUI(t theme.Theme, o UIOptions, version uint64) *UI {
 		return u
 	}
 	fg := func(c color.Color) lipgloss.Style { return n().Foreground(c) }
-	// fill paints a background unless transparent.
-	fill := func(s lipgloss.Style, c color.Color) lipgloss.Style {
-		if o.Transparent {
-			return s
-		}
-		return s.Background(c)
-	}
-
 	u.Base = fg(t.Fg)
 	u.Panel = fg(t.Fg)
-	u.Header = fill(fg(t.Muted), t.Surface)
-	u.HeaderActive = fill(fg(t.Accent).Bold(true), t.Surface)
-	u.HeaderLink = fill(fg(t.Fg), t.Surface)
-	u.HeaderDim = fill(fg(t.Border), t.Surface)
-	u.Pending = fill(fg(t.Warn).Bold(true), t.Surface)
+	u.AppName = fg(t.Accent).Bold(true)
+	u.Tab = fg(t.Muted)
+	u.TabActive = fg(t.Fg).Bold(true)
+	u.Pending = fg(t.Warn).Bold(true)
+	u.PanelTitle = fg(t.Fg).Bold(true)
+	u.PanelDim = fg(t.Muted)
+	u.HintKey = fg(t.Fg)
+	u.HintText = fg(t.Muted)
 
 	u.Title = fg(t.Accent).Bold(true)
 	u.Text = fg(t.Fg)
@@ -134,7 +134,7 @@ func NewUI(t theme.Theme, o UIOptions, version uint64) *UI {
 	u.Border = fg(t.Border)
 	u.Section = fg(t.Fg).Bold(true)
 	u.ErrorText, u.WarnText, u.SuccessText = fg(t.Error), fg(t.Warn), fg(t.Success)
-	u.InfoBar = fill(fg(t.Muted), t.Surface)
+	u.InfoBar = fg(t.Muted)
 	u.TableHeader = fg(t.Muted).Bold(true)
 	u.RowPlaying = fg(t.Accent).Bold(true)
 	u.RowDim = fg(t.Muted).Faint(true)
@@ -188,11 +188,12 @@ func NewUI(t theme.Theme, o UIOptions, version uint64) *UI {
 func (u *UI) noColor() {
 	p := lipgloss.NewStyle()
 	b := p.Bold(true)
-	u.Base, u.Panel, u.Header, u.HeaderLink, u.Text, u.Muted, u.Border, u.InfoBar = p, p, p, p, p, p, p, p
-	u.HeaderDim = p.Faint(true)
+	u.Base, u.Panel, u.Tab, u.Text, u.Muted, u.Border, u.InfoBar = p, p, p, p, p, p, p
+	u.PanelDim, u.HintText = p.Faint(true), p.Faint(true)
+	u.HintKey = p
 	u.TableHeader, u.RowPlaying, u.MarkGlyph = b, b, b
 	u.RowDim = p.Faint(true)
-	u.HeaderActive, u.Pending, u.Title, u.Accent, u.Section = b, b, b, b, b
+	u.AppName, u.TabActive, u.PanelTitle, u.Pending, u.Title, u.Accent, u.Section = b, b, b, b, b, b, b
 	u.ErrorText, u.WarnText, u.SuccessText = b, b, p
 	u.Selected = p.Reverse(true)
 	u.BarTitle, u.BarArtist, u.BarTime, u.BarIcon = b, p, p, p

@@ -59,58 +59,72 @@ func tabHit(names []string, x int) int {
 	return -1
 }
 
-// click routes a click by screen region: header, sidebar, main area, bar.
-// Popups own input, so clicks behind them are ignored.
+// click routes a click by screen region: frame buttons and tabs, sidebar,
+// main page, progress bar. Popups own input, so clicks behind them are
+// ignored. The mouse's back/forward side buttons walk the history.
 func (m *Model) click(ms tea.Mouse) tea.Cmd {
+	switch ms.Button {
+	case tea.MouseBackward:
+		m.goBack()
+		return nil
+	case tea.MouseForward:
+		m.goForward()
+		return nil
+	}
 	right := ms.Button == tea.MouseRight
 	if m.modal() || (ms.Button != tea.MouseLeft && !right) {
 		return nil
 	}
-	l := m.layout()
-	top := 0
-	if l.header {
-		top = 1
+	g := m.geom
+	if !right {
+		for _, b := range g.buttons {
+			if ms.Y == b.y && ms.X >= b.x && ms.X < b.x+b.w {
+				return m.global(keys.Action{Name: b.action})
+			}
+		}
 		if ms.Y == 0 {
-			return m.headerClick(ms.X, right)
+			for _, t := range g.tabs {
+				if ms.X >= t.x && ms.X < t.x+t.w {
+					return m.navigate(t.page)
+				}
+			}
 		}
-	}
-	if ms.Y >= top && ms.Y < top+l.mainH {
-		y := ms.Y - top
-		if l.sideW > 0 && ms.X < l.sideW {
-			return m.sideClick(ms.X, y, right)
-		}
-		x, ok := l.mainX(ms.X)
-		if !ok {
+		if g.progressW > 0 && ms.Y == g.progressY && ms.X >= g.progressX && ms.X < g.progressX+g.progressW {
+			m.seekTo(ms.X - g.progressX)
 			return nil
 		}
-		m.focus = paneMain
-		mp, isMouser := m.pages[m.current].(mouser)
-		if !isMouser {
-			return nil
-		}
-		ev := mouseEv{x: x, y: y, right: right, ctrl: ms.Mod&tea.ModCtrl != 0, shift: ms.Mod&tea.ModShift != 0}
-		p, cmd := mp.Click(ev, m.ctx())
-		m.pages[m.current] = p
-		return cmd
 	}
-	if !right && ms.Y >= m.barTop {
-		return m.barClick(ms.X, ms.Y-m.barTop)
+	l := m.layout()
+	if x, y, ok := l.sideXY(ms.X, ms.Y); ok {
+		return m.sideClick(x, y, right)
 	}
-	return nil
-}
-
-func (m *Model) headerClick(x int, right bool) tea.Cmd {
-	if right {
+	x, okX := l.mainX(ms.X)
+	y, okY := l.mainY(ms.Y)
+	if !okX || !okY {
 		return nil
 	}
-	backW, fwdW := ansi.StringWidth(backLabel), ansi.StringWidth(forwardLabel)
-	switch {
-	case x >= 1 && x < 1+backW:
-		m.goBack()
-	case x >= m.width-1-fwdW && x < m.width-1:
-		m.goForward()
+	m.focus = paneMain
+	mp, isMouser := m.pages[m.current].(mouser)
+	if !isMouser {
+		return nil
 	}
-	return nil
+	ev := mouseEv{x: x, y: y, right: right, ctrl: ms.Mod&tea.ModCtrl != 0, shift: ms.Mod&tea.ModShift != 0}
+	p, cmd := mp.Click(ev, m.ctx())
+	m.pages[m.current] = p
+	return cmd
+}
+
+// seekTo seeks to cell x of the progress bar.
+func (m *Model) seekTo(x int) {
+	g := m.geom
+	if m.o.Player == nil || m.bar.st.Duration <= 0 || g.progressW <= 0 {
+		return
+	}
+	frac := float64(x) / float64(max(g.progressW-1, 1))
+	m.bar.scrubbing = false
+	if err := m.o.Player.Seek(time.Duration(min(frac, 1)*float64(m.bar.st.Duration)), player.SeekAbsolute); err != nil {
+		m.log.Warn("ui: seek failed", "err", err)
+	}
 }
 
 // sideClick: pinned rows navigate; a playlist click selects and opens it
@@ -138,26 +152,6 @@ func (m *Model) sideClick(x, y int, right bool) tea.Cmd {
 	return nil
 }
 
-// barClick: progress seeks, the like/shuffle/repeat/play glyphs toggle.
-func (m *Model) barClick(x, y int) tea.Cmd {
-	g := m.geom
-	if y == g.progressRow && g.progressW > 0 && x >= g.progressX && x < g.progressX+g.progressW &&
-		m.o.Player != nil && m.bar.st.Duration > 0 {
-		frac := float64(x-g.progressX) / float64(g.progressW)
-		m.bar.scrubbing = false
-		if err := m.o.Player.Seek(time.Duration(frac*float64(m.bar.st.Duration)), player.SeekAbsolute); err != nil {
-			m.log.Warn("ui: seek failed", "err", err)
-		}
-		return nil
-	}
-	for _, b := range g.buttons {
-		if y == g.buttonRow && x >= b.x && x < b.x+b.w {
-			return m.global(keys.Action{Name: b.action})
-		}
-	}
-	return nil
-}
-
 // wheel: over the volume it changes volume, over the progress bar it
 // scrubs, over the sidebar or main area it moves that pane's cursor.
 func (m *Model) wheel(ms tea.Mouse) tea.Cmd {
@@ -174,35 +168,29 @@ func (m *Model) wheel(ms tea.Mouse) tea.Cmd {
 		return nil
 	}
 	g := m.geom
-	if ms.Y == m.barTop+g.volumeRow && ms.X >= g.volumeX && ms.X < g.volumeX+g.volumeW {
+	if g.volumeW > 0 && ms.Y == g.volumeY && ms.X >= g.volumeX && ms.X < g.volumeX+g.volumeW {
 		if d < 0 {
 			return m.playback(keys.Action{Name: "volume_up"})
 		}
 		return m.playback(keys.Action{Name: "volume_down"})
 	}
-	if ms.Y == m.barTop+g.progressRow && g.progressW > 0 && ms.X >= g.progressX && ms.X < g.progressX+g.progressW {
+	if g.progressW > 0 && ms.Y == g.progressY && ms.X >= g.progressX && ms.X < g.progressX+g.progressW {
 		return m.scrub(-d)
 	}
 	l := m.layout()
-	top := 0
-	if l.header {
-		top = 1
-	}
-	if ms.Y < top || ms.Y >= top+l.mainH {
-		return nil
-	}
 	name := "move_down"
 	if d < 0 {
 		name = "move_up"
 	}
 	a := keys.Action{Name: name}
-	if l.sideW > 0 && ms.X < l.sideW {
+	if _, _, ok := l.sideXY(ms.X, ms.Y); ok {
 		if m.side.state == stateLoaded {
 			m.side.list.Action(a)
 		}
 		return nil
 	}
-	if _, ok := l.mainX(ms.X); !ok {
+	_, okX := l.mainX(ms.X)
+	if _, okY := l.mainY(ms.Y); !okX || !okY {
 		return nil
 	}
 	p, cmd, _ := m.pages[m.current].Action(a, m.ctx())
@@ -231,17 +219,4 @@ func (m *Model) commitScrub(seq uint64) {
 	if err := m.o.Player.Seek(m.bar.scrubPos, player.SeekAbsolute); err != nil {
 		m.log.Warn("ui: seek failed", "err", err)
 	}
-}
-
-// mainX maps screen column x to a main-area column; false over the
-// sidebar, its separator or the lyrics pane.
-func (l layout) mainX(x int) (int, bool) {
-	if l.sideW > 0 {
-		x -= l.sideW + 1
-	}
-	w := l.mainW
-	if l.lyricsOverlay {
-		w -= l.lyricsW + 1
-	}
-	return x, x >= 0 && x < w
 }

@@ -1,40 +1,40 @@
- ← Back  Help                                                                                                                     Forward → 
- ♥ Liked Songs                │ Keys                                                                                                        
- ⏱ Recently Played            │ Chords are typed in sequence (g then l). Digits before a motion repeat it (15j).                            
- ♫ Discovery Mix              │ Rebind in ~/.config/ytm-go/keymap.toml — this page follows your bindings.                                   
- ──────────────────────────── │                                                                                                             
- Playlists                    │ Playback                                                                                                    
- Late night drives         87 │   space            Play / pause                                                                             
- Focus                     43 │   n                Next track                                                                               
-                              │   p                Previous track                                                                           
-                              │   .                Play a random track from the queue                                                       
-                              │   C-r              Cycle repeat (off, all, one)                                                             
-                              │   C-s     ╭─────────────────────────────────────────────────────╮                                           
-                              │   +       │ Settings                                            │                                           
-                              │   -       │                                                     │                                           
-                              │   _       │  Theme source      ‹ static ›                       │                                           
-                              │   >       │  Theme name        ‹ ytm-dark ›                     │                                           
-                              │   <       │  Transparent       [ ]  C-t                         │                                           
-                              │   ^       │  Selection style   ‹ bar ›  (transparent only)      │                                           
-                              │   l       │  Popup fill        [ ]                              │                                           
-                              │   D       │  Album art         ‹ blocks ›                       │                                           
-                              │           │  Enforce contrast  [x]                              │                                           
-                              │ Navigation│  Live reload       [x]                              │                                           
-                              │   j, down,│                                                     │                                           
-                              │   k, up, C│ ←/→ change · space toggle · enter save · esc cancel │                                           
-                              │   C-f, pag╰─────────────────────────────────────────────────────╯                                           
-                              │   C-b, page_up     Page up                                                                                  
-                              │   g g, home        Go to top (or row N with a count)                                                        
-                              │   G, end           Go to bottom (or row N with a count)                                                     
-                              │   enter            Select / open                                                                            
-                              │   tab              Focus next panel                                                                         
-                              │   S-tab            Focus previous panel                                                                     
-                              │   C-w h            Focus pane to the left                                                                   
-                              │   C-w l            Focus pane to the right                                                                  
-                              │   C-w w            Cycle pane focus                                                                         
- 2 playlists                  │   r                Retry a failed load                                                                      
-                                                                                                                                            
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ ytm  queue  library  search                                                                                            ⤮  ⟳  vol ▪▪▪▪▪ 80% 
+────────────╯       ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+╭│ help │──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Keys                                                                                                                                     │
+│ Chords are typed in sequence (g then l). Digits before a motion repeat it (15j).                                                         │
+│ Rebind in ~/.config/ytm-go/keymap.toml — this page follows your bindings.                                                                │
+│                                                                                                                                          │
+│ Playback                                                                                                                                 │
+│   space            Play / pause                                                                                                          │
+│   n                Next track                                                                                                            │
+│   p                Previous track                                                                                                        │
+│   .                Play a random track from the queue                                                                                    │
+│   C-r              Cycle repeat (off, all, one)                                                                                          │
+│   C-s              Toggle shuffle       ╭─────────────────────────────────────────────────────╮                                          │
+│   +                Volume up            │ Settings                                            │                                          │
+│   -                Volume down          │                                                     │                                          │
+│   _                Mute                 │  Theme source      ‹ static ›                       │                                          │
+│   >                Seek forward         │  Theme name        ‹ ytm-dark ›                     │                                          │
+│   <                Seek backward        │  Transparent       [ ]  C-t                         │                                          │
+│   ^                Restart track        │  Selection style   ‹ bar ›  (transparent only)      │                                          │
+│   l                Like / unlike current│  Popup fill        [ ]                              │                                          │
+│   D                Discovery mix        │  Album art         ‹ blocks ›                       │                                          │
+│                                         │  Enforce contrast  [x]                              │                                          │
+│ Navigation                              │  Live reload       [x]                              │                                          │
+│   j, down, C-n     Move down            │                                                     │                                          │
+│   k, up, C-p       Move up              │ ←/→ change · space toggle · enter save · esc cancel │                                          │
+│   C-f, page_down   Page down            ╰─────────────────────────────────────────────────────╯                                          │
+│   C-b, page_up     Page up                                                                                                               │
+│   g g, home        Go to top (or row N with a count)                                                                                     │
+│   G, end           Go to bottom (or row N with a count)                                                                                  │
+│   enter            Select / open                                                                                                         │
+│   tab              Focus next panel                                                                                                      │
+│   S-tab            Focus previous panel                                                                                                  │
+│   C-w h            Focus pane to the left                                                                                                │
+│   C-w l            Focus pane to the right                                                                                               │
+│   C-w w            Cycle pane focus                                                                                                      │
+│   r                Retry a failed load                                                                                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
  Nothing playing                                                                                                                            
-                                                                                                                                            
-                                                                                                                                    vol 80% 
+ / filter · backspace back · , settings   ? help                                                                                            

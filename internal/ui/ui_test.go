@@ -139,12 +139,13 @@ var scenarios = func() []scenario {
 			press(m, tea.Key{Code: tea.KeyTab}, tea.Key{Code: tea.KeyTab}, tea.Key{Code: tea.KeyTab})
 		}},
 		scenario{"sidebar-focused-wrap", func(m *Model) {
+			m.sidebar = true
+			drain(m, m.side.ensure(m.ctx()))
 			m.side.list.SetWrap(true)
 			drain(m, m.focusAction("focus_pane_left"))
 			drain(m, m.action(keys.Action{Name: "move_down"}))
 		}},
-		scenario{"no-sidebar-muted", func(m *Model) {
-			m.sidebar = false
+		scenario{"muted", func(m *Model) {
 			st := playing
 			st.Muted = true
 			m.Update(PlayerEventMsg{playerState(st)})
@@ -261,26 +262,31 @@ func TestEveryLineFitsWidth(t *testing.T) {
 
 func TestLayoutBreakpoints(t *testing.T) {
 	tests := []struct {
-		w, h                int
-		lyrics              bool
-		side, overlay, comp bool
-		header              bool
+		w, h                 int
+		lyrics               bool
+		side, overlay, rule  bool
+		mainW, mainH, mainY0 int
 	}{
-		{w: 140, h: 40, lyrics: true, side: true, header: true},
-		{w: 99, h: 30, lyrics: true, side: true, overlay: true, header: true},
-		{w: 79, h: 30, side: false, header: true},
-		{w: 59, h: 30, comp: true, header: true},
-		{w: 100, h: 11, side: true, comp: true},
+		// 140: sidebar 32 + main panel 70 + lyrics 38; rows 2 + 36 + 2.
+		{w: 140, h: 40, lyrics: true, side: true, rule: true, mainW: 68, mainH: 34, mainY0: 3},
+		{w: 99, h: 30, lyrics: true, side: true, overlay: true, rule: true, mainW: 65, mainH: 24, mainY0: 3},
+		{w: 79, h: 30, rule: true, mainW: 77, mainH: 24, mainY0: 3},
+		// Short: no rule, no hints → tab bar + panel + mini player.
+		{w: 100, h: 11, side: true, mainW: 66, mainH: 7, mainY0: 2},
 	}
 	for _, tt := range tests {
-		m, _ := newTestModel(t, tt.w, tt.h)
+		m, _ := newTestModel(t, tt.w, tt.h, withSidebar)
 		m.lyrics = tt.lyrics
 		l := m.layout()
-		if (l.sideW > 0) != tt.side || l.lyricsOverlay != tt.overlay || l.compactBar != tt.comp || l.header != tt.header {
+		if (l.sideW > 0) != tt.side || l.lyricsOverlay != tt.overlay || l.rule != tt.rule ||
+			l.mainW != tt.mainW || l.mainH != tt.mainH || l.mainY0 != tt.mainY0 {
 			t.Errorf("%dx%d: %+v", tt.w, tt.h, l)
 		}
 	}
 }
+
+// withSidebar shows the playlist sidebar at start (off by default).
+func withSidebar(o *Options) { o.Config.UI.ShowSidebar = true }
 
 func TestNavigation(t *testing.T) {
 	m, _ := newTestModel(t, 80, 24)
@@ -424,22 +430,32 @@ func TestMouse(t *testing.T) {
 	m.Update(PlayerEventMsg{playerState(playing)})
 	_ = plain(m) // layout + geometry
 	g := m.geom
-	y := m.barTop + g.progressRow
-	m.Update(tea.MouseClickMsg{X: g.progressX + g.progressW/2, Y: y, Button: tea.MouseLeft})
+	m.Update(tea.MouseClickMsg{X: g.progressX + g.progressW/2, Y: g.progressY, Button: tea.MouseLeft})
 	if len(fp.seeks) != 1 || fp.modes[0] != player.SeekAbsolute {
 		t.Fatalf("click on progress: %v %v", fp.seeks, fp.modes)
 	}
 	if d := fp.seeks[0] - playing.Duration/2; d < -5*time.Second || d > 5*time.Second {
 		t.Errorf("seek to %v, want ~half of %v", fp.seeks[0], playing.Duration)
 	}
-	m.Update(tea.MouseWheelMsg{X: g.volumeX + 1, Y: m.barTop + g.volumeRow, Button: tea.MouseWheelDown})
+	m.Update(tea.MouseWheelMsg{X: g.volumeX + 1, Y: g.volumeY, Button: tea.MouseWheelDown})
 	if fp.st.Volume != 75 {
 		t.Errorf("wheel volume = %d", fp.st.Volume)
 	}
-	m.navigate(PageQueue)
-	m.Update(tea.MouseClickMsg{X: 2, Y: 0, Button: tea.MouseLeft})
+	// Tabs navigate; the mouse's back button walks the history.
+	_ = plain(m)
+	var queueX int
+	for _, tb := range m.geom.tabs {
+		if tb.page == PageQueue {
+			queueX = tb.x
+		}
+	}
+	m.Update(tea.MouseClickMsg{X: queueX, Y: 0, Button: tea.MouseLeft})
+	if m.Current() != PageQueue {
+		t.Fatalf("click on the queue tab → %s", m.Current())
+	}
+	m.Update(tea.MouseClickMsg{X: 50, Y: 10, Button: tea.MouseBackward})
 	if m.Current() != PageLibrary {
-		t.Errorf("click on Back → %s", m.Current())
+		t.Errorf("mouse back → %s", m.Current())
 	}
 }
 
@@ -516,5 +532,52 @@ func BenchmarkThemeApplyAndRepaint(b *testing.B) {
 		m.Update(ThemeChangedMsg{theme.Result{Theme: themes[i%len(themes)], Cause: theme.CauseFile}})
 		_ = m.View()
 		i++
+	}
+}
+
+func TestSidebarHiddenByDefault(t *testing.T) {
+	m, _ := newTestModel(t, 140, 40)
+	if m.layout().sideW != 0 || strings.Contains(plain(m), "playlists │") {
+		t.Fatal("sidebar shown with default config")
+	}
+	press(m, tea.Key{Code: 'e', Mod: tea.ModCtrl})
+	if m.layout().sideW == 0 {
+		t.Fatal("C-e did not show the sidebar")
+	}
+}
+
+func TestHintsFollowKeymap(t *testing.T) {
+	km, err := keys.Load([]byte("[keys]\nfilter = [\"F2\"]\nhelp = [\"F1\"]\n"), "k.toml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	m, _ := newTestModel(t, 140, 40, func(o *Options) { o.Keymap = km })
+	drain(m, m.navigate(PageQueue))
+	lines := strings.Split(plain(m), "\n")
+	foot := lines[len(lines)-1]
+	if !strings.Contains(foot, "f2 filter") || !strings.Contains(foot, "f1 help") || strings.Contains(foot, "/ filter") {
+		t.Errorf("hints ignore the live keymap: %q", foot)
+	}
+	m.o.Config.UI.ShowHints = false
+	if l := m.layout(); l.hints {
+		t.Error("show_hints = false still shows hints")
+	}
+}
+
+func TestTabFollowsNavigation(t *testing.T) {
+	m, _ := newTestModel(t, 140, 40)
+	for _, tt := range []struct {
+		action string
+		tab    PageID
+	}{{"queue", PageQueue}, {"search", PageSearch}, {"liked_songs", PageLibrary}, {"help", PageLibrary}} {
+		drain(m, m.action(keys.Action{Name: tt.action}))
+		if m.tab != tt.tab {
+			t.Errorf("%s: tab %s, want %s", tt.action, m.tab, tt.tab)
+		}
+	}
+	m.goBack() // help → liked songs: still library
+	m.goBack() // → search
+	if m.tab != PageSearch {
+		t.Errorf("back restores tab %s", m.tab)
 	}
 }

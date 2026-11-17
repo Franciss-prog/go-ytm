@@ -11,11 +11,13 @@ import (
 	"github.com/Franciss-Prog/go-ytm/internal/ui/components"
 )
 
-// Screen geometry of newPB (100×30): header row 0, sidebar columns 0–29,
-// separator 30, main area from column 31, main rows from 1.
+// Screen geometry of newPB (100×30, sidebar shown): tab bar row 0, rule
+// row 1, panels from row 2 with a one-cell border; the sidebar panel is
+// columns 0–31, the main panel 32–99, so the page starts at (33, 3).
+// Sidebar content cell (x, y) is at screen (x+1, mainY0+y).
 const (
-	mainX0 = 31
-	mainY0 = 1
+	mainX0 = 33
+	mainY0 = 3
 )
 
 func (h pbHarness) click(x, y int, b tea.MouseButton, mod tea.KeyMod) {
@@ -171,15 +173,16 @@ func TestBarButtonClicks(t *testing.T) {
 		t.Fatalf("no %s button", action)
 		return barButton{}
 	}
-	h.left(btn("toggle_shuffle").x, h.m.barTop)
+	at := func(action string) (int, int) { b := btn(action); return b.x, b.y }
+	h.left(at("toggle_shuffle"))
 	if !h.m.Queue().Shuffle() {
 		t.Fatal("shuffle glyph did not toggle shuffle")
 	}
-	h.left(btn("play_pause").x, h.m.barTop)
+	h.left(at("play_pause"))
 	if calls := h.pl.Calls(); calls[len(calls)-1] != "toggle_pause" {
 		t.Fatalf("play glyph: %v", calls)
 	}
-	h.left(btn("cycle_repeat").x, h.m.barTop)
+	h.left(at("cycle_repeat"))
 	if h.m.bar.repeat == "off" {
 		t.Fatal("repeat glyph did not cycle")
 	}
@@ -205,7 +208,7 @@ func TestWheelScrubCommitsLast(t *testing.T) {
 	h.send(PlayerEventMsg{playerState(st)})
 	h.m.View()
 	g := h.m.geom
-	x, y := g.progressX+2, h.m.barTop+g.progressRow
+	x, y := g.progressX+2, g.progressY
 	m := h.m
 	// Ticks arm timers; deliver the commits by hand, oldest first.
 	m.Update(tea.MouseWheelMsg(tea.Mouse{X: x, Y: y, Button: tea.MouseWheelUp}))

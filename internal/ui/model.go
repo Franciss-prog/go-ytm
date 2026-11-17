@@ -9,7 +9,6 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/colorprofile"
-	"github.com/charmbracelet/x/ansi"
 
 	"github.com/Franciss-Prog/go-ytm/internal/config"
 	"github.com/Franciss-Prog/go-ytm/internal/keys"
@@ -18,12 +17,6 @@ import (
 	"github.com/Franciss-Prog/go-ytm/internal/style"
 	"github.com/Franciss-Prog/go-ytm/internal/theme"
 	"github.com/Franciss-Prog/go-ytm/internal/ytmusic"
-)
-
-// Header navigation labels (also hit-tested for mouse clicks).
-const (
-	backLabel    = "← Back"
-	forwardLabel = "Forward →"
 )
 
 // MaxHistory bounds the back/forward stacks (as the original).
@@ -89,6 +82,7 @@ type Model struct {
 
 	pages   map[PageID]Page
 	current PageID
+	tab     PageID // highlighted tab (spec 09)
 	back    []navEntry
 	forward []navEntry
 
@@ -101,8 +95,7 @@ type Model struct {
 	themeErr string    // last theme problem toasted (toast once)
 
 	bar     barState
-	barTop  int // first screen row of the bar, for mouse hits
-	geom    barGeom
+	geom    frameGeom // interactive frame parts of the last View
 	toasts  toasts
 	quiting bool
 
@@ -130,7 +123,7 @@ func New(o Options) *Model {
 		disp:    keys.NewDispatcher(o.Keymap),
 		pages:   newPages(),
 		current: PageID(o.Config.General.StartupPage),
-		sidebar: true,
+		sidebar: o.Config.UI.ShowSidebar,
 		side:    newPlaylistSidebar(o.Config.UI.SidebarOverflow == "wrap"),
 		bar:     barState{style: o.Config.UI.ProgressStyle, repeat: "off"},
 		toasts:  toasts{ctx: o.Context},
@@ -142,6 +135,10 @@ func New(o Options) *Model {
 	m.pages[PageSearch] = newSearchPage(columns(o.Config))
 	if _, ok := m.pages[m.current]; !ok {
 		m.current = PageLibrary
+	}
+	m.tab = tabOf(m.current)
+	if m.tab == "" {
+		m.tab = PageLibrary
 	}
 	if o.Player != nil {
 		m.bar.st = o.Player.State()
@@ -449,6 +446,7 @@ func (m *Model) playerEvent(ev player.Event) tea.Cmd {
 type navEntry struct {
 	id   PageID
 	page Page
+	tab  PageID
 }
 
 // activator is a page that loads data when it is shown.
@@ -463,6 +461,7 @@ func (m *Model) navigate(id PageID) tea.Cmd {
 	}
 	m.pushHistory()
 	m.current = id
+	m.setTab(id)
 	return m.activate()
 }
 
@@ -471,12 +470,20 @@ func (m *Model) open(p Page) tea.Cmd {
 	m.pushHistory()
 	m.current = p.ID()
 	m.pages[p.ID()] = p
+	m.setTab(p.ID())
 	return m.activate()
 }
 
 func (m *Model) pushHistory() {
-	m.back = pushBounded(m.back, navEntry{m.current, m.pages[m.current]})
+	m.back = pushBounded(m.back, navEntry{m.current, m.pages[m.current], m.tab})
 	m.forward = nil
+}
+
+// setTab highlights id's tab; pages without one keep the current tab.
+func (m *Model) setTab(id PageID) {
+	if t := tabOf(id); t != "" {
+		m.tab = t
+	}
 }
 
 func (m *Model) activate() tea.Cmd {
@@ -490,20 +497,20 @@ func (m *Model) goBack() {
 	if len(m.back) == 0 {
 		return
 	}
-	m.forward = pushBounded(m.forward, navEntry{m.current, m.pages[m.current]})
+	m.forward = pushBounded(m.forward, navEntry{m.current, m.pages[m.current], m.tab})
 	e := m.back[len(m.back)-1]
 	m.back = m.back[:len(m.back)-1]
-	m.current, m.pages[e.id] = e.id, e.page
+	m.current, m.pages[e.id], m.tab = e.id, e.page, e.tab
 }
 
 func (m *Model) goForward() {
 	if len(m.forward) == 0 {
 		return
 	}
-	m.back = pushBounded(m.back, navEntry{m.current, m.pages[m.current]})
+	m.back = pushBounded(m.back, navEntry{m.current, m.pages[m.current], m.tab})
 	e := m.forward[len(m.forward)-1]
 	m.forward = m.forward[:len(m.forward)-1]
-	m.current, m.pages[e.id] = e.id, e.page
+	m.current, m.pages[e.id], m.tab = e.id, e.page, e.tab
 }
 
 func pushBounded(s []navEntry, e navEntry) []navEntry {
@@ -562,48 +569,6 @@ func (m *Model) hasPage(p Page) bool {
 	return false
 }
 
-// layout is the screen split for the current size (spec 05 breakpoints).
-type layout struct {
-	header, info, rule bool
-	compactBar         bool
-	barH, mainH        int
-	sideW, lyricsW     int
-	lyricsOverlay      bool
-	mainW              int
-}
-
-func (m *Model) layout() layout {
-	w, h := m.width, m.height
-	l := layout{header: true, info: m.o.Config.UI.ShowSelectionInfo, rule: true, barH: 3}
-	if w < 60 {
-		l.compactBar, l.barH = true, 1
-	}
-	if h < 12 {
-		l.header, l.info, l.rule, l.compactBar, l.barH = false, false, false, true, 1
-	}
-	chrome := l.barH
-	for _, on := range []bool{l.header, l.info, l.rule} {
-		if on {
-			chrome++
-		}
-	}
-	l.mainH = max(h-chrome, 0)
-	l.mainW = w
-	if m.sidebar && w >= 80 {
-		l.sideW = min(m.o.Config.UI.SidebarWidth, w/3)
-		l.mainW -= l.sideW + 1
-	}
-	if m.lyrics {
-		l.lyricsW = min(m.o.Config.UI.LyricsWidth, max(l.mainW-20, 0))
-		if w >= 100 {
-			l.mainW -= l.lyricsW + 1
-		} else {
-			l.lyricsOverlay = true
-		}
-	}
-	return l
-}
-
 // View implements tea.Model.
 func (m *Model) View() tea.View {
 	v := tea.NewView(m.render())
@@ -626,34 +591,49 @@ func (m *Model) render() string {
 	}
 	l := m.layout()
 	st := m.st
+	m.geom.buttons = m.geom.buttons[:0]
 	var out []string
-	if l.header {
-		out = append(out, m.header())
+	if l.tabs {
+		out = append(out, m.tabBar())
+	}
+	if l.rule {
+		out = append(out, m.tabRule())
 	}
 
 	page := m.pages[m.current]
-	mainLines := splitFixed(page.View(l.mainW, l.mainH, st), l.mainW, l.mainH)
-	sep := st.Border.Render("│")
+	info := ""
+	if m.o.Config.UI.ShowSelectionInfo {
+		info = page.Info()
+	}
+	main := panel(st, panelSpec{
+		title: m.panelTitle(), counter: countText(page), info: info, focused: !m.sideFocused(),
+	}, page.View(l.mainW, l.mainH, st), l.panelW, l.panelH, l.border)
 	var side, lyr []string
+	in := l.inset()
 	if l.sideW > 0 {
-		side = splitFixed(m.sidebarView(l.sideW, l.mainH), l.sideW, l.mainH)
+		sideInfo := ""
+		if m.o.Config.UI.ShowSelectionInfo && m.sideFocused() {
+			sideInfo = m.side.info()
+		}
+		side = panel(st, panelSpec{title: sideTitle, info: sideInfo, focused: m.sideFocused()},
+			m.sidebarView(l.sideW-2*in, l.panelH-2*in), l.sideW, l.panelH, l.border)
 	}
 	if l.lyricsW > 0 {
-		lyr = splitFixed(m.lyricsView(l.lyricsW, l.mainH), l.lyricsW, l.mainH)
+		lyr = panel(st, panelSpec{title: "lyrics"}, m.lyricsView(l.lyricsW-2*in, l.panelH-2*in), l.lyricsW, l.panelH, l.border)
 	}
-	rows := make([]string, l.mainH)
-	for i := range l.mainH {
+	rows := make([]string, l.panelH)
+	for i := range l.panelH {
 		var b strings.Builder
 		if side != nil {
-			b.WriteString(side[i] + sep)
+			b.WriteString(side[i])
 		}
-		line := mainLines[i]
+		line := main[i]
 		if lyr != nil && l.lyricsOverlay {
-			line = overlayRight(line, sep+lyr[i], l.mainW, l.lyricsW+1)
+			line = overlayRight(line, lyr[i], l.panelW, l.lyricsW)
 		}
 		b.WriteString(line)
 		if lyr != nil && !l.lyricsOverlay {
-			b.WriteString(sep + lyr[i])
+			b.WriteString(lyr[i])
 		}
 		rows[i] = b.String()
 	}
@@ -665,42 +645,13 @@ func (m *Model) render() string {
 	m.toasts.overlay(rows, m.width, st)
 	out = append(out, rows...)
 
-	if l.info {
-		info := page.Info()
-		if m.sideFocused() {
-			info = m.side.info()
-		}
-		out = append(out, st.InfoBar.Render(fit(" "+info, m.width)))
+	if l.mini {
+		out = append(out, m.miniPlayer(len(out)))
 	}
-	if l.rule {
-		out = append(out, st.Border.Render(strings.Repeat("─", m.width)))
+	if l.hints {
+		out = append(out, m.hintLine())
 	}
-	m.barTop = len(out)
-	bar, g := m.bar.view(m.width, l.compactBar, st)
-	m.geom = g
-	out = append(out, bar)
 	return strings.Join(out, "\n")
-}
-
-// header renders "← Back  Library  g-          Forward →".
-func (m *Model) header() string {
-	st := m.st
-	link := func(on bool, s string) string {
-		if on {
-			return st.HeaderLink.Render(s)
-		}
-		return st.HeaderDim.Render(s)
-	}
-	left := st.Header.Render(" ") + link(len(m.back) > 0, backLabel) + st.Header.Render("  ") + st.HeaderActive.Render(m.pageTitle())
-	if p := m.disp.Pending(); p != "" {
-		left += st.Header.Render("  ") + st.Pending.Render(p)
-	}
-	right := link(len(m.forward) > 0, forwardLabel) + st.Header.Render(" ")
-	gap := m.width - ansi.StringWidth(left) - ansi.StringWidth(right)
-	if gap < 1 {
-		return st.Header.Render(fit(ansi.Strip(left), m.width))
-	}
-	return left + st.Header.Render(strings.Repeat(" ", gap)) + right
 }
 
 func (m *Model) sidebarView(w, h int) string {

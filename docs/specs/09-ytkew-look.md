@@ -1,6 +1,6 @@
 # 09 — ytkew look (M5b)
 
-Status: **draft, awaiting owner approval** · Milestone: M5b `ytkew-look` (side quest, stacked on M5)
+Status: **approved** 2026-11-17 (open questions: proposed defaults) · Milestone: M5b `ytkew-look` (side quest, stacked on M5)
 
 Visual reference: [ytkew](https://github.com/dtDhruv/ytkew) screenshots (`assets/ytkew_*.png`, commit
 `316cd85`). ytkew is **GPL-3.0-or-later**; ytm-go is MIT. We reimplement the *look* from the
@@ -45,7 +45,8 @@ Selection info (`show_selection_info`) renders inside the panel's bottom border,
 
 - **Tab bar.** App name in `accent`, then tab names; the active tab in `text` bold with a notch in
   the rule below it (`╯ name ╰`, rule broken under the active tab), inactive in `muted`. Right side:
-  queue position `i/n`, shuffle/repeat glyphs (only when on), volume as 5 dots + percent. Pending
+  queue position `i/n`, shuffle/repeat glyphs (`accent` when on, `muted` when off; clickable),
+  volume as 5 dots + percent (wheel changes it). Pending
   chord/count (`g-`, `15`) shows left of the position in `accent`.
 - **Tabs** map to existing actions: queue (`z`), library (`g l`), track (`g n`, new), search
   (`g s`), browse (`g b`, M6; hidden until then). Liked Songs and Recently Played open under
@@ -56,7 +57,7 @@ Selection info (`show_selection_info`) renders inside the panel's bottom border,
   `artist · Name`, `playlist · Name`); counter `│ cursor/total │` bottom-right. Two-panel pages
   (track page, sidebar shown) draw two panels side by side.
 - **Mini player.** `▌` in `accent` when playing (muted when paused), ⏵/⏸ (spinner while
-  buffering), `title — artist`, then a line progress bar with a `●` knob over the right ~40 %, then
+  buffering), `title — artist`, ♥ (`accent` when liked, clickable), then a line progress bar with a `●` knob over the right ~40 %, then
   `pos / dur` in `muted`. Hidden on the track page (it has its own progress). "Nothing playing" when
   idle. The 3-row bar and its 6×3 art are removed.
 - **Hint footer.** Page-specific `key action` pairs joined by ` · ` in `muted` keys / `text`
@@ -191,13 +192,22 @@ Replaces the Playlists · Albums · Artists tabs.
   to page visibility and playback; goleak.
 - Benchmarks: keypress → repaint stays < 16 ms at 200×60; track page frame with art + spectrum.
 
-## Open questions (owner)
+## Resolved questions (owner approved defaults, 2026-11-17)
 
-1. Tab bar shows names only (our tab keys are chords, digits are counts). OK, or bind
-   `alt+1…5` to tabs as well?
-2. `g n` for the track page OK?
-3. WebP thumbnails: YouTube's `lh3` art URLs can be requested as JPEG by URL suffix
-   (to verify live); if not, `golang.org/x/image/webp` (decode-only, pure Go) would be the one new
-   dependency.
-4. Visualizer captures the default sink's monitor, so it shows *all* system audio, not just mpv
-   (ytkew-style approach). Acceptable?
+1. Tab bar shows names only; tabs switch with the existing chords (digits stay counts).
+2. `g n` opens the track page.
+3. WebP: first verify live whether art URLs can be requested as JPEG; add
+   `golang.org/x/image/webp` only if not (justified in the PR).
+4. The visualizer shows the default sink's monitor (all system audio), as ytkew does.
+
+## Implementation notes
+
+- **Phase 1 (frame), done.** `internal/ui/frame.go` (layout, tab bar + rule, `panel`, mini
+  player, hint footer) and `page_frame.go` (per-page `PanelTitle`/`Count`/`Hints`). Header
+  `← Back / Forward →` removed; mouse X1/X2 (`tea.MouseBackward/Forward`) walk the history, tabs
+  are clickable. Shuffle/repeat glyphs live in the tab bar, ♥ and play/pause in the mini player.
+  The frame's styles (`AppName`, `Tab*`, `Panel*`, `Hint*`) are foreground-only; the old header
+  `Surface` fill is gone, so the frame paints no background in opaque mode either.
+  Page-internal titles (Queue, Context name) moved into panel titles. Hints render the keymap's
+  canonical key names (`f2`, not `F2`).
+

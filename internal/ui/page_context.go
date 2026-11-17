@@ -288,7 +288,7 @@ func (p *contextPage) source() trackSource {
 }
 
 func (p *contextPage) View(width, height int, st *style.UI) string {
-	lines := []string{" " + st.Title.Render(p.name)}
+	var lines []string // the name is in the panel title (spec 09)
 	for _, h := range p.head {
 		if h != "" {
 			lines = append(lines, " "+st.Muted.Render(h))

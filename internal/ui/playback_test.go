@@ -98,7 +98,7 @@ func newPB(t *testing.T, mut ...func(*Options)) pbHarness {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	h := pbHarness{s: &fakeStreams{fail: map[string]error{}}, pf: &fakePrefetch{}}
-	m, pl := newTestModel(t, 100, 30, append([]func(*Options){func(o *Options) {
+	m, pl := newTestModel(t, 100, 30, append([]func(*Options){withSidebar, func(o *Options) {
 		o.Streams, o.Prefetch, o.Context = h.s, h.pf, ctx
 		o.Queue = queue.New(rand.New(rand.NewPCG(1, 2)))
 	}}, mut...)...)
