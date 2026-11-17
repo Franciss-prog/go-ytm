@@ -182,7 +182,7 @@ func Default() Config {
 			ShowQueueSource: true, Mouse: true, ShowHints: true,
 		},
 		Theme: Theme{
-			Source: "static", Name: "ytm-dark", TransparentSelection: "bar", EnforceContrast: true,
+			Source: "static", Name: "ytm-dark", TransparentSelection: "solid", EnforceContrast: true,
 			Watch: true, Fallback: "ytm-dark", ColorDepth: "auto", ANSIAccent: 4,
 			PywalMap: map[string]string{},
 		},

@@ -8,7 +8,6 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/Franciss-Prog/go-ytm/internal/player"
-	"github.com/Franciss-Prog/go-ytm/internal/ui/components"
 )
 
 // Screen geometry of newPB (100×30, sidebar shown): tab bar row 0, rule
@@ -33,12 +32,12 @@ func (h pbHarness) wheel(x, y int, b tea.MouseButton) {
 }
 
 // openNightTable opens "Late night drives" and returns its page; table
-// rows start at screen row tableRow0.
+// rows start at screen row tableRow0 (no header row since spec 09).
 func openNightTable(t *testing.T, h pbHarness) (*contextPage, int) {
 	t.Helper()
 	p := openNight(t, h)
 	h.m.View()
-	return p, mainY0 + p.tableY + 1
+	return p, mainY0 + p.tableY
 }
 
 func TestClickTableRowsMarksAndActivate(t *testing.T) {
@@ -77,21 +76,6 @@ func TestRightClickOpensActionsAndPopupBlocksMouse(t *testing.T) {
 	h.left(mainX0+10, row0)
 	if p.table.Cursor() != 3 {
 		t.Fatal("click went through the popup")
-	}
-}
-
-func TestHeaderClickSorts(t *testing.T) {
-	h := newPB(t)
-	p, row0 := openNightTable(t, h)
-	// Title column starts after gutter, index and two spaces.
-	l := p.table
-	h.left(mainX0+12, row0-1)
-	if k, desc := l.Sort(); k != components.SortTitle || desc {
-		t.Fatalf("sort %v desc %v", k, desc)
-	}
-	h.left(mainX0+12, row0-1)
-	if _, desc := l.Sort(); !desc {
-		t.Fatal("second header click did not reverse")
 	}
 }
 
@@ -231,7 +215,8 @@ func TestWheelScrubCommitsLast(t *testing.T) {
 
 func TestTabHit(t *testing.T) {
 	names := []string{"Playlists", "Albums", "Artists"}
-	for x, want := range map[int]int{0: 0, 10: 0, 11: 1, 18: 1, 19: 2, 27: 2, 28: -1} {
+	// " playlists · albums · artists ": 0–10, separator 11, 12–19, 20, 21–29.
+	for x, want := range map[int]int{0: 0, 10: 0, 11: -1, 12: 1, 19: 1, 21: 2, 29: 2, 30: -1} {
 		if got := tabHit(names, x); got != want {
 			t.Errorf("tabHit(%d) = %d, want %d", x, got, want)
 		}

@@ -385,7 +385,7 @@ func (p *searchPage) View(width, height int, st *style.UI) string {
 	if p.editing {
 		cur = "█"
 	}
-	in := " " + st.Section.Render("Search ▸ ") + st.Text.Render(string(p.input)+cur)
+	in := " " + st.Accent.Render("⌕ ") + st.Text.Render(string(p.input)+cur)
 	right := st.Muted.Render("mode: " + mode + " ")
 	lines := []string{components.Fit(in, max(width-components.Width(right), 0)) + right}
 	p.tabY, p.bodyY = -1, -1

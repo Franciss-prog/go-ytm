@@ -232,14 +232,14 @@ func TestTrackTableView(t *testing.T) {
 			t.Fatalf("line %d width %d: %q", i, w, l)
 		}
 	}
+	// Spec 09: no header; # · artist · title · time (album from 120 cols).
 	want := []string{
-		"#  Title ↑",                      // header with sort mark
-		"▌●    3  Lose Yourself to Dance", // cursor + marked
-		" ▶    4  Giorgio by Moroder",     // playing
-		" ↻    6  One More Time",          // autoplay
-		"sort: title ↑ · 1 marked",        // footer
-		"      5  Around the World",       // unavailable
-		"Random Access",                   // album column present at 80
+		"▌●    3  Daft Punk",       // cursor + marked, artist first
+		"Lose Yourself to Dance",   // title after the artist
+		" ▶    4  Daft Punk",       // playing
+		" ↻    6  Daft Punk",       // autoplay
+		"sort: title ↑ · 1 marked", // footer
+		"      5  Daft Punk",       // unavailable
 	}
 	joined := strings.Join(lines, "\n")
 	for _, w := range want {
@@ -249,6 +249,12 @@ func TestTrackTableView(t *testing.T) {
 	}
 	if bg := style.BackgroundSGRs(out); len(bg) != 0 {
 		t.Fatalf("transparent bar-mode table paints backgrounds: %v", bg)
+	}
+	if strings.Contains(joined, "Random Access") || strings.Contains(joined, "Title") {
+		t.Errorf("header or album column at 80 cols:\n%s", joined)
+	}
+	if wide := ansi.Strip(tt.View(130, 9, st)); !strings.Contains(wide, "Random Access") {
+		t.Errorf("no album column at 130 cols:\n%s", wide)
 	}
 	// Narrow: album then artist columns drop, still exact width.
 	for _, w := range []int{60, 40, 20, 8} {
@@ -285,17 +291,17 @@ func TestTrackTableScrollAndHit(t *testing.T) {
 	tt := NewTrackTable(Columns{}, "")
 	tt.SetRows(manyTracks(100))
 	st := testStyles(false, style.SelSolid)
-	tt.View(80, 11, st) // body 10
+	tt.View(80, 10, st) // body 10 (no header row)
 	tt.Action(keys.Action{Name: "page_down"})
 	if tt.Cursor() != 9 {
 		t.Fatalf("page_down cursor %d", tt.Cursor())
 	}
 	tt.Action(keys.Action{Name: "move_down", Count: 5})
-	out := ansi.Strip(tt.View(80, 11, st))
-	if !strings.Contains(out, " 15  Song 15") || strings.Contains(out, " 1  Song 1 ") {
+	out := ansi.Strip(tt.View(80, 10, st))
+	if !strings.Contains(out, "Song 15") || strings.Contains(out, "Song 5 ") || !strings.Contains(out, "↑") || !strings.Contains(out, "↓") {
 		t.Fatalf("not scrolled:\n%s", out)
 	}
-	if v := tt.HitRow(1); v != tt.top || tt.HitRow(0) != -1 || tt.HitRow(11) != -1 {
+	if v := tt.HitRow(0); v != tt.top || tt.HitRow(-1) != -1 || tt.HitRow(10) != -1 {
 		t.Fatalf("HitRow: %d top %d", v, tt.top)
 	}
 	if !tt.InGutter(1, st) || tt.InGutter(2, st) {
@@ -359,29 +365,5 @@ func BenchmarkScroll1000(b *testing.B) {
 		}
 		tt.Action(down)
 		tt.View(140, 40, st)
-	}
-}
-
-func TestTrackTableHeaderClickHitsLabels(t *testing.T) {
-	tt := NewTrackTable(Columns{}, "")
-	tt.SetRows(daftPunk())
-	st := testStyles(false, style.SelBar)
-	head := strings.Split(ansi.Strip(tt.View(100, 10, st)), "\n")[0]
-	for label, want := range map[string]SortKey{"Title": SortTitle, "Artist": SortArtist, "Album": SortAlbum, "Time": SortDuration} {
-		tt.Action(keys.Action{Name: "sort_date"}) // reset to a different key
-		i := strings.Index(head, label)
-		if i < 0 {
-			t.Fatalf("no %q in header %q", label, head)
-		}
-		x := ansi.StringWidth(head[:i])
-		if r := tt.Click(x, 0, false, false, false); r != ClickSorted {
-			t.Fatalf("%s: result %v", label, r)
-		}
-		if k, _ := tt.Sort(); k != want {
-			t.Errorf("click on %q sorted by %v", label, k)
-		}
-	}
-	if r := tt.Click(99, 0, true, false, false); r != ClickNone {
-		t.Fatalf("right click on header: %v", r)
 	}
 }

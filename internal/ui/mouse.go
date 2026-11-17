@@ -46,7 +46,8 @@ func tableClick(r components.ClickResult) string {
 // listClick maps a list click to the page action it asks for.
 func listClick(r components.ClickResult) string { return tableClick(r) }
 
-// tabHit maps x on a tabBar row to a tab index, or -1.
+// tabHit maps x on a tabBar row (" songs · albums · artists ") to a tab
+// index, or -1. Each tab owns its name and the space on either side.
 func tabHit(names []string, x int) int {
 	at := 0
 	for i, n := range names {
@@ -54,7 +55,7 @@ func tabHit(names []string, x int) int {
 		if x >= at && x < at+w {
 			return i
 		}
-		at += w
+		at += w + 1 // the "·" between tabs
 	}
 	return -1
 }

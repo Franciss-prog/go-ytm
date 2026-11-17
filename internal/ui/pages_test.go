@@ -135,12 +135,12 @@ func TestSearchFlow(t *testing.T) {
 		t.Fatalf("query %q calls %v", p.query, api.Calls())
 	}
 	out := plain(h.m)
-	for _, want := range []string{"Top result: Daft Punk · Artist", "Songs", "Get Lucky", "Instant Crush"} {
+	for _, want := range []string{"Top result: Daft Punk · Artist", "songs · albums", "Get Lucky", "Instant Crush"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("results lack %q:\n%s", want, out)
 		}
 	}
-	if strings.Contains(out, "Videos") {
+	if strings.Contains(out, "videos") {
 		t.Fatal("videos panel in music mode")
 	}
 	// Enter on a song plays the songs list from there.
@@ -156,7 +156,7 @@ func TestSearchFlow(t *testing.T) {
 	h.keys(tea.Key{Code: tea.KeyBackspace})
 	// All mode adds Videos.
 	h.m.action(keyAction("toggle_search_mode"))
-	if !strings.Contains(plain(h.m), "Videos") {
+	if !strings.Contains(plain(h.m), "· videos") {
 		t.Fatal("all mode has no Videos panel")
 	}
 	// Esc in the input hands keys back to the keymap.

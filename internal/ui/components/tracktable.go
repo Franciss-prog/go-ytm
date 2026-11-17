@@ -588,11 +588,12 @@ func (t *TrackTable) layout(width int, st *style.UI) layout {
 		l.dur = 7
 	}
 	free := width - l.gutter - l.index - l.dur - 1 // spaces: after index, between text columns
+	// Spec 09: the album column shows only on wide panels.
 	cols := 3
 	switch {
 	case width < 45:
 		cols = 1
-	case width < 70:
+	case width < 120:
 		cols = 2
 	}
 	free -= cols // separators before title, artist, album
@@ -631,10 +632,11 @@ func (t *TrackTable) layout(width int, st *style.UI) layout {
 	return l
 }
 
-// HitRow maps a row y inside the table (0 = header) to a view index, or -1.
+// HitRow maps a row y inside the table (0 = first row) to a view index,
+// or -1.
 func (t *TrackTable) HitRow(y int) int {
-	v := t.top + y - 1
-	if y < 1 || y > t.lastH || v >= len(t.view) {
+	v := t.top + y
+	if y < 0 || y >= t.lastH || v >= len(t.view) {
 		return -1
 	}
 	return v
@@ -655,26 +657,15 @@ const (
 	ClickActivate                    // clicked the row under the cursor: the owner runs select
 	ClickMenu                        // right click on a row (cursor moved): the owner opens actions
 	ClickMarked                      // toggled or extended marks
-	ClickSorted                      // header click changed the sort
 )
 
 // Click applies a mouse click at (x, y) inside the table as last drawn
-// (y 0 = header), like the original: a plain click moves the cursor (and
+// (y 0 = first row), like the original: a plain click moves the cursor (and
 // sets the range anchor), a click on the cursor row activates it, Ctrl-click
 // or a click in the mark gutter toggles the row's mark, Shift-click marks
-// from the anchor, right click asks for the actions menu and a header click
-// sorts by that column (again: reverses).
+// from the anchor and right click asks for the actions menu. There is no
+// header row to sort from (spec 09); sorting is `s …`.
 func (t *TrackTable) Click(x, y int, right, ctrl, shift bool) ClickResult {
-	if y == 0 {
-		if right || len(t.rows) == 0 {
-			return ClickNone
-		}
-		if name := t.headerHit(x); name != "" {
-			t.Action(keys.Action{Name: name})
-			return ClickSorted
-		}
-		return ClickNone
-	}
 	v := t.HitRow(y)
 	if v < 0 {
 		return ClickNone
@@ -698,30 +689,6 @@ func (t *TrackTable) Click(x, y int, right, ctrl, shift bool) ClickResult {
 	return ClickMarked
 }
 
-// headerHit maps a header column x to its sort action ("" for none); "#"
-// sorts by source order.
-func (t *TrackTable) headerHit(x int) string {
-	l := t.lastL
-	at := l.gutter
-	cols := []struct {
-		w    int
-		name string
-	}{
-		{l.index + 1, "sort_date"},
-		{l.title + 1, "sort_title"},
-		{l.artist + min(l.artist, 1), "sort_artist"},
-		{l.album + min(l.album, 1), "sort_album"},
-		{l.dur, "sort_duration"},
-	}
-	for _, c := range cols {
-		if x >= at && x < at+c.w {
-			return c.name
-		}
-		at += c.w
-	}
-	return ""
-}
-
 // Wheel scrolls the cursor by n rows (negative: up).
 func (t *TrackTable) Wheel(n int) { t.SetCursor(t.cursor + n) }
 
@@ -738,7 +705,7 @@ func (t *TrackTable) View(width, height int, st *style.UI) string {
 		return Block(lines, width, height)
 	}
 	footer := t.footer(width, st)
-	body := height - 1 // header
+	body := height
 	if footer != "" {
 		body--
 	}
@@ -746,15 +713,24 @@ func (t *TrackTable) View(width, height int, st *style.UI) string {
 	t.lastH = max(body, 1)
 	t.scroll(t.lastH)
 
-	l := t.layout(width, st)
+	// The last column holds the ↑/↓ scroll arrows (spec 09).
+	rw := max(width-1, 0)
+	l := t.layout(rw, st)
 	t.lastL = l
 	lines := make([]string, 0, height)
-	lines = append(lines, t.header(l, width, st))
 	if len(t.view) == 0 {
 		lines = append(lines, " "+st.Muted.Render("No track matches “"+t.filter+"”."))
 	}
-	for v := t.top; v < len(t.view) && v < t.top+body; v++ {
-		lines = append(lines, t.row(v, l, width, st))
+	last := min(len(t.view), t.top+body) - 1
+	for v := t.top; v <= last; v++ {
+		arrow := " "
+		switch {
+		case v == t.top && t.top > 0:
+			arrow = st.Muted.Render("↑")
+		case v == last && last < len(t.view)-1:
+			arrow = st.Muted.Render("↓")
+		}
+		lines = append(lines, t.row(v, l, rw, st)+arrow)
 	}
 	for len(lines) < height-1 {
 		lines = append(lines, "")
@@ -763,31 +739,6 @@ func (t *TrackTable) View(width, height int, st *style.UI) string {
 		lines = append(lines[:height-1], footer)
 	}
 	return Block(lines, width, height)
-}
-
-func (t *TrackTable) header(l layout, width int, st *style.UI) string {
-	ind := func(k SortKey, s string) string {
-		if t.sort == k && t.Sorted() {
-			d := 0
-			if t.desc {
-				d = 1
-			}
-			return s + " " + st.Opts.Icons.Sort[d]
-		}
-		return s
-	}
-	var b strings.Builder
-	b.WriteString(strings.Repeat(" ", l.gutter))
-	b.WriteString(FitRight("#", l.index) + " ")
-	b.WriteString(" " + Fit(ind(SortTitle, "Title"), l.title))
-	if l.artist > 0 {
-		b.WriteString(" " + Fit(ind(SortArtist, "Artist"), l.artist))
-	}
-	if l.album > 0 {
-		b.WriteString(" " + Fit(ind(SortAlbum, "Album"), l.album))
-	}
-	b.WriteString(FitRight(ind(SortDuration, "Time"), l.dur))
-	return st.TableHeader.Render(Fit(b.String(), width))
 }
 
 func (t *TrackTable) row(v int, l layout, width int, st *style.UI) string {
@@ -824,6 +775,7 @@ func (t *TrackTable) renderRow(i int, k rowKey, l layout, width int, st *style.U
 	}
 	gutter := Fit(sel, gw) + Fit(glyph, 1) + " "
 
+	// Spec 09 order: # · artist · title · album · time.
 	idx := FitRight(strconv.Itoa(i+1), l.index) + " "
 	title := " " + Fit(r.Title, l.title)
 	var artist, album string
@@ -834,7 +786,7 @@ func (t *TrackTable) renderRow(i int, k rowKey, l layout, width int, st *style.U
 		album = " " + Fit(albumName(r), l.album)
 	}
 	dur := FitRight(FormatDuration(r.Duration), l.dur)
-	rest := width - l.gutter - ansi.StringWidth(idx+title+artist+album+dur)
+	rest := width - l.gutter - ansi.StringWidth(idx+artist+title+album+dur)
 	pad := strings.Repeat(" ", max(rest, 0))
 
 	g := gutter
@@ -842,16 +794,16 @@ func (t *TrackTable) renderRow(i int, k rowKey, l layout, width int, st *style.U
 		g = Fit(sel, gw) + st.MarkGlyph.Render(Fit(glyph, 1)) + " "
 	}
 	if k.sel {
-		return Fit(st.Selected.Render(Fit(sel, gw))+st.Selected.Render(ansi.Strip(Fit(glyph, 1))+" "+idx+title+artist+album+dur+pad), width)
+		return Fit(st.Selected.Render(Fit(sel, gw))+st.Selected.Render(ansi.Strip(Fit(glyph, 1))+" "+idx+artist+title+album+pad+dur), width)
 	}
 	if !r.Available || r.VideoID == "" {
-		return Fit(g+st.RowDim.Render(idx+title+artist+album+dur), width)
+		return Fit(g+st.RowDim.Render(idx+artist+title+album+pad+dur), width)
 	}
 	ts := st.Text
 	if k.playing {
 		ts = st.RowPlaying
 	}
-	return Fit(g+st.Muted.Render(idx)+ts.Render(title)+st.Muted.Render(artist+album+dur), width)
+	return Fit(g+st.Muted.Render(idx+artist)+ts.Render(title)+st.Muted.Render(album+pad+dur), width)
 }
 
 func (t *TrackTable) loadingText() string {

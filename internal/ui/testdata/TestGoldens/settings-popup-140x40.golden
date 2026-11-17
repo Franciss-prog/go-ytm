@@ -17,7 +17,7 @@
 │   _                Mute                 │  Theme source      ‹ static ›                       │                                          │
 │   >                Seek forward         │  Theme name        ‹ ytm-dark ›                     │                                          │
 │   <                Seek backward        │  Transparent       [ ]  C-t                         │                                          │
-│   ^                Restart track        │  Selection style   ‹ bar ›  (transparent only)      │                                          │
+│   ^                Restart track        │  Selection style   ‹ solid ›  (transparent on…      │                                          │
 │   l                Like / unlike current│  Popup fill        [ ]                              │                                          │
 │   D                Discovery mix        │  Album art         ‹ blocks ›                       │                                          │
 │                                         │  Enforce contrast  [x]                              │                                          │

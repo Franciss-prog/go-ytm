@@ -217,11 +217,14 @@ func (p *libraryPage) dropPlaylist(id string) {
 func tabBar(names []string, active int, st *style.UI) string {
 	var b strings.Builder
 	for i, n := range names {
+		if i > 0 {
+			b.WriteString(st.Border.Render("·"))
+		}
 		b.WriteString(" ")
 		if i == active {
-			b.WriteString(st.TabActive.Render(n))
+			b.WriteString(st.TabActive.Render(strings.ToLower(n)))
 		} else {
-			b.WriteString(st.Muted.Render(n))
+			b.WriteString(st.Tab.Render(strings.ToLower(n)))
 		}
 		b.WriteString(" ")
 	}

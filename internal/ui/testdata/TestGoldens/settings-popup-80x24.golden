@@ -9,7 +9,7 @@
 │   space   │  Theme source      ‹ static ›                       │            │
 │   n       │  Theme name        ‹ ytm-dark ›                     │            │
 │   p       │  Transparent       [ ]  C-t                         │            │
-│   .       │  Selection style   ‹ bar ›  (transparent only)      │            │
+│   .       │  Selection style   ‹ solid ›  (transparent on…      │            │
 │   C-r     │  Popup fill        [ ]                              │            │
 │   C-s     │  Album art         ‹ blocks ›                       │            │
 │   +       │  Enforce contrast  [x]                              │            │

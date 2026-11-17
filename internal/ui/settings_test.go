@@ -89,13 +89,13 @@ func TestSettingsPreviewSaveAndRevert(t *testing.T) {
 		t.Fatalf("transparent preview: styles=%v sets=%v", m.Styles().Opts.Transparent, ft.sets)
 	}
 	// Row 3 = Selection style: style-only, no re-resolve.
-	press(m, kDown, kRight)
-	if m.o.Config.Theme.TransparentSelection != "reverse" || len(ft.sets) != 1 {
+	press(m, kDown, kRight) // solid (default) wraps to bar
+	if m.o.Config.Theme.TransparentSelection != "bar" || len(ft.sets) != 1 {
 		t.Errorf("selection: %s, sets=%d", m.o.Config.Theme.TransparentSelection, len(ft.sets))
 	}
 	// esc reverts everything and re-resolves the theme once.
 	press(m, kEsc)
-	if m.SettingsOpen() || m.Styles().Opts.Transparent || m.o.Config.Theme.TransparentSelection != "bar" || len(ft.sets) != 2 {
+	if m.SettingsOpen() || m.Styles().Opts.Transparent || m.o.Config.Theme.TransparentSelection != "solid" || len(ft.sets) != 2 {
 		t.Errorf("revert: open=%v transparent=%v sel=%s sets=%d", m.SettingsOpen(), m.Styles().Opts.Transparent, m.o.Config.Theme.TransparentSelection, len(ft.sets))
 	}
 	if len(pr.changes) != 0 {

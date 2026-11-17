@@ -210,4 +210,9 @@ Replaces the Playlists · Albums · Artists tabs.
   `Surface` fill is gone, so the frame paints no background in opaque mode either.
   Page-internal titles (Queue, Context name) moved into panel titles. Hints render the keymap's
   canonical key names (`f2`, not `F2`).
+- **Phase 2 (rows), done.** TrackTable has no header row, so the M5 header-click sort is gone
+  (sorting stays on `s t/a/A/d/D`, `s r`); clicks address rows from y = 0. The last column holds
+  ↑/↓ scroll arrows. Duration is right-aligned with padding before it. In-page tab strips
+  (search panels, library tabs) render as `songs · albums · artists`; the search input is
+  `⌕ query`. `transparent_selection` defaults to `solid`.
 
