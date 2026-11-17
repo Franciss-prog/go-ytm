@@ -14,7 +14,7 @@ Last updated: 2026-11-17
 | M4 | tui-shell | **in review** | [#6](https://github.com/Franciss-prog/go-ytm/pull/6) (stacked on #5) | keymap engine, root model, header, bar, toasts, Help, app wiring |
 | M4b | dynamic-theme | **in review** | [#7](https://github.com/Franciss-prog/go-ytm/pull/7) (stacked on #6) | sources, contrast, depth, watcher, Patch, Settings, `theme show` |
 | M5 | tui-library-search-queue | **in review** | [#8](https://github.com/Franciss-prog/go-ytm/pull/8) (stacked on #7) | queue pkg, ytmusic browse/library/edit calls, TrackTable, playback owner (resolve/gapless/retry), Queue, Library, Context, Search pages, popups, playlist sidebar, mouse |
-| M5b | ytkew-look | **in review** (spec 09 approved 2026-11-17) | branch `feat/ytkew-look` (stacked on #8) | side quest, spec 09: frame, rows, Library columns, track page, cover art, visualizer |
+| M5b | ytkew-look | **in review** (spec 09 approved 2026-11-17) | [#9](https://github.com/Franciss-prog/go-ytm/pull/9) (stacked on #8) | side quest, spec 09: frame, rows, Library columns, track page, cover art, visualizer |
 | M6 | browse-liked-history | not started | | |
 | M7 | session-cache-offline | not started | | |
 | M8 | lyrics | not started | | |
