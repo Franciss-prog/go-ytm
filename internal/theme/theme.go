@@ -1,13 +1,16 @@
 // Package theme defines the semantic palette consumed by all UI code.
 //
-// M0 ships the token set and two static themes. Sources (pywal, matugen,
-// ansi, file), contrast enforcement and live reload arrive in M4/M4b; see
+// Sources (static, pywal, matugen, ansi, file) produce a Theme; Complete
+// derives missing tokens and EnforceContrast keeps text readable. See
 // docs/specs/08-dynamic-theme-transparency.md.
 package theme
 
 import (
+	"embed"
 	"fmt"
+	"hash/fnv"
 	"image/color"
+	"iter"
 	"slices"
 	"strings"
 
@@ -34,51 +37,114 @@ type Theme struct {
 	Error, Warn, Success                        color.Color
 }
 
-var builtins = map[string]func() Theme{
-	"ytm-dark": func() Theme {
-		return Theme{
-			Name: "ytm-dark", Source: "static", Dark: true,
-			Bg: hex("#0f0f0f"), Fg: hex("#f1f1f1"), Surface: hex("#1a1a1a"), SurfaceAlt: hex("#212121"),
-			Border: hex("#3d3d3d"), Accent: hex("#ff4e45"), AccentDim: hex("#8c2b26"), Muted: hex("#9a9a9a"),
-			SelectedBg: hex("#2a2a2a"), SelectedFg: hex("#ffffff"),
-			ProgressFilled: hex("#ff0000"), ProgressEmpty: hex("#555555"),
-			LyricsPlayed: hex("#999999"), LyricsCurrent: hex("#ff4e45"), LyricsUpcoming: hex("#aaaaaa"),
-			Error: hex("#ff6b6b"), Warn: hex("#f5c451"), Success: hex("#5fd38d"),
-		}
-	},
-	"ytm-light": func() Theme {
-		return Theme{
-			Name: "ytm-light", Source: "static", Dark: false,
-			Bg: hex("#ffffff"), Fg: hex("#0f0f0f"), Surface: hex("#f2f2f2"), SurfaceAlt: hex("#e8e8e8"),
-			Border: hex("#c4c4c4"), Accent: hex("#cc0000"), AccentDim: hex("#f2b8b5"), Muted: hex("#606060"),
-			SelectedBg: hex("#e5e5e5"), SelectedFg: hex("#0f0f0f"),
-			ProgressFilled: hex("#cc0000"), ProgressEmpty: hex("#c4c4c4"),
-			LyricsPlayed: hex("#767676"), LyricsCurrent: hex("#cc0000"), LyricsUpcoming: hex("#3d3d3d"),
-			Error: hex("#b3261e"), Warn: hex("#8a5a00"), Success: hex("#1e7b3a"),
-		}
-	},
-}
+//go:embed builtin/*.toml
+var builtinFS embed.FS
 
-// Builtin returns a built-in static theme by name.
+// Builtin returns a built-in static theme by name (case-insensitive).
 func Builtin(name string) (Theme, error) {
-	f, ok := builtins[strings.ToLower(name)]
-	if !ok {
+	n := strings.ToLower(strings.TrimSpace(name))
+	data, err := builtinFS.ReadFile("builtin/" + n + ".toml")
+	if err != nil || strings.ContainsAny(n, "/\\") {
 		return Theme{}, fmt.Errorf("unknown theme %q (available: %s)", name, strings.Join(BuiltinNames(), ", "))
 	}
-	return f(), nil
+	f, err := ParseFile(data)
+	if err != nil {
+		return Theme{}, fmt.Errorf("builtin theme %s: %w", n, err)
+	}
+	return FromFile(f, n, "static")
 }
 
 // BuiltinNames lists built-in theme names, sorted.
 func BuiltinNames() []string {
-	names := make([]string, 0, len(builtins))
-	for n := range builtins {
-		names = append(names, n)
+	entries, _ := builtinFS.ReadDir("builtin")
+	names := make([]string, 0, len(entries))
+	for _, e := range entries {
+		names = append(names, strings.TrimSuffix(e.Name(), ".toml"))
 	}
 	slices.Sort(names)
 	return names
 }
 
 // Fallback is the theme used when nothing else resolves.
-func Fallback() Theme { return builtins["ytm-dark"]() }
+func Fallback() Theme {
+	t, err := Builtin("ytm-dark")
+	if err != nil { // unreachable: TestBuiltinsComplete parses every embedded file
+		t = Theme{Name: "ytm-dark", Source: "static", Bg: lipgloss.Color("#0f0f0f"), Fg: lipgloss.Color("#f1f1f1"), Accent: lipgloss.Color("#ff4e45")}
+		Complete(&t)
+	}
+	return t
+}
 
-func hex(s string) color.Color { return lipgloss.Color(s) }
+// TokenNames lists every token in display order, as written in TOML
+// (`[colors]` keys) and printed by `ytm theme show`.
+var TokenNames = []string{
+	"bg", "fg", "surface", "surface_alt", "border", "accent", "accent_dim", "muted",
+	"selected_bg", "selected_fg", "progress_filled", "progress_empty",
+	"lyrics_played", "lyrics_current", "lyrics_upcoming", "error", "warn", "success",
+}
+
+// Token returns a pointer to the token called name, or nil if there is no
+// such token.
+func (t *Theme) Token(name string) *color.Color {
+	switch name {
+	case "bg":
+		return &t.Bg
+	case "fg":
+		return &t.Fg
+	case "surface":
+		return &t.Surface
+	case "surface_alt":
+		return &t.SurfaceAlt
+	case "border":
+		return &t.Border
+	case "accent":
+		return &t.Accent
+	case "accent_dim":
+		return &t.AccentDim
+	case "muted":
+		return &t.Muted
+	case "selected_bg":
+		return &t.SelectedBg
+	case "selected_fg":
+		return &t.SelectedFg
+	case "progress_filled":
+		return &t.ProgressFilled
+	case "progress_empty":
+		return &t.ProgressEmpty
+	case "lyrics_played":
+		return &t.LyricsPlayed
+	case "lyrics_current":
+		return &t.LyricsCurrent
+	case "lyrics_upcoming":
+		return &t.LyricsUpcoming
+	case "error":
+		return &t.Error
+	case "warn":
+		return &t.Warn
+	case "success":
+		return &t.Success
+	}
+	return nil
+}
+
+// Tokens iterates over (name, color) in TokenNames order.
+func (t *Theme) Tokens() iter.Seq2[string, color.Color] {
+	return func(yield func(string, color.Color) bool) {
+		for _, n := range TokenNames {
+			if !yield(n, *t.Token(n)) {
+				return
+			}
+		}
+	}
+}
+
+// Hash is a stable digest of the palette (name, source and every token),
+// used to skip repaints when a tool rewrites identical colors.
+func (t *Theme) Hash() uint64 {
+	h := fnv.New64a()
+	fmt.Fprintf(h, "%s\x00%s\x00%v", t.Name, t.Source, t.Dark)
+	for n, c := range t.Tokens() {
+		fmt.Fprintf(h, "\x00%s=%s", n, FormatColor(c))
+	}
+	return h.Sum64()
+}

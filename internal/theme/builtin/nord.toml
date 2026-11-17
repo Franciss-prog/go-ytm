@@ -1,0 +1,16 @@
+# nord: palette from https://github.com/nordtheme/nord/blob/develop/src/nord.css
+# (nord0..nord15, MIT). Unlisted tokens are derived.
+[colors]
+bg = "#2e3440"           # nord0
+fg = "#d8dee9"           # nord4
+surface = "#3b4252"      # nord1
+surface_alt = "#434c5e"  # nord2
+border = "#4c566a"       # nord3
+accent = "#88c0d0"       # nord8
+accent_dim = "#5e81ac"   # nord10
+selected_bg = "#434c5e"  # nord2
+selected_fg = "#eceff4"  # nord6
+lyrics_upcoming = "#e5e9f0" # nord5
+error = "#bf616a"        # nord11
+warn = "#ebcb8b"         # nord13
+success = "#a3be8c"      # nord14

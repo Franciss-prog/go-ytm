@@ -32,3 +32,24 @@ func TestBuiltinLookup(t *testing.T) {
 		t.Error("fallback")
 	}
 }
+
+func TestBuiltinsShipped(t *testing.T) {
+	want := []string{"gruvbox-dark", "nord", "ytm-dark", "ytm-light"}
+	if got := BuiltinNames(); !reflect.DeepEqual(got, want) {
+		t.Errorf("BuiltinNames = %v, want %v", got, want)
+	}
+	if _, err := Builtin("../theme"); err == nil {
+		t.Error("path traversal accepted")
+	}
+}
+
+// Built-ins are hand-picked palettes: contrast enforcement must not need
+// to touch them.
+func TestBuiltinsMeetContrast(t *testing.T) {
+	for _, name := range BuiltinNames() {
+		th, _ := Builtin(name)
+		if _, adj := EnforceContrast(th, th.Bg); len(adj) != 0 {
+			t.Errorf("%s needs adjustments: %v", name, adj)
+		}
+	}
+}

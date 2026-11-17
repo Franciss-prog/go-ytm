@@ -1,0 +1,17 @@
+# gruvbox-dark: palette from https://github.com/morhetz/gruvbox/blob/master/colors/gruvbox.vim
+# (s:gb dictionary, MIT/X11). Unlisted tokens are derived.
+[colors]
+bg = "#282828"           # dark0
+fg = "#ebdbb2"           # light1
+surface = "#3c3836"      # dark1
+surface_alt = "#504945"  # dark2
+border = "#665c54"       # dark3
+accent = "#fe8019"       # bright_orange
+accent_dim = "#d65d0e"   # neutral_orange
+muted = "#a89984"        # light4
+selected_bg = "#504945"  # dark2
+selected_fg = "#fbf1c7"  # light0
+lyrics_played = "#928374" # gray_245
+error = "#fb4934"        # bright_red
+warn = "#fabd2f"         # bright_yellow
+success = "#b8bb26"      # bright_green
