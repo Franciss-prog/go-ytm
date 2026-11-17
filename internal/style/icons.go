@@ -14,6 +14,9 @@ type IconSet struct {
 	Shuffle  string
 	Repeat   string
 	Ellipsis string
+	Mark     string    // marked row
+	Autoplay string    // row added by autoplay
+	Sort     [2]string // ascending, descending
 }
 
 var (
@@ -21,16 +24,19 @@ var (
 	UnicodeIcons = IconSet{
 		Name: "unicode", OK: "✓", Warn: "!", Fail: "✗", Info: "·", Bullet: "•",
 		Play: "▶", Pause: "⏸", Heart: "♥", Shuffle: "⤮", Repeat: "⟳", Ellipsis: "…",
+		Mark: "●", Autoplay: "↻", Sort: [2]string{"↑", "↓"},
 	}
 	// NerdIcons require a Nerd Font.
 	NerdIcons = IconSet{
 		Name: "nerd", OK: "", Warn: "", Fail: "", Info: "", Bullet: "",
 		Play: "", Pause: "", Heart: "", Shuffle: "", Repeat: "", Ellipsis: "…",
+		Mark: "", Autoplay: "", Sort: [2]string{"", ""},
 	}
 	// ASCIIIcons are safe everywhere.
 	ASCIIIcons = IconSet{
 		Name: "ascii", OK: "[ok]", Warn: "[!!]", Fail: "[x]", Info: "[i]", Bullet: "*",
 		Play: ">", Pause: "||", Heart: "<3", Shuffle: "~", Repeat: "@", Ellipsis: "...",
+		Mark: "*", Autoplay: "+", Sort: [2]string{"^", "v"},
 	}
 )
 

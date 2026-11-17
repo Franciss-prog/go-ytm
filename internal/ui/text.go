@@ -8,37 +8,15 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/charmbracelet/x/ansi"
+
+	"github.com/Franciss-Prog/go-ytm/internal/ui/components"
 )
 
-// fit truncates s (ANSI-aware, never splitting graphemes) to width cells
-// and pads it with spaces to exactly width.
-func fit(s string, width int) string {
-	if width <= 0 {
-		return ""
-	}
-	w := ansi.StringWidth(s)
-	if w > width {
-		s = ansi.Truncate(s, width, "…")
-		w = ansi.StringWidth(s)
-	}
-	if w < width {
-		s += strings.Repeat(" ", width-w)
-	}
-	return s
-}
-
-// block fits lines into a width×height rectangle and joins them.
-func block(lines []string, width, height int) string {
-	out := make([]string, height)
-	for i := range height {
-		l := ""
-		if i < len(lines) {
-			l = lines[i]
-		}
-		out[i] = fit(l, width)
-	}
-	return strings.Join(out, "\n")
-}
+// fit and block are the shared text helpers (see components.Fit/Block).
+var (
+	fit   = components.Fit
+	block = components.Block
+)
 
 // splitFixed splits s into exactly height lines of exactly width cells.
 func splitFixed(s string, width, height int) []string {

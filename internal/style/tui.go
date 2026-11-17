@@ -72,6 +72,12 @@ type UI struct {
 
 	InfoBar lipgloss.Style // selection info line
 
+	// Track tables.
+	TableHeader lipgloss.Style // column titles
+	RowPlaying  lipgloss.Style // the playing track's title and ▶
+	RowDim      lipgloss.Style // unavailable (greyed out) rows
+	MarkGlyph   lipgloss.Style // ● and ↻ in the gutter
+
 	BarTitle       lipgloss.Style
 	BarArtist      lipgloss.Style
 	BarTime        lipgloss.Style
@@ -129,6 +135,10 @@ func NewUI(t theme.Theme, o UIOptions, version uint64) *UI {
 	u.Section = fg(t.Fg).Bold(true)
 	u.ErrorText, u.WarnText, u.SuccessText = fg(t.Error), fg(t.Warn), fg(t.Success)
 	u.InfoBar = fill(fg(t.Muted), t.Surface)
+	u.TableHeader = fg(t.Muted).Bold(true)
+	u.RowPlaying = fg(t.Accent).Bold(true)
+	u.RowDim = fg(t.Muted).Faint(true)
+	u.MarkGlyph = fg(t.Accent)
 
 	switch {
 	case t.IsReverseSelection():
@@ -180,6 +190,8 @@ func (u *UI) noColor() {
 	b := p.Bold(true)
 	u.Base, u.Panel, u.Header, u.HeaderLink, u.Text, u.Muted, u.Border, u.InfoBar = p, p, p, p, p, p, p, p
 	u.HeaderDim = p.Faint(true)
+	u.TableHeader, u.RowPlaying, u.MarkGlyph = b, b, b
+	u.RowDim = p.Faint(true)
 	u.HeaderActive, u.Pending, u.Title, u.Accent, u.Section = b, b, b, b, b
 	u.ErrorText, u.WarnText, u.SuccessText = b, b, p
 	u.Selected = p.Reverse(true)
