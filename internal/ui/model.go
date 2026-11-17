@@ -133,6 +133,7 @@ func New(o Options) *Model {
 	m.pages[PageHelp] = &help{keymap: o.Keymap, path: o.KeymapPath}
 	m.pages[PageQueue] = newQueuePage(columns(o.Config), o.Queue)
 	m.pages[PageLibrary] = newLibraryPage()
+	m.pages[PageSearch] = newSearchPage(columns(o.Config))
 	if _, ok := m.pages[m.current]; !ok {
 		m.current = PageLibrary
 	}
@@ -187,7 +188,7 @@ func (m *Model) SettingsOpen() bool { return m.settings != nil }
 func (m *Model) ctx() *Context {
 	return &Context{
 		Keymap: m.o.Keymap, KeymapPath: m.o.KeymapPath, Height: m.layout().mainH,
-		API: m.o.API, SignedIn: m.o.SignedIn, Root: m.o.Context, Columns: columns(m.o.Config), Styles: m.st,
+		API: m.o.API, SignedIn: m.o.SignedIn, Root: m.o.Context, Columns: columns(m.o.Config), Styles: m.st, Log: m.log,
 	}
 }
 

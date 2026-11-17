@@ -8,6 +8,7 @@ package ui
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	tea "charm.land/bubbletea/v2"
 
@@ -99,6 +100,8 @@ type Context struct {
 	Columns components.Columns
 	// Styles are the current styles (mouse hit-testing).
 	Styles *style.UI
+	// Log is the debug log.
+	Log *slog.Logger
 }
 
 // Load runs f in a command and delivers its result to page p as a

@@ -70,3 +70,6 @@ func FuzzyMatch(s, query string) bool {
 	}
 	return false
 }
+
+// Width is the display width of s in terminal cells (ANSI-aware).
+func Width(s string) int { return ansi.StringWidth(s) }

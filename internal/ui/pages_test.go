@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
+
+	"github.com/Franciss-Prog/go-ytm/internal/keys"
 )
 
 func TestLibraryOpensPlaylistWithContinuation(t *testing.T) {
@@ -95,3 +97,90 @@ func TestLibrarySignedOut(t *testing.T) {
 		t.Fatalf("no signed-out state:\n%s", plain(h.m))
 	}
 }
+
+func typeKeys(h pbHarness, s string) {
+	for _, r := range s {
+		h.keys(ch(r))
+	}
+}
+
+func TestSearchFlow(t *testing.T) {
+	h := newPB(t)
+	api := h.m.o.API.(*fakeAPI)
+	h.keys(ch('g'), ch('s'))
+	p := h.m.pages[PageSearch].(*searchPage)
+	if !p.Capturing() {
+		t.Fatal("input not focused on arrival")
+	}
+	typeKeys(h, "daf")
+	stale := p.seq
+	typeKeys(h, "t")
+	// The tick for an older keystroke is ignored; the latest one asks.
+	h.send(pageMsg{to: p, msg: suggestTickMsg{stale}})
+	if slices.Contains(api.Calls(), "SearchSuggestions:daf") {
+		t.Fatal("debounce: stale tick requested suggestions")
+	}
+	h.send(pageMsg{to: p, msg: suggestTickMsg{p.seq}})
+	if !strings.Contains(plain(h.m), "daft punk get lucky") {
+		t.Fatalf("no suggestions:\n%s", plain(h.m))
+	}
+	// A reply for older input is dropped.
+	h.send(pageMsg{to: p, msg: Loaded{Key: "suggest@" + itoa(stale), Value: []string{"stale!"}}})
+	if strings.Contains(plain(h.m), "stale!") {
+		t.Fatal("stale suggestions shown")
+	}
+	// Down + enter searches the second suggestion.
+	h.keys(tea.Key{Code: tea.KeyDown}, tea.Key{Code: tea.KeyDown}, tea.Key{Code: tea.KeyEnter})
+	if p.query != "daft punk get lucky" || !slices.Contains(api.Calls(), "Search:daft punk get lucky|songs") {
+		t.Fatalf("query %q calls %v", p.query, api.Calls())
+	}
+	out := plain(h.m)
+	for _, want := range []string{"Top result: Daft Punk · Artist", "Songs", "Get Lucky", "Instant Crush"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("results lack %q:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "Videos") {
+		t.Fatal("videos panel in music mode")
+	}
+	// Enter on a song plays the songs list from there.
+	h.keys(ch('j'), tea.Key{Code: tea.KeyEnter})
+	if h.current() != "t2" {
+		t.Fatalf("play from search: %s", h.current())
+	}
+	// Tab to Albums, enter opens it.
+	h.keys(tea.Key{Code: tea.KeyTab}, tea.Key{Code: tea.KeyEnter})
+	if h.m.pageTitle() != "Album" || !slices.Contains(api.Calls(), "Album:MPREb_disc") {
+		t.Fatalf("album: %s %v", h.m.pageTitle(), api.Calls())
+	}
+	h.keys(tea.Key{Code: tea.KeyBackspace})
+	// All mode adds Videos.
+	h.m.action(keyAction("toggle_search_mode"))
+	if !strings.Contains(plain(h.m), "Videos") {
+		t.Fatal("all mode has no Videos panel")
+	}
+	// Esc in the input hands keys back to the keymap.
+	h.keys(ch('g'), ch('s'), tea.Key{Code: tea.KeyEscape}, ch('g'), ch('l'))
+	if h.m.Current() != PageLibrary {
+		t.Fatalf("esc then g l: on %s", h.m.Current())
+	}
+}
+
+func TestSearchErrorAndEmpty(t *testing.T) {
+	h := newPB(t)
+	api := h.m.o.API.(*fakeAPI)
+	api.errs["Search"] = errors.New("boom")
+	h.keys(ch('g'), ch('s'))
+	typeKeys(h, "x")
+	h.keys(tea.Key{Code: tea.KeyEnter})
+	if !strings.Contains(plain(h.m), "press r to retry") {
+		t.Fatalf("no error:\n%s", plain(h.m))
+	}
+	delete(api.errs, "Search")
+	h.keys(ch('r'))
+	if !strings.Contains(plain(h.m), "Top result") {
+		t.Fatalf("retry:\n%s", plain(h.m))
+	}
+}
+
+func keyAction(name string) keys.Action { return keys.Action{Name: name} }

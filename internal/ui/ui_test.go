@@ -95,6 +95,28 @@ var scenarios = func() []scenario {
 			m.o.API.(*fakeAPI).errs["LibraryAlbums"] = ytmusic.ErrUnauthenticated
 			drain(m, press(m, tea.Key{Code: tea.KeyTab}))
 		}},
+		scenario{"search-suggestions", func(m *Model) {
+			drain(m, m.navigate(PageSearch))
+			for _, r := range "daft" {
+				drain(m, press(m, ch(r)))
+			}
+			p := m.pages[PageSearch].(*searchPage)
+			drain(m, func() tea.Msg { return pageMsg{to: p, msg: suggestTickMsg{p.seq}} })
+			press(m, tea.Key{Code: tea.KeyDown})
+		}},
+		scenario{"search-results", func(m *Model) {
+			drain(m, m.navigate(PageSearch))
+			for _, r := range "daft punk" {
+				drain(m, press(m, ch(r)))
+			}
+			drain(m, press(m, tea.Key{Code: tea.KeyEnter}))
+		}},
+		scenario{"search-playlists-all-mode", func(m *Model) {
+			drain(m, m.navigate(PageSearch))
+			drain(m, press(m, ch('d'), tea.Key{Code: tea.KeyEnter}))
+			m.action(keys.Action{Name: "toggle_search_mode"})
+			press(m, tea.Key{Code: tea.KeyTab}, tea.Key{Code: tea.KeyTab}, tea.Key{Code: tea.KeyTab})
+		}},
 		scenario{"no-sidebar-muted", func(m *Model) {
 			m.sidebar = false
 			st := playing
@@ -240,7 +262,11 @@ func TestNavigation(t *testing.T) {
 	if m.Current() != PageSearch {
 		t.Fatalf("g s → %s", m.Current())
 	}
-	press(m, ch('z'))
+	// Search focuses its input on arrival; escape hands keys back.
+	press(m, tea.Key{Code: tea.KeyEscape}, ch('z'))
+	if m.Current() != PageQueue {
+		t.Fatalf("z → %s", m.Current())
+	}
 	press(m, tea.Key{Code: tea.KeyBackspace})
 	if m.Current() != PageSearch {
 		t.Errorf("back → %s", m.Current())

@@ -1,8 +1,8 @@
  ← Back  Search                                                                                                                   Forward → 
- Playlists                    │                                                                                                             
-                              │ Search                                                                                                      
- Your playlists will appear h…│                                                                                                             
-                              │ This page is not built yet. Try `ytm search` in a shell meanwhile.                                          
+ Playlists                    │ Search ▸ █                                                                                      mode: music 
+                              │                                                                                                             
+ Your playlists will appear h…│ Type to search, enter runs it, esc leaves the input. Tab cycles panels; g s edits the query.                
+                              │                                                                                                             
                               │                                                                                                             
                               │                                                                                                             
                               │                                                                                                             
