@@ -10,7 +10,7 @@ Last updated: 2026-11-17
 | M0 | scaffold | **in review** | branch `feat/scaffold` (stacked on #1) | CLI skeleton, config loader, logging, style, doctor stub |
 | M1 | player-core | **in review** | [#3](https://github.com/Franciss-prog/go-ytm/pull/3) (stacked on #2) | mpv launcher, JSON IPC, controller, crash restore, fakempv |
 | M2 | ytmusic-auth-search | **in review** | [#4](https://github.com/Franciss-prog/go-ytm/pull/4) (stacked on #3) | InnerTube client, search, setup, auth store, doctor Auth |
-| M3 | stream-resolve | **in review** | branch `feat/stream-resolve` (stacked on #4) | yt-dlp resolver, URL cache, prefetcher, doctor mpv version |
+| M3 | stream-resolve | **in review** | [#5](https://github.com/Franciss-prog/go-ytm/pull/5) (stacked on #4) | yt-dlp resolver, URL cache, prefetcher, doctor mpv version |
 | M4 | tui-shell | not started | | |
 | M4b | dynamic-theme | not started | | |
 | M5 | tui-library-search-queue | not started | | |
