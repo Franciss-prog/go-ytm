@@ -2,6 +2,7 @@ package theme
 
 import (
 	"io/fs"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -10,7 +11,7 @@ import (
 
 func fakeFS(files map[string]string) func(string) ([]byte, error) {
 	return func(p string) ([]byte, error) {
-		if s, ok := files[p]; ok {
+		if s, ok := files[filepath.ToSlash(p)]; ok {
 			return []byte(s), nil
 		}
 		return nil, fs.ErrNotExist
@@ -49,7 +50,7 @@ func TestResolveSources(t *testing.T) {
 
 func TestResolveFallback(t *testing.T) {
 	r := Resolve(Spec{Source: "pywal", Home: "/h", ConfigDir: "/c", Fallback: "nord", ReadFile: fakeFS(nil)})
-	if r.Err == nil || r.Theme.Name != "nord" || !strings.Contains(r.Err.Error(), "/h/.cache/wal/colors.json") {
+	if r.Err == nil || r.Theme.Name != "nord" || !strings.Contains(r.Err.Error(), filepath.FromSlash("/h/.cache/wal/colors.json")) {
 		t.Errorf("missing pywal: name=%s err=%v", r.Theme.Name, r.Err)
 	}
 	r = Resolve(Spec{Source: "static", Name: "nope", Fallback: "nope2", ReadFile: fakeFS(nil)})

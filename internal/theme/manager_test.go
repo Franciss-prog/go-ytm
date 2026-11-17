@@ -62,8 +62,21 @@ func TestManager(t *testing.T) {
 	if !clk.BlockUntil(1, stop) {
 		t.Fatal("watcher did not arm a debounce timer")
 	}
-	clk.Advance(DefaultDebounce)
-	if r := recv(); r.Cause != CauseFile || FormatColor(r.Theme.Bg) != "#fafafa" {
+	// A rename emits several events on kqueue and Windows; a late one
+	// re-arms the debounce timer after an Advance, so keep firing it until
+	// the result arrives (as watchRig.step does).
+	var r Result
+	for got := false; !got; {
+		clk.Advance(DefaultDebounce)
+		select {
+		case r = <-sends:
+			got = true
+		case <-time.After(50 * time.Millisecond):
+		case <-stop:
+			t.Fatal("nothing sent after file change")
+		}
+	}
+	if r.Cause != CauseFile || FormatColor(r.Theme.Bg) != "#fafafa" {
 		t.Errorf("file: %v %s", r.Cause, FormatColor(r.Theme.Bg))
 	}
 

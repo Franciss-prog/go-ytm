@@ -1,6 +1,7 @@
 package theme
 
 import (
+	"encoding/json"
 	"fmt"
 	"image/color"
 	"math"
@@ -23,6 +24,18 @@ type Adjustment struct {
 	Before   float64 `json:"before"`
 	After    float64 `json:"after"`
 	Fallback bool    `json:"fallback,omitempty"` // fell back to black/white
+}
+
+// MarshalJSON rounds the ratios to two decimals, as String prints them.
+// Full precision differs in the last digit across CPUs (fused
+// multiply-add on arm64), which would make `theme show --json` output
+// platform-dependent.
+func (a Adjustment) MarshalJSON() ([]byte, error) {
+	type plain Adjustment
+	p := plain(a)
+	p.Before = math.Round(p.Before*100) / 100
+	p.After = math.Round(p.After*100) / 100
+	return json.Marshal(p)
 }
 
 func (a Adjustment) String() string {

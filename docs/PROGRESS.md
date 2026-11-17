@@ -68,6 +68,7 @@ Last updated: 2026-11-17
 | 2026-11-17 | Deps added: `fsnotify` v1.10.1 (listed in 01); `go-colorful` v1.4.1 promoted to direct (has OkLab/OkLch, no in-house OKLCH) | 01 |
 | 2026-11-17 | `Dark` = luminance < 0.179 (equal white/black contrast), not 0.5 | 08 |
 | 2026-11-17 | Built-in themes are embedded TOML parsed like `theme.toml`; nord/gruvbox from nord.css / gruvbox.vim | 08 |
+| 2026-11-17 | `theme show --json` contrast ratios rounded to 2 decimals (full precision differed on macOS arm64) | 06, 08 |
 | 2026-11-17 | Broken palette file keeps current colors; Settings → missing source shows fallback; toast once per error | 08 |
 | 2026-11-17 | `config.Patch` writes basic strings, refuses keys inside inline tables, re-parses before rename | 04 |
 | 2026-11-17 | `ytm theme reload` deferred to M9 (IPC); SIGUSR1 reloads now | 06, 08 |

@@ -47,6 +47,7 @@ type Server struct {
 	hook      Hook
 	exited    chan struct{}
 	exitOnce  sync.Once
+	dead      bool // exit ran; a later Serve closes its conn at once
 }
 
 // New returns a fake in the idle state with mpv's defaults.
@@ -128,6 +129,11 @@ func (s *Server) PlaylistURLs() []string {
 // Serve handles one client connection until it closes or the fake exits.
 func (s *Server) Serve(rwc io.ReadWriteCloser) {
 	s.mu.Lock()
+	if s.dead { // killed before Serve ran: nothing else would close rwc
+		s.mu.Unlock()
+		_ = rwc.Close()
+		return
+	}
 	s.w, s.closer = rwc, rwc
 	s.mu.Unlock()
 	sc := bufio.NewScanner(rwc)
@@ -157,6 +163,7 @@ func (s *Server) exit() {
 	s.exitOnce.Do(func() {
 		s.mu.Lock()
 		c := s.closer
+		s.dead = true
 		s.mu.Unlock()
 		if c != nil {
 			_ = c.Close()
