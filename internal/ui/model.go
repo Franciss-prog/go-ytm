@@ -216,6 +216,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if a := m.syncArt(); a != nil {
 		cmd = tea.Batch(cmd, a)
 	}
+	if h := m.syncHover(); h != nil {
+		cmd = tea.Batch(cmd, h)
+	}
 	return m, cmd
 }
 
@@ -240,6 +243,9 @@ func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, cmd
 	case tea.MouseClickMsg:
 		cmd := m.click(msg.Mouse())
+		return m, cmd
+	case hoverMsg:
+		cmd := m.hovered(msg)
 		return m, cmd
 	case scrubCommitMsg:
 		m.commitScrub(msg.seq)

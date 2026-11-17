@@ -355,3 +355,11 @@ func (p *contextPage) clickAction(name string, ctx *Context) (Page, tea.Cmd) {
 	_, cmd, _ := p.Action(keys.Action{Name: name}, ctx)
 	return p, cmd
 }
+
+// Hovered implements hoverer: the track under the cursor.
+func (p *contextPage) Hovered() string {
+	if p.focus == 1 { // artist releases list
+		return ""
+	}
+	return tableHovered(p.table)
+}

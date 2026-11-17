@@ -45,6 +45,7 @@ type Playback struct {
 	SyncHistoryToYTMusic    bool     `toml:"sync_history_to_ytmusic"`
 	MPVConfig               bool     `toml:"mpv_config"`
 	MPVArgs                 []string `toml:"mpv_args"`
+	PrefetchOnHover         bool     `toml:"prefetch_on_hover"`
 }
 
 // Cache holds [cache].
@@ -173,7 +174,7 @@ func Default() Config {
 		Playback: Playback{
 			AudioQuality: "high", DefaultVolume: 80, Autoplay: true, Gapless: true,
 			SeekStep: 5, APITimeout: 15, ResumeOnLaunch: true, HistoryMinListenSeconds: 5,
-			SyncHistoryToYTMusic: true, MPVArgs: []string{},
+			SyncHistoryToYTMusic: true, MPVArgs: []string{}, PrefetchOnHover: true,
 		},
 		Cache:  Cache{MaxSizeMB: 1024},
 		Search: Search{DefaultMode: "music", MaxHistory: 500, Predictive: true},

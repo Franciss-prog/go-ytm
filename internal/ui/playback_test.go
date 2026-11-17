@@ -380,3 +380,51 @@ func TestQueuePage(t *testing.T) {
 		t.Fatal("no reorder hint")
 	}
 }
+
+func TestHoverPrefetch(t *testing.T) {
+	h := newPB(t)
+	h.send(PlayMsg{Tracks: tracks("a", "b", "c", "d"), Start: 0})
+	h.started("a")
+	drain(h.m, h.m.navigate(PageQueue))
+	// The test context is cancelled, so dwell timers never fire on their
+	// own: rest delivers the one for the current cursor row.
+	rest := func() { h.send(hoverMsg{h.m.pb.hoverSeq}) }
+	rest() // on the playing track: only the next one is wanted
+	if got := h.pf.last(); got != "b" {
+		t.Fatalf("on playing row: want %q", got)
+	}
+	press(h.m, ch('j'), ch('j'), ch('j'))
+	rest()
+	if got := h.pf.last(); got != "d,b" {
+		t.Fatalf("rested on d: want %q", got)
+	}
+	// A stale timer (the cursor moved on before it fired) is ignored, and
+	// leaving d drops it from the want list.
+	seq := h.m.pb.hoverSeq
+	press(h.m, ch('k')) // onto c
+	if got := h.pf.last(); got != "b" {
+		t.Fatalf("leaving d: want %q", got)
+	}
+	n := len(h.pf.wants)
+	h.send(hoverMsg{seq})
+	if len(h.pf.wants) != n {
+		t.Fatalf("stale hover fired: %v", h.pf.wants[n:])
+	}
+	rest()
+	if got := h.pf.last(); got != "c,b" {
+		t.Fatalf("rested on c: want %q", got)
+	}
+	// Turned off: the hovered track is dropped, and moving the cursor
+	// requests nothing more.
+	h.m.o.Config.Playback.PrefetchOnHover = false
+	press(h.m, ch('k'))
+	rest()
+	for _, w := range h.pf.wants[n+1:] {
+		if slices.Contains(w, "b") && len(w) > 1 {
+			t.Fatalf("disabled but hovered: %v", h.pf.wants[n:])
+		}
+	}
+	if got := h.pf.last(); got != "b" {
+		t.Fatalf("disabled: want %q", got)
+	}
+}

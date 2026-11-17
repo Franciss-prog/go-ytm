@@ -60,6 +60,7 @@ history_min_listen_seconds = 5  # 0..3600
 sync_history_to_ytmusic = true
 mpv_config = false              # NEW: load the user's mpv.conf (default: mpv runs with --no-config)
 mpv_args = []                   # NEW: extra mpv arguments
+prefetch_on_hover = true        # NEW: resolve the track under the cursor after 0.4 s at rest (spec 03)
 # prefer_audio: no effect in original → dropped (accepted, ignored)
 
 [cache]

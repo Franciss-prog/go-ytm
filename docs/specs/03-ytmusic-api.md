@@ -212,6 +212,14 @@ type Resolver interface {
 - `stream.Prefetcher`: one goroutine; `Want(q, next, next+1)` replaces the list (2 slots, priority
   order), cancels work for tracks no longer wanted, skips cached ones, tries each ID once per list,
   and reports each result via a non-blocking callback (TUI: `tea.Program.Send`).
+- **Hover prefetch** (`[playback] prefetch_on_hover`, default on): when the cursor rests on a
+  track row for 0.4 s (Search, Library track columns, playlist/album/artist pages, Queue), the UI
+  calls `Want(q, hovered, next)`, hovered first. Moving on before it finishes cancels it (the
+  Prefetcher drops IDs no longer wanted); the playing track is never requested. Enter then joins
+  the run in flight or hits the cache. Measured live (2026-11-17, yt-dlp 2026.10.26, signed out):
+  a cold Enter costs ≈5 s of resolve plus ≈3 s of `available_at` wait; `default` is the only
+  player client that returns audio without a PO token (`tv`, `tv_simply`, `web_safari`, `mweb`,
+  `ios`, `web_music`, `android_vr` all fail), so the latency cannot be cut per request.
 - Local audio cache hit (M7) short-circuits resolution with a `file://` path.
 - Warm process: **rejected with numbers.** A resolve takes 3.7–4.9 s wall (live, 2026-11-17), of
   which yt-dlp startup + import is ~0.2 s; the rest is network. `--batch-file -` also reads stdin

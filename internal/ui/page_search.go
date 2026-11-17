@@ -475,3 +475,17 @@ func (p *searchPage) Click(ev mouseEv, ctx *Context) (Page, tea.Cmd) {
 	_, cmd, _ := p.Action(keys.Action{Name: name}, ctx)
 	return p, cmd
 }
+
+// Hovered implements hoverer: the song or video under the cursor.
+func (p *searchPage) Hovered() string {
+	if p.editing {
+		return ""
+	}
+	switch p.panel {
+	case panelSongs:
+		return tableHovered(p.songs)
+	case panelVideos:
+		return tableHovered(p.videos)
+	}
+	return ""
+}

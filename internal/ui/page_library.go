@@ -645,3 +645,11 @@ func (p *libraryPage) WheelAt(x, _ int, a keys.Action, ctx *Context) tea.Cmd {
 	_, cmd, _ := p.Action(a, ctx)
 	return cmd
 }
+
+// Hovered implements hoverer: the track under the cursor in a track column.
+func (p *libraryPage) Hovered() string {
+	if c := p.col(); c != nil && c.table != nil {
+		return tableHovered(c.table)
+	}
+	return ""
+}

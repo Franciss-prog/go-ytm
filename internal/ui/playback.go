@@ -84,6 +84,12 @@ type playback struct {
 	loading  string // video ID being resolved for the current slot
 	appended string // video ID preloaded in mpv as the next track
 	retried  string // video ID already re-resolved once after an error
+
+	// Hover prefetch (spec 03): the track under the cursor, resolved once
+	// the cursor rests on it for hoverDwell.
+	hoverSeen string // video ID under the cursor after the last update
+	hoverSeq  uint64 // bumps when hoverSeen changes; older timers are dropped
+	hover     string // video ID that rested long enough ("" none)
 }
 
 func (m *Model) quality() stream.Quality {
@@ -193,13 +199,71 @@ func (m *Model) skipAfterError() tea.Cmd {
 	return m.startCurrent(0)
 }
 
-// prefetchNext asks for the next tracks to be resolved.
+// hoverDwell is how long the cursor must rest on a track before it is
+// resolved in the background (spec 03, "Hover prefetch").
+const hoverDwell = 400 * time.Millisecond
+
+// hoverer is a page with track rows: the video ID under the cursor ("" for
+// none, e.g. a non-track row or an empty list).
+type hoverer interface{ Hovered() string }
+
+// hoverMsg fires hoverDwell after the cursor reached a track.
+type hoverMsg struct{ seq uint64 }
+
+// syncHover arms the dwell timer when the track under the cursor changed.
+// It runs after every update, so any way the cursor moves (keys, mouse,
+// a page loading) counts.
+func (m *Model) syncHover() tea.Cmd {
+	if m.o.Prefetch == nil {
+		return nil
+	}
+	if !m.o.Config.Playback.PrefetchOnHover { // off (maybe just now, from Settings)
+		m.pb.hoverSeen = ""
+		if m.pb.hover != "" {
+			m.pb.hover = ""
+			m.prefetchNext()
+		}
+		return nil
+	}
+	id := ""
+	if h, ok := m.pages[m.current].(hoverer); ok && !m.sideFocused() {
+		id = h.Hovered()
+	}
+	if id == m.pb.hoverSeen {
+		return nil
+	}
+	m.pb.hoverSeen = id
+	m.pb.hoverSeq++
+	if m.pb.hover != "" { // the cursor left: stop resolving the old row
+		m.pb.hover = ""
+		m.prefetchNext()
+	}
+	if id == "" {
+		return nil
+	}
+	return after(m.o.Context, hoverDwell, hoverMsg{m.pb.hoverSeq})
+}
+
+// hovered starts resolving the row the cursor rested on.
+func (m *Model) hovered(msg hoverMsg) tea.Cmd {
+	if msg.seq != m.pb.hoverSeq || m.pb.hoverSeen == "" || !m.o.Config.Playback.PrefetchOnHover {
+		return nil
+	}
+	m.pb.hover = m.pb.hoverSeen
+	return m.prefetchNext()
+}
+
+// prefetchNext asks for the hovered track (when it rested long enough)
+// and the next track to be resolved, in that order.
 func (m *Model) prefetchNext() tea.Cmd {
 	if m.o.Prefetch == nil {
 		return nil
 	}
 	var ids []string
-	if t, ok := m.pb.q.PeekNext(); ok {
+	if h := m.pb.hover; h != "" && h != m.bar.st.Item.ID && h != m.pb.loading {
+		ids = append(ids, h)
+	}
+	if t, ok := m.pb.q.PeekNext(); ok && (len(ids) == 0 || ids[0] != t.VideoID) {
 		ids = append(ids, t.VideoID)
 	}
 	m.o.Prefetch.Want(m.quality(), ids...)

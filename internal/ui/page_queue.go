@@ -157,3 +157,17 @@ func (p *queuePage) Click(ev mouseEv, ctx *Context) (Page, tea.Cmd) {
 	_, cmd, _ := p.Action(keys.Action{Name: name}, ctx)
 	return p, cmd
 }
+
+// Hovered implements hoverer: the track under the cursor.
+func (p *queuePage) Hovered() string { return tableHovered(p.table) }
+
+// tableHovered is the playable video ID under a table's cursor.
+func tableHovered(t *components.TrackTable) string {
+	if t == nil {
+		return ""
+	}
+	if tr, ok := t.Selected(); ok && tr.Available {
+		return tr.VideoID
+	}
+	return ""
+}

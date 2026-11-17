@@ -69,6 +69,8 @@ Last updated: 2026-11-17
 | 2026-11-17 | `Dark` = luminance < 0.179 (equal white/black contrast), not 0.5 | 08 |
 | 2026-11-17 | Built-in themes are embedded TOML parsed like `theme.toml`; nord/gruvbox from nord.css / gruvbox.vim | 08 |
 | 2026-11-17 | `theme show --json` contrast ratios rounded to 2 decimals (full precision differed on macOS arm64) | 06, 08 |
+| 2026-11-17 | Track page = centered kew-style card (art above title); up next split dropped, Queue page keeps it (owner) | 09 |
+| 2026-11-17 | Hover prefetch: cursor at rest 0.4 s on a track resolves it (`[playback] prefetch_on_hover`, default on). Cold Enter 10.3 s → 1.2 s to `0:01` live (owner) | 03, 04 |
 | 2026-11-17 | Broken palette file keeps current colors; Settings → missing source shows fallback; toast once per error | 08 |
 | 2026-11-17 | `config.Patch` writes basic strings, refuses keys inside inline tables, re-parses before rename | 04 |
 | 2026-11-17 | `ytm theme reload` deferred to M9 (IPC); SIGUSR1 reloads now | 06, 08 |
