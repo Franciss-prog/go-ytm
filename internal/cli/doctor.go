@@ -21,7 +21,7 @@ func newDoctorCmd(a *App) *cobra.Command {
 		Args: usageArgs(cobra.NoArgs),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			d := DoctorDeps()
-			d.Paths, d.Config, d.Diags = a.Paths, a.Config, a.Diags
+			d.Paths, d.Config, d.Diags, d.Theme = a.Paths, a.Config, a.Diags, a.ThemeResult
 			d.Env = a.platformEnv()
 			d.YtDlpBinary = a.Config.YtDlp.Binary
 			d.Terminal = colorprofile.NoTTY

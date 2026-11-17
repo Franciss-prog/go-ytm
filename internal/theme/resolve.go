@@ -52,6 +52,9 @@ type Result struct {
 	Against string
 	// Pywal metadata, for `ytm theme show`.
 	Wallpaper, Alpha string
+	// NoSpecial: the pywal file has no special block — typically written
+	// by a matugen template, where source = "matugen" gives richer colors.
+	NoSpecial bool
 	// Cause says what produced this result (set by Watcher and Manager).
 	Cause Cause
 }
@@ -168,7 +171,7 @@ func (s Spec) source(read func(string) ([]byte, error), r *Result) (Theme, error
 		if err != nil {
 			return Theme{}, err
 		}
-		r.Wallpaper, r.Alpha = p.Wallpaper, p.Alpha
+		r.Wallpaper, r.Alpha, r.NoSpecial = p.Wallpaper, p.Alpha, len(p.Special) == 0
 		t, notes := FromPywal(p, s.PywalMap)
 		r.Notes = append(r.Notes, notes...)
 		return t, nil

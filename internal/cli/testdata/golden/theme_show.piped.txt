@@ -1,0 +1,31 @@
+ Theme
+
+   source       pywal
+   name         pywal
+   mode         dark
+   palette      $HOME/wal/colors.json
+   wallpaper    /home/user/wallpapers/example.png
+   alpha        100 (informational)
+
+ Tokens
+      bg               #1a1110
+      fg               #f1dfdc
+      surface          #251b1a
+      surface_alt      #2c2220
+      border           #493d3b
+      accent           #ffb4a8
+      accent_dim       #8e645e
+      muted            #616262
+      selected_bg      #412d2a
+      selected_fg      #f1dfdc
+      progress_filled  #ffb4a8
+      progress_empty   #493d3b
+      lyrics_played    #887977
+      lyrics_current   #ffb4a8
+      lyrics_upcoming  #f1dfdc
+      error            #f97770
+      warn             #cf9c00
+      success          #5bbe62
+
+ Contrast
+   muted #3a3a3a → #616262 (1.63 → 3.03 vs #1a1110)

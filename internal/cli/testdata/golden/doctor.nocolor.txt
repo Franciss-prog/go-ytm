@@ -18,4 +18,8 @@
  Config
    [i]  config.toml  ~/.config/ytm-go/config.toml    not present; using defaults
 
+ Theme
+   [ok] source       static → ytm-dark
+   [ok] contrast     ok against #0f0f0f
+
  1 problem

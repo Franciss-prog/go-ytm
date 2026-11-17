@@ -44,7 +44,7 @@ func NewRootCmd(a *App) *cobra.Command {
 	pf.Lookup("pprof").NoOptDefVal = "127.0.0.1:6060"
 	root.Flags().BoolVar(&a.traceFrames, "trace-frames", false, "log per-frame Update/View timings to the debug log (player UI only)")
 
-	root.AddCommand(newDoctorCmd(a), newConfigCmd(a), newSearchCmd(a), newSetupCmd(a))
+	root.AddCommand(newDoctorCmd(a), newConfigCmd(a), newSearchCmd(a), newSetupCmd(a), newThemeCmd(a))
 	return root
 }
 

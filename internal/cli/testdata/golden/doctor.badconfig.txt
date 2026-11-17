@@ -20,6 +20,9 @@
    [!!]   line 2     playback.default_volume         150 is above maximum 100; clamped to 100
    [!!]   line 3     playback.seek_stp               unknown key (did you mean "seek_step"?)
    [x]    line 6     theme.source                    "wallpaper" is not one of static, pywal, matugen, ansi, file; using "static"
-   [ok] theme        ytm-dark (static)               transparent
+
+ Theme
+   [ok] source       static → ytm-dark               transparent
+   [ok] contrast     ok against #000000
 
  2 problems, 2 warnings

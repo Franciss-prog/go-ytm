@@ -344,3 +344,39 @@ func TestPprofFlag(t *testing.T) {
 		t.Fatalf("pprof: code %d stderr %q", r.code, r.stderr)
 	}
 }
+
+func TestThemeShowGolden(t *testing.T) {
+	sparse, err := os.ReadFile("../theme/testdata/pywal/matugen-pywalfox-sparse.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	pywal := runOpts{
+		config: "[theme]\nsource = \"pywal\"\npywal_path = \"~/wal/colors.json\"\n",
+		prep: func(cfg string) {
+			home := filepath.Dir(filepath.Dir(cfg))
+			_ = os.MkdirAll(filepath.Join(home, "wal"), 0o700)
+			_ = os.WriteFile(filepath.Join(home, "wal", "colors.json"), sparse, 0o600)
+			_ = os.WriteFile(filepath.Join(cfg, "theme.toml"), []byte("[overrides]\nmuted = \"#3a3a3a\"\n"), 0o600)
+		},
+	}
+	r := run(t, pywal, "theme", "show")
+	if r.code != ExitOK {
+		t.Fatalf("exit %d: %s", r.code, r.stderr)
+	}
+	golden(t, "theme_show.piped.txt", r.stdout)
+	r = run(t, pywal, "theme", "show", "--json")
+	golden(t, "theme_show.json", r.stdout)
+	pywal.tty = true
+	r = run(t, pywal, "theme", "show")
+	golden(t, "theme_show.styled.txt", r.stdout)
+
+	// Missing source: fallback, still exit 0, error reported.
+	r = run(t, runOpts{config: "[theme]\nsource = \"matugen\"\nfallback = \"nord\"\n"}, "theme", "show", "--json")
+	if r.code != ExitOK || !strings.Contains(r.stdout, `"name":"nord"`) || !strings.Contains(r.stdout, `"error":"matugen colors not found`) {
+		t.Errorf("fallback: %d %s", r.code, r.stdout)
+	}
+	r = run(t, pywal, "doctor")
+	if !strings.Contains(r.stdout, "matugen-written") {
+		t.Errorf("doctor lacks matugen hint:\n%s", r.stdout)
+	}
+}

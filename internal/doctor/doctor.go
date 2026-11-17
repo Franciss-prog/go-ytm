@@ -1,8 +1,7 @@
 // Package doctor gathers diagnostics for `ytm doctor`.
 //
-// M0 ships the environment, paths, config and terminal sections. Auth,
-// theme, integrations and recent-error sections arrive with their
-// milestones (see docs/specs/06-cli-ipc.md).
+// Sections: environment, paths, auth, config, theme. Integrations and
+// recent errors arrive with their milestones (docs/specs/06-cli-ipc.md).
 package doctor
 
 import (
@@ -26,6 +25,7 @@ import (
 	"github.com/Franciss-Prog/go-ytm/internal/config"
 	"github.com/Franciss-Prog/go-ytm/internal/platform"
 	"github.com/Franciss-Prog/go-ytm/internal/style"
+	"github.com/Franciss-Prog/go-ytm/internal/theme"
 )
 
 // Deps are the side-effecting lookups doctor needs; fakes are used in tests.
@@ -40,6 +40,7 @@ type Deps struct {
 	Config   config.Config
 	Diags    config.Diagnostics
 	Terminal colorprofile.Profile // detected profile of stdout (NoTTY when piped)
+	Theme    theme.Result         // how the theme resolved
 	// YtDlpBinary overrides PATH lookup ([yt_dlp] binary).
 	YtDlpBinary string
 }
@@ -77,6 +78,7 @@ func Run(ctx context.Context, d Deps) style.Report {
 			paths(d),
 			authSection(d),
 			configSection(d),
+			themeSection(d),
 		},
 	}
 }
@@ -251,11 +253,48 @@ func configSection(d Deps) style.Section {
 		}
 		s.Items = append(s.Items, style.Item{Label: label, Status: st, Value: diag.Key, Detail: diag.Message})
 	}
-	s.Items = append(s.Items, style.Item{
-		Label: "theme", Status: style.StatusOK,
-		Value:  fmt.Sprintf("%s (%s)", d.Config.Theme.Name, d.Config.Theme.Source),
-		Detail: transparentNote(d.Config.Theme.Transparent),
-	})
+	return s
+}
+
+// themeSection reports how the theme resolved (spec 08: doctor Theme
+// section, adjustments, matugen hint).
+func themeSection(d Deps) style.Section {
+	s := style.Section{Name: "Theme"}
+	r, c := d.Theme, d.Config.Theme
+	src := style.Item{Label: "source", Status: style.StatusOK, Value: fmt.Sprintf("%s → %s", c.Source, r.Theme.Name), Detail: transparentNote(c.Transparent)}
+	if r.Err != nil {
+		src.Status, src.Detail = style.StatusWarn, fmt.Sprintf("%v; using the fallback", r.Err)
+	}
+	s.Items = append(s.Items, src)
+	if r.Path != "" {
+		watch := "live reload off"
+		if c.Watch {
+			watch = "live reload on"
+		}
+		s.Items = append(s.Items, style.Item{Label: "palette", Status: style.StatusInfo, Value: tildify(r.Path, d.Env), Detail: watch})
+	}
+	ct := style.Item{Label: "contrast", Status: style.StatusInfo, Value: "off"}
+	switch {
+	case !c.EnforceContrast:
+	case r.Against == "":
+		ct.Value = "not checked (terminal colors)"
+	case len(r.Adjustments) == 0:
+		ct.Status, ct.Value = style.StatusOK, "ok against "+r.Against
+	default:
+		ct.Value = fmt.Sprintf("%s adjusted against %s", style.Plural(len(r.Adjustments), "color"), r.Against)
+		ct.Detail = "see `ytm theme show`"
+	}
+	s.Items = append(s.Items, ct)
+	for _, n := range r.Notes {
+		s.Items = append(s.Items, style.Item{Label: "  -", Status: style.StatusWarn, Detail: n})
+	}
+	if c.Source == "pywal" && r.NoSpecial && r.Err == nil {
+		s.Items = append(s.Items, style.Item{
+			Label: "hint", Status: style.StatusInfo,
+			Value:  "colors.json looks matugen-written",
+			Detail: `source = "matugen" gives richer colors (README: dynamic theming)`,
+		})
+	}
 	return s
 }
 
