@@ -11,10 +11,11 @@ import (
 )
 
 // Transliterate returns s in ASCII (anyascii, the library ytm-player
-// uses), or "" when s is already ASCII and there is nothing to add.
+// uses), or "" when s has no non-ASCII letters (symbols such as "♪"
+// would only turn into noise).
 func Transliterate(s string) string {
-	for i := 0; i < len(s); i++ {
-		if s[i] >= utf8.RuneSelf {
+	for _, r := range s {
+		if r >= utf8.RuneSelf && unicode.IsLetter(r) {
 			return strings.TrimSpace(anyascii.Transliterate(s))
 		}
 	}

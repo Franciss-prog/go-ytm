@@ -22,10 +22,12 @@ import (
 	"github.com/charmbracelet/colorprofile"
 
 	"github.com/Franciss-Prog/go-ytm/internal/art"
+	"github.com/Franciss-Prog/go-ytm/internal/buildinfo"
 	"github.com/Franciss-Prog/go-ytm/internal/cache"
 	"github.com/Franciss-Prog/go-ytm/internal/clock"
 	"github.com/Franciss-Prog/go-ytm/internal/config"
 	"github.com/Franciss-Prog/go-ytm/internal/keys"
+	"github.com/Franciss-Prog/go-ytm/internal/lyrics"
 	"github.com/Franciss-Prog/go-ytm/internal/platform"
 	"github.com/Franciss-Prog/go-ytm/internal/player"
 	"github.com/Franciss-Prog/go-ytm/internal/store"
@@ -78,6 +80,8 @@ type Options struct {
 	Resolver stream.Resolver
 	// Art fetches cover art (nil: over HTTP).
 	Art art.Fetcher
+	// Lyrics finds lyrics (nil: YouTube Music via API, then LRCLIB).
+	Lyrics ui.LyricsFinder
 	// Audio is the visualizer's capture (nil: pw-cat when available).
 	Audio viz.Source
 	// ProgramOptions are appended (tests pass tea.WithInput etc.).
@@ -167,7 +171,7 @@ func Run(ctx context.Context, o Options) error {
 		Themes:     themeService{m: themes, configDir: o.ThemeSpec.ConfigDir, home: o.ThemeSpec.Home},
 		ConfigPath: o.Paths.ConfigFile(), PatchConfig: config.Patch, Profile: o.Profile,
 		Streams: uiStreams(streams, loc.cache), Prefetch: prefetch, API: o.API, SignedIn: o.SignedIn,
-		Art: artFetcher(o.Art), Spectrum: uiSpectrum(spectrum),
+		Art: artFetcher(o.Art), Spectrum: uiSpectrum(spectrum), Lyrics: lyricsFinder(o.Lyrics, o.API),
 		Local: loc.local(), Downloads: loc.downloads(), Session: loc.session, ShuffleLocks: loc.locks(),
 	})
 	var model tea.Model = um
@@ -335,6 +339,24 @@ func artFetcher(f art.Fetcher) art.Fetcher {
 		return f
 	}
 	return art.HTTPFetcher{Client: &http.Client{Timeout: artTimeout}}
+}
+
+// lyricsTimeout bounds one LRCLIB lookup.
+const lyricsTimeout = 10 * time.Second
+
+func lyricsFinder(f ui.LyricsFinder, api ytmusic.Client) ui.LyricsFinder {
+	if f != nil {
+		return f
+	}
+	lf := lyrics.Finder{LRCLIB: &lyrics.LRCLIB{
+		Client: &http.Client{Timeout: lyricsTimeout},
+		// LRCLIB asks clients to identify themselves (lrclib.net/docs.txt).
+		UserAgent: "ytm-go/" + buildinfo.Get().Version + " (https://github.com/Franciss-Prog/go-ytm)",
+	}}
+	if api != nil {
+		lf.YT = api
+	}
+	return lf
 }
 
 // uiSpectrum avoids handing the UI a typed nil.

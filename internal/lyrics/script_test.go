@@ -5,6 +5,7 @@ import "testing"
 func TestTransliterate(t *testing.T) {
 	for in, want := range map[string]string{
 		"plain ascii":       "",
+		"♪ — ♫":             "",
 		"Ты меня не любишь": "Ty menya ne lyubish'",
 		"Beyoncé":           "Beyonce",
 		"こんにちは":             "konnichiha",

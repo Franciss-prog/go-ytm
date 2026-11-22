@@ -13,6 +13,7 @@ import (
 	"github.com/charmbracelet/x/exp/teatest/v2"
 
 	"github.com/Franciss-Prog/go-ytm/internal/keys"
+	"github.com/Franciss-Prog/go-ytm/internal/lyrics"
 	"github.com/Franciss-Prog/go-ytm/internal/player"
 	"github.com/Franciss-Prog/go-ytm/internal/style"
 	"github.com/Franciss-Prog/go-ytm/internal/theme"
@@ -50,6 +51,24 @@ var scenarios = func() []scenario {
 			m.Update(Toast{Severity: SevError, Text: "Couldn't play this track: loading failed"})
 			m.Update(Toast{Severity: SevWarn, Text: "Playback engine restarted"})
 			m.Update(Toast{Severity: SevSuccess, Text: "Saved"})
+		}},
+		scenario{"lyrics-synced", func(m *Model) {
+			m.lyr.find = &fakeLyrics{l: &lyrics.Lyrics{Synced: true, Source: "YouTube Music · LyricFind", Lines: []lyrics.Line{
+				{Start: 0, Text: "♪"},
+				{Start: 10 * time.Second, Text: "First line already sung"},
+				{Start: 20 * time.Second, Text: "This is the line playing right now, long enough to wrap in the pane"},
+				{Start: 30 * time.Second, Text: "Ты меня не любишь"},
+				{Start: 40 * time.Second, Text: "שלום עולם"},
+				{Start: 50 * time.Second, Text: ""},
+				{Start: 60 * time.Second, Text: "Last line"},
+			}}}
+			m.lyr.translit = true
+			m.pb.q.AddMany(tracks("abc"))
+			m.pb.q.JumpTo(0)
+			st := playing
+			st.Position = 25 * time.Second
+			m.Update(PlayerEventMsg{playerState(st)})
+			drain(m, press(m, ch('g'), ch('L')))
 		}},
 		scenario{"lyrics-pending-chord", func(m *Model) {
 			m.lyrics = true

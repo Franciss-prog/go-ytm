@@ -75,6 +75,9 @@ type Client interface {
 	// WatchPlaylist returns the queue YouTube Music builds for a track or
 	// playlist: radio, up next, playlist radio (M6).
 	WatchPlaylist(ctx context.Context, r WatchRequest) (WatchPlaylist, error)
+	// Lyrics returns the lyrics page WatchPlaylist.LyricsID points at,
+	// timed when YouTube has timings; nil when there are none (M8).
+	Lyrics(ctx context.Context, browseID string) (*Lyrics, error)
 	// Home returns the home feed, loading at least shelves rows when
 	// YouTube has that many.
 	Home(ctx context.Context, shelves int) ([]HomeShelf, error)
