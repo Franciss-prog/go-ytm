@@ -226,6 +226,22 @@ func TestHistory(t *testing.T) {
 	if _, err := a.History(context.Background()); !errors.Is(err, ErrUnauthenticated) {
 		t.Errorf("signed-out page: %v", err)
 	}
+	// A "Sign in" page with credentials renews once and retries.
+	srv, reqs := server(t, func(w http.ResponseWriter, r recorded, n int) {
+		name := "history_unauth"
+		if n > 1 {
+			name = "history_synthetic"
+		}
+		_, _ = w.Write(fixtureBytes(t, name))
+	})
+	renewed := 0
+	a = newTestAPI(t, srv, Options{Credentials: &Credentials{Cookie: "__Secure-3PAPISID=old"}, Renew: func(context.Context) (Credentials, error) {
+		renewed++
+		return Credentials{Cookie: "__Secure-3PAPISID=new"}, nil
+	}})
+	if h, err := a.History(context.Background()); err != nil || len(h) != 4 || renewed != 1 || len(reqs()) != 2 {
+		t.Errorf("renewal: %d items, err %v, renewed %d, %d requests", len(h), err, renewed, len(reqs()))
+	}
 	anon := New(Options{})
 	defer anon.Close()
 	if _, err := anon.History(context.Background()); !errors.Is(err, ErrUnauthenticated) {
@@ -295,5 +311,28 @@ func TestCPN(t *testing.T) {
 	c := cpn()
 	if len(c) != 16 || strings.Trim(c, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_") != "" {
 		t.Errorf("cpn %q", c)
+	}
+}
+
+func TestLikedMusicSignedOutRenews(t *testing.T) {
+	signedOutPage := `{"responseContext":{"serviceTrackingParams":[{"service":"GFEEDBACK","params":[{"key":"logged_in","value":"0"}]}]}}`
+	srv, reqs := server(t, func(w http.ResponseWriter, r recorded, n int) {
+		if n == 1 {
+			_, _ = w.Write([]byte(signedOutPage))
+			return
+		}
+		_, _ = w.Write(fixtureBytes(t, "playlist_owned"))
+	})
+	a := newTestAPI(t, srv, Options{Credentials: &Credentials{Cookie: "__Secure-3PAPISID=old"}, Renew: func(context.Context) (Credentials, error) {
+		return Credentials{Cookie: "__Secure-3PAPISID=new"}, nil
+	}})
+	if pl, err := a.Playlist(context.Background(), "LM"); err != nil || len(reqs()) != 2 || len(pl.Tracks) == 0 {
+		t.Fatalf("LM: %v, %d requests", err, len(reqs()))
+	}
+	// Other playlists are public: a signed-out answer is just the page.
+	srv2, reqs2 := server(t, func(w http.ResponseWriter, r recorded, n int) { _, _ = w.Write([]byte(signedOutPage)) })
+	a = newTestAPI(t, srv2, Options{Credentials: &Credentials{Cookie: "__Secure-3PAPISID=x"}})
+	if _, err := a.Playlist(context.Background(), "PLx"); err != nil || len(reqs2()) != 1 {
+		t.Errorf("public playlist: %v, %d requests", err, len(reqs2()))
 	}
 }

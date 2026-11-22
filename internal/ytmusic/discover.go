@@ -485,21 +485,32 @@ func (a *API) Explore(ctx context.Context) (Explore, error) {
 	return out, nil
 }
 
-// History implements Client. It needs a signed-in session.
+// History implements Client. It needs a signed-in session. A stale session
+// answers 200 with a "Sign in" page rather than 401, so that page counts as
+// ErrUnauthenticated and goes through silent renewal like a 401.
 func (a *API) History(ctx context.Context) ([]HistoryItem, error) {
 	if a.credentials() == nil {
 		return nil, ErrUnauthenticated
 	}
-	resp, err := a.read(ctx, "browse", map[string]any{"browseId": "FEmusic_history"}, "")
-	if err != nil {
-		return nil, err
-	}
+	var out []HistoryItem
 	var p parser
+	err := a.withRenew(ctx, func() error {
+		resp, err := a.call(ctx, "browse", map[string]any{"browseId": "FEmusic_history"}, "", true)
+		if err != nil {
+			return err
+		}
+		out, err = p.parseHistory(resp)
+		return err
+	})
+	a.logShapes("history", p)
+	return out, err
+}
+
+func (p *parser) parseHistory(resp node) ([]HistoryItem, error) {
 	var out []HistoryItem
 	for _, sec := range singleColumnSections(resp) {
 		shelf := sec.get("musicShelfRenderer")
 		if !shelf.exists() {
-			// Signed out: a "Sign in to view your history" message.
 			if sec.get("itemSectionRenderer", "contents", 0, "messageRenderer").exists() {
 				return nil, ErrUnauthenticated
 			}
@@ -513,7 +524,6 @@ func (a *API) History(ctx context.Context) ([]HistoryItem, error) {
 			out = append(out, HistoryItem{Track: t, Played: played})
 		}
 	}
-	a.logShapes("history", p)
 	return out, nil
 }
 
@@ -574,6 +584,19 @@ func (a *API) AddHistoryItem(ctx context.Context, videoID string) error {
 		return &HTTPError{Endpoint: "playback tracking", Status: res.StatusCode}
 	}
 	return nil
+}
+
+// signedOut reports whether InnerTube served the request as signed out
+// (responseContext GFEEDBACK logged_in=0), whatever cookies were sent.
+func signedOut(resp node) bool {
+	for _, s := range resp.get("responseContext", "serviceTrackingParams").list() {
+		for _, p := range s.get("params").list() {
+			if p.get("key").str() == "logged_in" {
+				return p.get("value").str() == "0"
+			}
+		}
+	}
+	return false
 }
 
 // cpn is the 16-character client playback nonce (add_history_item).
