@@ -16,7 +16,7 @@ Last updated: 2026-11-22
 | M5 | tui-library-search-queue | **merged** 2026-11-17 | [#8](https://github.com/Franciss-prog/go-ytm/pull/8) | queue pkg, ytmusic browse/library/edit calls, TrackTable, playback owner (resolve/gapless/retry), Queue, Library, Context, Search pages, popups, playlist sidebar, mouse |
 | M5b | ytkew-look | **merged** 2026-11-17 (spec 09 approved 2026-11-17) | [#9](https://github.com/Franciss-prog/go-ytm/pull/9) | side quest, spec 09: frame, rows, Library columns, track page, cover art, visualizer |
 | M6 | browse-liked-history | **in review** | PR #10 | ytmusic watch/radio/home/charts/explore/history, radio + autoplay + discovery + history sync, Browse, Liked Songs, Recently Played, country picker |
-| M7 | session-cache-offline | not started | | |
+| M7 | session-cache-offline | **built**, PR not opened | branch `feat/session-cache-offline` | SQLite store (play/search history, cache index), session.json resume, shuffle_prefs.json lock, yt-dlp downloads + LRU audio cache, search history, Download action |
 | M8 | lyrics | not started | | |
 | M9 | cli-ipc | not started | | |
 | M10 | mpris-media-keys | not started | | |
@@ -252,7 +252,7 @@ Last updated: 2026-11-22
 
 ## Open questions (need owner)
 
-- None currently.
+- M7: OK to open the PR from `feat/session-cache-offline`? (not pushed yet)
 
 ## Known gaps
 
@@ -284,10 +284,9 @@ Last updated: 2026-11-22
   only asked at startup in transparent mode. tmux passthrough untested.
 - M4b: not run against a real `wal -i` (would rewrite the owner's palette); pywal fixtures are
   pywal's own schemes plus the owner's file. Not tested on macOS/Windows terminals.
-- M5: Search history (shown when the input is empty) waits for the SQLite store (M7).
 - M5: playlist writes (add, create, remove, delete, like) only tested against the fake client;
   the ytmusic write bodies were never sent live (see 03).
-- M5: picker has no recently-used ordering yet; actions popup has no Start radio (M6) / Download (M7).
+- M5: picker has no recently-used ordering yet.
 - M5: Search page not driven live in a terminal yet; covered by fake-API tests and goldens.
 - M5: mouse driven live (tmux SGR events, signed in): sidebar click opens, row click / right-click
   popup / wheel / Back work. **Bar glyph clicks and wheel scrubbing not run live** (nothing was
@@ -308,3 +307,13 @@ Last updated: 2026-11-22
 - M4b: album-art transparency rules wait for album art (no art yet, no exemption registered).
 - fang queries the terminal background (OSC 11) when rendering help on a TTY; harmless on real
   terminals, visible as junk only under `script`-style captures.
+- M7: driven live once in tmux (2026-11-22, scratch XDG dirs): search logged, a track downloaded
+  (1.6 MB webm) and played from disk, session saved on quit and restored, play/pause resumed at
+  the saved position. That run found the memoized-URL bug fixed in `fb5e96e`. Not tested: a full
+  cache eviction on disk, `[cache] location`, downloads signed in, macOS/Windows paths.
+- M7: listen time stored is the time at `history_min_listen_seconds`, not the final one (M9 stats).
+- M7: shuffle lock has no keyboard toggle on the playlist page itself (mouse line, or the library
+  playlist popup); `shuffle_prefs.json` cap drops arbitrary entries, not LRU.
+- M7: `play_pause` with nothing loaded now starts the queue's current track (was a "Nothing to
+  play yet" toast); needed for resume, also applies after the queue ends.
+- M7: `cache status` / `cache clear` CLI land with M9 (spec 00).
