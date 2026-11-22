@@ -317,7 +317,17 @@ func (a *API) Playlist(ctx context.Context, id string) (Playlist, error) {
 	if id == "" {
 		return Playlist{}, fmt.Errorf("%w: empty playlist id", ErrInvalidID)
 	}
-	resp, err := a.read(ctx, "browse", map[string]any{"browseId": "VL" + id}, "")
+	var resp node
+	err := a.withRenew(ctx, func() error {
+		var err error
+		resp, err = a.call(ctx, "browse", map[string]any{"browseId": "VL" + id}, "", true)
+		// Liked Music needs a session; a stale one gets an empty public
+		// page (200, logged_in=0) instead of 401.
+		if err == nil && id == "LM" && signedOut(resp) {
+			err = ErrUnauthenticated
+		}
+		return err
+	})
 	if err != nil {
 		return Playlist{}, err
 	}
