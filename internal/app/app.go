@@ -166,7 +166,7 @@ func Run(ctx context.Context, o Options) error {
 		Theme: o.Theme.Theme, NoColor: o.NoColor, Player: pl, Log: o.Log, Toasts: toasts, Context: ctx,
 		Themes:     themeService{m: themes, configDir: o.ThemeSpec.ConfigDir, home: o.ThemeSpec.Home},
 		ConfigPath: o.Paths.ConfigFile(), PatchConfig: config.Patch, Profile: o.Profile,
-		Streams: streams, Prefetch: prefetch, API: o.API, SignedIn: o.SignedIn,
+		Streams: uiStreams(streams, loc.cache), Prefetch: prefetch, API: o.API, SignedIn: o.SignedIn,
 		Art: artFetcher(o.Art), Spectrum: uiSpectrum(spectrum),
 		Local: loc.local(), Downloads: loc.downloads(), Session: loc.session, ShuffleLocks: loc.locks(),
 	})
@@ -426,4 +426,13 @@ func (l *local) close(log *slog.Logger) {
 			log.Warn("store close", "err", err)
 		}
 	}
+}
+
+// uiStreams puts the audio cache in front of the stream cache (nil c:
+// the stream cache alone).
+func uiStreams(s *stream.Cache, c *cache.Cache) ui.Streams {
+	if c == nil {
+		return s
+	}
+	return cache.Streams{Cache: c, Next: s}
 }
