@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"slices"
 
 	tea "charm.land/bubbletea/v2"
 
@@ -31,16 +32,32 @@ var (
 // recentMax caps each source (100 local + 100 account rows, as the original).
 const recentMax = 100
 
-// localPlays is the in-app play log, newest first. shortcut: kept in memory
-// for the session only; M7's SQLite store persists it.
-type localPlays struct{ tracks []ytmusic.Track }
+// localPlays is the in-app play log, newest first, one row per track (as
+// the store's RecentPlays). Seeded from the store at start; plays are
+// written through to it (Model.logPlay).
+type localPlays struct {
+	tracks []ytmusic.Track
+	rev    int // bumps on every change (pages refill)
+}
 
 // add records a play that passed history_min_listen_seconds.
 func (l *localPlays) add(t ytmusic.Track) {
+	l.tracks = slices.DeleteFunc(l.tracks, func(x ytmusic.Track) bool { return x.VideoID == t.VideoID })
 	l.tracks = append([]ytmusic.Track{t}, l.tracks...)
 	if len(l.tracks) > recentMax {
 		l.tracks = l.tracks[:recentMax]
 	}
+	l.rev++
+}
+
+// seed puts the stored plays behind any made before they loaded.
+func (l *localPlays) seed(ts []ytmusic.Track) {
+	for _, t := range slices.Backward(l.tracks) {
+		ts = slices.DeleteFunc(ts, func(x ytmusic.Track) bool { return x.VideoID == t.VideoID })
+	}
+	l.tracks = append(l.tracks, ts...)
+	l.tracks = l.tracks[:min(len(l.tracks), recentMax)]
+	l.rev++
 }
 
 // recentPage is Recently Played (spec 05): All · Local · YT Music.
@@ -51,7 +68,7 @@ type recentPage struct {
 	account []ytmusic.Track
 	state   loadState // account history
 	err     string
-	shown   int // local plays count at the last fill (refill on change)
+	shown   int // local plays rev at the last fill (refill on change)
 	tableY  int
 }
 
@@ -134,7 +151,7 @@ func (p *recentPage) rows() []ytmusic.Track {
 }
 
 func (p *recentPage) fill() {
-	p.shown = len(p.local.tracks)
+	p.shown = p.local.rev
 	p.table.SetRows(p.rows())
 	empty := "No play history yet."
 	switch {
@@ -171,7 +188,7 @@ func (p *recentPage) Action(a keys.Action, ctx *Context) (Page, tea.Cmd, bool) {
 }
 
 func (p *recentPage) View(width, height int, st *style.UI) string {
-	if p.shown != len(p.local.tracks) {
+	if p.shown != p.local.rev {
 		p.fill()
 	}
 	lines := []string{tabBar(recentTabs, p.tab, st), " " + st.Muted.Render(recentDescs[p.tab]), radioButton(st)}

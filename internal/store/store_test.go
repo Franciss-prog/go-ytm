@@ -175,11 +175,15 @@ func TestShufflePrefs(t *testing.T) {
 	if err != nil || p.Locked("PL1") {
 		t.Fatalf("fresh: %v %v", err, p.Locked("PL1"))
 	}
-	if err := p.SetLocked("PL1", true); err != nil {
+	p.Set("PL1", true)
+	p.Set("PL2", true)
+	p.Set("PL2", false)
+	if !p.Locked("PL1") || p.Locked("PL2") {
+		t.Fatal("Set not visible")
+	}
+	if err := p.Save(); err != nil {
 		t.Fatal(err)
 	}
-	_ = p.SetLocked("PL2", true)
-	_ = p.SetLocked("PL2", false)
 	q, err := LoadShufflePrefs(dir)
 	if err != nil || !q.Locked("PL1") || q.Locked("PL2") || q.Locked("") {
 		t.Errorf("reload: err=%v PL1=%v PL2=%v", err, q.Locked("PL1"), q.Locked("PL2"))

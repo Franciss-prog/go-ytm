@@ -16,6 +16,7 @@ import (
 	"github.com/Franciss-Prog/go-ytm/internal/keys"
 	"github.com/Franciss-Prog/go-ytm/internal/player"
 	"github.com/Franciss-Prog/go-ytm/internal/queue"
+	"github.com/Franciss-Prog/go-ytm/internal/store"
 	"github.com/Franciss-Prog/go-ytm/internal/style"
 	"github.com/Franciss-Prog/go-ytm/internal/theme"
 	"github.com/Franciss-Prog/go-ytm/internal/ytmusic"
@@ -66,6 +67,53 @@ type Options struct {
 	Art art.Fetcher
 	// Spectrum is the visualizer (nil: unavailable).
 	Spectrum Spectrum
+	// Local keeps play and search history on disk (nil: this session only).
+	Local Local
+	// Downloads saves tracks for offline play (nil: Download toasts).
+	Downloads Downloads
+	// Session is the last session to restore (nil: start fresh).
+	Session *store.Session
+	// ShuffleLocks are the per-playlist shuffle locks (nil: none).
+	ShuffleLocks ShuffleLocks
+}
+
+// Local is the on-disk history (*store.DB). Its methods block: the model
+// calls them only from commands.
+type Local interface {
+	LogPlay(ctx context.Context, t ytmusic.Track, listened time.Duration) error
+	RecentPlays(ctx context.Context, limit int) ([]ytmusic.Track, error)
+	LogSearch(ctx context.Context, query, filter string) error
+	RecentSearches(ctx context.Context, limit int) ([]string, error)
+}
+
+// localPlaysMsg delivers the stored play log at start.
+type localPlaysMsg struct{ tracks []ytmusic.Track }
+
+// loadPlays reads the stored play log (nil without a store).
+func (m *Model) loadPlays() tea.Cmd {
+	l, ctx, log := m.o.Local, m.o.Context, m.log
+	if l == nil {
+		return nil
+	}
+	return func() tea.Msg {
+		ts, err := l.RecentPlays(ctx, recentMax)
+		if err != nil {
+			log.Warn("ui: play history unreadable", "err", err)
+			return nil
+		}
+		return localPlaysMsg{ts}
+	}
+}
+
+// localWrite runs a store write in a command; failures only reach the log
+// (history is best effort, as in ytm-player).
+func localWrite(ctx context.Context, log *slog.Logger, what string, f func(context.Context) error) tea.Cmd {
+	return func() tea.Msg {
+		if err := f(ctx); err != nil {
+			log.Warn("ui: "+what+" not saved", "err", err)
+		}
+		return nil
+	}
 }
 
 // PlayerEventMsg carries a player event into Update (sent by the app's
@@ -158,6 +206,7 @@ func New(o Options) *Model {
 		m.bar.st = o.Player.State()
 	}
 	m.syncQueueFlags()
+	m.restoreSession(o.Session)
 	m.restyle()
 	for _, t := range o.Toasts {
 		m.toasts.push(t)
@@ -192,7 +241,7 @@ func (m *Model) Current() PageID { return m.current }
 // contrast is then checked against what is really behind the text. Only
 // at start, while no root background has been set by us.
 func (m *Model) Init() tea.Cmd {
-	cmds := []tea.Cmd{m.toasts.armAll(), m.activate(), m.queryKitty()}
+	cmds := []tea.Cmd{m.toasts.armAll(), m.activate(), m.queryKitty(), m.loadPlays()}
 	if m.sidebar {
 		cmds = append(cmds, m.side.ensure(m.ctx()))
 	}
@@ -209,6 +258,7 @@ func (m *Model) ctx() *Context {
 	return &Context{
 		Keymap: m.o.Keymap, KeymapPath: m.o.KeymapPath, Height: m.layout().mainH,
 		API: m.o.API, SignedIn: m.o.SignedIn, Root: m.o.Context, Columns: columns(m.o.Config), Styles: m.st, Log: m.log,
+		Local: m.o.Local, ShuffleLocks: m.o.ShuffleLocks,
 	}
 }
 
@@ -291,6 +341,18 @@ func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case discoveryMsg:
 		cmd := m.discovered(msg)
 		return m, cmd
+	case shuffleLockMsg:
+		cmd := m.toggleShuffleLock(msg.id)
+		return m, cmd
+	case DownloadMsg:
+		cmd := m.download(msg)
+		return m, cmd
+	case downloadedMsg:
+		cmd := m.downloaded(msg)
+		return m, cmd
+	case localPlaysMsg:
+		m.plays.seed(msg.tracks)
+		return m, nil
 	case historyReportedMsg:
 		m.historyReported(msg)
 		return m, nil
@@ -454,6 +516,9 @@ func (m *Model) playback(a keys.Action) tea.Cmd {
 	switch a.Name {
 	case "play_pause":
 		if m.bar.st.Item.IsZero() {
+			if cmd, ok := m.startRestored(); ok {
+				return cmd
+			}
 			return m.toasts.push(Toast{Severity: SevInfo, Text: "Nothing to play yet"})
 		}
 		err = p.TogglePause()

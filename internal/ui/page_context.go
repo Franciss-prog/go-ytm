@@ -57,13 +57,19 @@ type contextPage struct {
 	as      PageID
 	asTitle string
 	radio   bool
+
+	// Shuffle lock line (playlists, with a lock store): its row at the
+	// last View (-1: not drawn) and the lock state.
+	lockable bool
+	locked   bool
+	lockY    int
 }
 
 func newContextPage(kind contextKind, id, name string, cols components.Columns) *contextPage {
 	empty := map[contextKind]string{
 		kindPlaylist: "This playlist is empty.", kindAlbum: "This album has no tracks.", kindArtist: "No songs.",
 	}[kind]
-	p := &contextPage{kind: kind, id: id, name: name, table: components.NewTrackTable(cols, empty), queue: id, relY: -1}
+	p := &contextPage{kind: kind, id: id, name: name, table: components.NewTrackTable(cols, empty), queue: id, relY: -1, lockY: -1}
 	if kind == kindArtist {
 		p.releases = components.NewList("No releases.")
 	}
@@ -133,6 +139,8 @@ func (p *contextPage) Key(msg tea.KeyPressMsg, _ *Context) (Page, tea.Cmd) {
 
 // Activate implements activator.
 func (p *contextPage) Activate(ctx *Context) tea.Cmd {
+	p.lockable = p.kind == kindPlaylist && ctx.ShuffleLocks != nil
+	p.locked = p.lockable && ctx.ShuffleLocks.Locked(lockKey(p.queue))
 	if p.state != stateIdle {
 		return nil
 	}
@@ -316,6 +324,15 @@ func (p *contextPage) View(width, height int, st *style.UI) string {
 	if p.radio {
 		lines = append(lines, radioButton(st))
 	}
+	p.lockY = -1
+	if p.lockable {
+		p.lockY = len(lines)
+		if p.locked {
+			lines = append(lines, " "+st.Accent.Render("⤮ Shuffle lock: ON"))
+		} else {
+			lines = append(lines, " "+st.Muted.Render("⤮ Shuffle lock: off"))
+		}
+	}
 	for _, h := range p.head {
 		if h != "" {
 			lines = append(lines, " "+st.Muted.Render(h))
@@ -371,6 +388,10 @@ func (p *contextPage) Click(ev mouseEv, ctx *Context) (Page, tea.Cmd) {
 	if ev.y < p.tableY {
 		if p.radio && ev.y == 0 && !ev.right {
 			return p, radioFromRows(p.table, "Radio: "+p.Title())
+		}
+		if p.lockY >= 0 && ev.y == p.lockY && !ev.right {
+			p.locked = !p.locked
+			return p, msgCmd(shuffleLockMsg{p.queue})
 		}
 		return p, nil
 	}

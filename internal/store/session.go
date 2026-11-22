@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/Franciss-Prog/go-ytm/internal/ytmusic"
@@ -83,8 +84,13 @@ const maxShufflePrefs = 1000
 // plays shuffled. The file maps playlist ID → true; order is not kept, so
 // the cap drops arbitrary entries (ytm-player drops the least recently
 // used). shortcut: no LRU order; upgrade if anyone reaches 1000 locks.
+//
+// Locked and Set only touch memory (safe on the UI goroutine); Save
+// writes the file and may run concurrently with them.
 type ShufflePrefs struct {
 	dir  string
+	mu   sync.Mutex // guards lock
+	save sync.Mutex // orders Saves: a later Save writes a later state
 	lock map[string]bool
 }
 
@@ -106,14 +112,19 @@ func LoadShufflePrefs(dir string) (*ShufflePrefs, error) {
 }
 
 // Locked reports whether playlist id has shuffle lock on.
-func (p *ShufflePrefs) Locked(id string) bool { return id != "" && p.lock[id] }
+func (p *ShufflePrefs) Locked(id string) bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return id != "" && p.lock[id]
+}
 
-// SetLocked sets the lock for id and writes the file. Writes are tiny and
-// rare (a click), so callers may run this from a tea.Cmd.
-func (p *ShufflePrefs) SetLocked(id string, on bool) error {
+// Set sets the lock for id in memory; Save persists it.
+func (p *ShufflePrefs) Set(id string, on bool) {
 	if id == "" {
-		return nil
+		return
 	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	if on {
 		p.lock[id] = true
 	} else {
@@ -127,7 +138,15 @@ func (p *ShufflePrefs) SetLocked(id string, on bool) error {
 			delete(p.lock, k)
 		}
 	}
+}
+
+// Save writes the current locks to dir/shuffle_prefs.json.
+func (p *ShufflePrefs) Save() error {
+	p.save.Lock()
+	defer p.save.Unlock()
+	p.mu.Lock()
 	b, err := json.Marshal(p.lock)
+	p.mu.Unlock()
 	if err != nil {
 		return fmt.Errorf("shuffle prefs: %w", err)
 	}

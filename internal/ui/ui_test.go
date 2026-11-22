@@ -93,6 +93,10 @@ var scenarios = func() []scenario {
 			drain(m, m.open(newPlaylistPage("PLnight", "Late night drives", columns(m.o.Config))))
 			press(m, ch('j'))
 		}},
+		scenario{"context-playlist-locked", func(m *Model) {
+			m.o.ShuffleLocks = &fakeLocks{on: map[string]bool{"PLnight": true}}
+			drain(m, m.open(newPlaylistPage("PLnight", "Late night drives", columns(m.o.Config))))
+		}},
 		scenario{"context-album", func(m *Model) {
 			drain(m, m.open(newAlbumPage("MPREb_ram", "Random Access Memories", columns(m.o.Config))))
 		}},
