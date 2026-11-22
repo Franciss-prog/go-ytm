@@ -24,10 +24,12 @@ func msgCmd(msg tea.Msg) tea.Cmd { return func() tea.Msg { return msg } }
 // autoplay marks; J/K reorder (with counts), delete / d d remove, enter
 // plays (spec 05, "Queue").
 type queuePage struct {
-	table *components.TrackTable
-	q     *queue.Queue
-	rev   uint64
-	total time.Duration
+	table  *components.TrackTable
+	q      *queue.Queue
+	rev    uint64
+	total  time.Duration
+	source string // "Generated from" label (radio / discovery), set by the root
+	head   bool   // the label line was drawn by the last View
 }
 
 func newQueuePage(cols components.Columns, q *queue.Queue) *queuePage {
@@ -145,12 +147,21 @@ func (p *queuePage) remove(ctx *Context) tea.Cmd {
 
 func (p *queuePage) View(width, height int, st *style.UI) string {
 	p.sync(false)
-	return p.table.View(width, height, st)
+	p.head = p.source != "" && height >= 3
+	if !p.head {
+		return p.table.View(width, height, st)
+	}
+	head := components.Fit(" "+st.Muted.Render("Generated from: ")+st.Text.Render(p.source), width)
+	return head + "\n" + p.table.View(width, height-1, st)
 }
 
 // Click implements mouser (the table fills the panel).
 func (p *queuePage) Click(ev mouseEv, ctx *Context) (Page, tea.Cmd) {
-	name := tableClick(p.table.Click(ev.x, ev.y, ev.right, ev.ctrl, ev.shift))
+	y := ev.y
+	if p.head {
+		y-- // the "Generated from" line
+	}
+	name := tableClick(p.table.Click(ev.x, y, ev.right, ev.ctrl, ev.shift))
 	if name == "" {
 		return p, nil
 	}

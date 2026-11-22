@@ -118,6 +118,10 @@ func trackActionsPopup(t *components.TrackTable, src trackSource, inQueue bool) 
 			})
 		}
 	}
+	add("Start radio", func(*Context) (popup, tea.Cmd) {
+		t.ClearMarks()
+		return nil, msgCmd(RadioMsg{Seeds: ts})
+	})
 	add("Add to playlist", pageAction("add_to_playlist"))
 	if src.playlist != "" && !inQueue {
 		add("Remove from playlist", pageAction("delete_item"))
@@ -385,7 +389,9 @@ func samePlaylist(a, b string) bool {
 
 // playlistActionsPopup lists what can be done with a library playlist.
 func playlistActionsPopup(pl ytmusic.PlaylistRef) popup {
-	items := []menuItem{{label: "Open", run: pageAction("select")}}
+	items := []menuItem{{label: "Open", run: pageAction("select")}, {label: "Start radio", run: func(*Context) (popup, tea.Cmd) {
+		return nil, msgCmd(RadioMsg{Playlist: pl.ID, Label: "Radio from " + pl.Title})
+	}}}
 	if pl.Owned {
 		items = append(items, menuItem{label: "Delete playlist", run: pageAction("delete_item")})
 	}

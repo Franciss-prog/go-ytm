@@ -90,6 +90,8 @@ type playback struct {
 	hoverSeen string // video ID under the cursor after the last update
 	hoverSeq  uint64 // bumps when hoverSeen changes; older timers are dropped
 	hover     string // video ID that rested long enough ("" none)
+
+	radio radioState // radio, autoplay, discovery, history reporting (radio.go)
 }
 
 func (m *Model) quality() stream.Quality {
@@ -166,7 +168,8 @@ func (m *Model) resolved(msg resolvedMsg) tea.Cmd {
 		m.log.Warn("ui: load failed", "err", err)
 		return m.toasts.push(Toast{Severity: SevError, Text: "Playback command failed; see the log"})
 	}
-	return m.prefetchNext()
+	m.trackLoaded(msg.track.VideoID, msg.startAt.Seconds())
+	return tea.Batch(m.prefetchNext(), m.refill(false))
 }
 
 // streamErrText is the short toast for a failed resolve.
@@ -337,7 +340,8 @@ func (m *Model) trackStarted(it player.Item) tea.Cmd {
 	m.pb.retried = ""
 	m.bar.now = nowPlaying(t)
 	m.queueChanged()
-	return m.prefetchNext()
+	m.trackLoaded(t.VideoID, 0)
+	return tea.Batch(m.prefetchNext(), m.refill(false))
 }
 
 // trackEnded advances on a natural end (unless mpv already moved into a
@@ -367,7 +371,7 @@ func (m *Model) trackEnded(e player.TrackEnded) tea.Cmd {
 	}
 	if _, ok := m.pb.q.Next(); !ok {
 		m.queueChanged()
-		return nil
+		return m.refill(true) // autoplay: continue with related tracks
 	}
 	return m.startCurrent(0)
 }
@@ -378,6 +382,9 @@ func (m *Model) queueAction(name string) tea.Cmd {
 	switch name {
 	case "next_track":
 		if _, ok := q.Next(); !ok {
+			if cmd := m.refill(true); cmd != nil {
+				return cmd
+			}
 			return m.toasts.push(Toast{Severity: SevInfo, Text: "End of queue"})
 		}
 		return m.startCurrent(0)
@@ -420,6 +427,7 @@ func (m *Model) play(msg PlayMsg) tea.Cmd {
 	}
 	q := m.pb.q
 	shuffle := q.Shuffle() || msg.Shuffle
+	m.pb.radio.source = ""
 	q.Clear()
 	q.SetShuffle(false)
 	q.AddMany(msg.Tracks)
@@ -475,6 +483,12 @@ func plural(n int, w string) string {
 // queueChanged tells the Queue page (and other track tables) to refresh
 // their playing marker.
 func (m *Model) queueChanged() {
+	if qp, ok := m.pages[PageQueue].(*queuePage); ok {
+		qp.source = ""
+		if m.o.Config.UI.ShowQueueSource {
+			qp.source = m.pb.radio.source
+		}
+	}
 	for _, p := range m.pages {
 		if l, ok := p.(queueListener); ok {
 			l.QueueChanged(m.pb.q, m.bar.now.VideoID)

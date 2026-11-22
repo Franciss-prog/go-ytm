@@ -10,6 +10,7 @@
 │     5  YOASOBI          │  Add to queue            │                    4:21 │
 │     6  Daft Punk        │  Go to artist            │                    7:09 │
 │     7  Daft Punk        │  Go to album             │                    5:20 │
+│                         │  Start radio             │                         │
 │                         │  Add to playlist         │                         │
 │                         │  Remove from playlist    │                         │
 │                         │  Like                    │                         │
@@ -17,7 +18,6 @@
 │                         │                          │                         │
 │                         │ enter select · esc close │                         │
 │                         ╰──────────────────────────╯                         │
-│                                                                              │
 │                                                                              │
 ╰ Get Lucky · Daft Punk · Random Access Memories ─────────────────────│ 1/7 │──╯
  Nothing playing                                                                
