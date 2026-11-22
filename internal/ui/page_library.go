@@ -31,6 +31,7 @@ const (
 // The Library browses like a file manager (spec 09): one column per level.
 //
 //	root ─┬ Liked Music → tracks
+//	      ├ Recently Played → tracks (account history)
 //	      ├ Artists → artist → releases → tracks
 //	      ├ Albums → album → tracks
 //	      └ Playlists → playlist → tracks
@@ -56,6 +57,7 @@ const (
 	keyPlaylists = "playlists"
 	keyAlbums    = "albums"
 	keyArtists   = "artists"
+	keyHistory   = "history"
 	prefPlaylist = "pl:"
 	prefAlbum    = "al:"
 	prefArtist   = "ar:"
@@ -65,6 +67,7 @@ const (
 // libraryRoot is the first column.
 var libraryRoot = []components.Item{
 	{Left: "Liked Music", Key: prefPlaylist + likedID, Drill: true},
+	{Left: "Recently Played", Key: keyHistory, Drill: true},
 	{Left: "Artists", Key: keyArtists, Drill: true},
 	{Left: "Albums", Key: keyAlbums, Drill: true},
 	{Left: "Playlists", Key: keyPlaylists, Drill: true},
@@ -242,6 +245,8 @@ func (p *libraryPage) load(ctx *Context, c *millerCol) tea.Cmd {
 			return api.LibraryAlbums(cx, 0)
 		case key == keyArtists:
 			return api.LibraryArtists(cx, 0)
+		case key == keyHistory:
+			return api.History(cx)
 		case strings.HasPrefix(key, prefArtist):
 			return api.Artist(cx, id)
 		case strings.HasPrefix(key, prefAlbum):
@@ -309,6 +314,13 @@ func (p *libraryPage) loaded(l Loaded, ctx *Context) tea.Cmd {
 			items = append(items, components.Item{Left: r.Name, Right: joinNonEmpty(" · ", r.Kind, r.Year), Key: prefAlbum + r.ID, Drill: true})
 		}
 		c.list.SetEmpty("No releases.")
+	case []ytmusic.HistoryItem:
+		ts := make([]ytmusic.Track, len(v))
+		for i, it := range v {
+			ts[i] = it.Track
+		}
+		c.table.SetRows(ts)
+		return nil
 	case ytmusic.Album:
 		c.table.SetRows(v.Tracks)
 		c.src = trackSource{queue: cmpOr(v.PlaylistID, v.ID)}

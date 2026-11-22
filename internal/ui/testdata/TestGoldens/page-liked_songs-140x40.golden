@@ -1,11 +1,11 @@
- ytm  queue  library  track  search                                                                                     ⤮  ⟳  vol ▪▪▪▪▪ 80% 
+ ytm  queue  library  track  search  browse                                                                             ⤮  ⟳  vol ▪▪▪▪▪ 80% 
 ────────────╯       ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ╭│ liked songs │───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ▶ Start Radio                                                                                                                            │
+│ Text 1 · 43 minutes · private                                                                                                            │
 │                                                                                                                                          │
-│ Liked Songs                                                                                                                              │
 │                                                                                                                                          │
-│ This page is not built yet.                                                                                                              │
-│                                                                                                                                          │
+│ This playlist is empty.                                                                                                                  │
 │                                                                                                                                          │
 │                                                                                                                                          │
 │                                                                                                                                          │
@@ -37,4 +37,4 @@
 │                                                                                                                                          │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
  Nothing playing                                                                                                                            
- space play · n next · p prev · > seek   ? help                                                                                             
+ enter play · Z queue · A playlist · a actions · v mark · / filter · backspace back   ? help                                                

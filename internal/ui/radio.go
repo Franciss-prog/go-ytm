@@ -9,6 +9,8 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/Franciss-Prog/go-ytm/internal/queue"
+	"github.com/Franciss-Prog/go-ytm/internal/style"
+	"github.com/Franciss-Prog/go-ytm/internal/ui/components"
 	"github.com/Franciss-Prog/go-ytm/internal/ytmusic"
 )
 
@@ -31,6 +33,7 @@ const (
 type RadioMsg struct {
 	Seeds    []ytmusic.Track
 	Playlist string
+	Mix      string // a ready-made radio playlist ("RD…") from the home feed
 	Label    string
 }
 
@@ -93,7 +96,7 @@ func (m *Model) startRadio(msg RadioMsg) tea.Cmd {
 		return m.toasts.push(Toast{Severity: SevError, Text: "YouTube Music is unavailable."})
 	}
 	seeds := msg.Seeds
-	if msg.Playlist == "" && len(ids(seeds)) == 0 {
+	if msg.Playlist == "" && msg.Mix == "" && len(ids(seeds)) == 0 {
 		return nil
 	}
 	label := msg.Label
@@ -101,15 +104,20 @@ func (m *Model) startRadio(msg RadioMsg) tea.Cmd {
 		label = "Radio from " + seeds[0].Title
 	}
 	m.pb.radio.seq++
-	seq, ctx, pl := m.pb.radio.seq, m.o.Context, strings.TrimPrefix(msg.Playlist, "VL")
+	seq, ctx, pl, mix := m.pb.radio.seq, m.o.Context, strings.TrimPrefix(msg.Playlist, "VL"), msg.Mix
 	fetch := func() tea.Msg {
 		var ts []ytmusic.Track
 		var err error
-		if pl != "" {
+		switch {
+		case mix != "":
+			var w ytmusic.WatchPlaylist
+			w, err = api.WatchPlaylist(ctx, ytmusic.WatchRequest{PlaylistID: mix, Limit: radioLimit})
+			ts = w.Tracks
+		case pl != "":
 			var w ytmusic.WatchPlaylist
 			w, err = api.WatchPlaylist(ctx, ytmusic.WatchRequest{PlaylistID: "RDAMPL" + pl, Radio: true, Limit: radioLimit})
 			ts = w.Tracks
-		} else {
+		default:
 			ts, err = ytmusic.Radio(ctx, api, ids(seeds), radioLimit)
 		}
 		return radioLoadedMsg{seq: seq, seeds: seeds, label: label, tracks: ts, err: err}
@@ -324,20 +332,27 @@ func (m *Model) trackLoaded(id string, startAt float64) {
 	m.pb.radio.reportID, m.pb.radio.startPos, m.pb.radio.reported = id, startAt, false
 }
 
-// maybeReport sends the play to the account history once the same track
-// has played past history_min_listen_seconds from where it started
-// (_report_ytm_play). mpv keeps sending positions without terminal focus.
+// maybeReport records the play once the same track has played past
+// history_min_listen_seconds from where it started: in the local play log
+// always, and in the account history when sync_history_to_ytmusic is on
+// and signed in (_report_local_play, _report_ytm_play). mpv keeps sending
+// positions without terminal focus.
 func (m *Model) maybeReport() tea.Cmd {
 	r := &m.pb.radio
 	st := m.bar.st
-	if r.reported || r.reportID == "" || st.Item.ID != r.reportID || !m.o.Config.Playback.SyncHistoryToYTMusic ||
-		!m.o.SignedIn || m.o.API == nil {
+	if r.reported || r.reportID == "" || st.Item.ID != r.reportID {
 		return nil
 	}
 	if st.Position.Seconds()-r.startPos <= float64(m.o.Config.Playback.HistoryMinListenSeconds) {
 		return nil
 	}
 	r.reported = true
+	if t, ok := m.pb.q.Current(); ok && t.VideoID == r.reportID {
+		m.plays.add(t)
+	}
+	if !m.o.Config.Playback.SyncHistoryToYTMusic || !m.o.SignedIn || m.o.API == nil {
+		return nil
+	}
 	api, ctx, id := m.o.API, m.o.Context, r.reportID
 	return func() tea.Msg { return historyReportedMsg{id: id, err: api.AddHistoryItem(ctx, id)} }
 }
@@ -349,4 +364,20 @@ func (m *Model) historyReported(msg historyReportedMsg) {
 	if msg.err != nil && !errors.Is(msg.err, context.Canceled) {
 		m.log.Info("ui: history report failed", "id", msg.id, "err", msg.err)
 	}
+}
+
+// radioSeedsFromRows is how many random rows seed a page's Start Radio.
+const radioSeedsFromRows = 5
+
+// radioButton is the clickable "▶ Start Radio" line of the Liked Songs and
+// Recently Played pages.
+func radioButton(st *style.UI) string { return " " + st.Accent.Render("▶ Start Radio") }
+
+// radioFromRows starts a radio seeded by random rows of t.
+func radioFromRows(t *components.TrackTable, label string) tea.Cmd {
+	seeds := sample(t.Rows(), radioSeedsFromRows)
+	if len(seeds) == 0 {
+		return nil
+	}
+	return msgCmd(RadioMsg{Seeds: seeds, Label: label})
 }

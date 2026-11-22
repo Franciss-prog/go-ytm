@@ -1,8 +1,9 @@
- ytm  queue  library  track  search                         ⤮  ⟳  vol ▪▪▪▪▪ 80% 
+ ytm  queue  library  track  search  browse                 ⤮  ⟳  vol ▪▪▪▪▪ 80% 
 ────────────╯       ╰───────────────────────────────────────────────────────────
 ╭│ library │───────────────────────────────────────────────────────────────────╮
 │ Liked Music            ▸ │                                                   │
-│ Artists                ▸ │ No tracks here.                                   │
+│ Recently Played        ▸ │ No tracks here.                                   │
+│ Artists                ▸ │                                                   │
 │ Albums                 ▸ │                                                   │
 │ Playlists              ▸ │                                                   │
 │                          │                                                   │
@@ -18,7 +19,6 @@
 │                          │                                                   │
 │                          │                                                   │
 │                          │                                                   │
-│                          │                                                   │
-╰ Artists ────────────────────────────────────────────────────────────│ 2/4 │──╯
+╰ Recently Played ────────────────────────────────────────────────────│ 2/5 │──╯
  Nothing playing                                                                
  enter open · h/right level · P play all · / filter   ? help                    

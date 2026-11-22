@@ -121,15 +121,31 @@ var scenarios = func() []scenario {
 			drain(m, m.activate())
 			drain(m, press(m, ch('j'), tea.Key{Code: tea.KeyDelete}))
 		}},
+		scenario{"browse-charts", func(m *Model) {
+			drain(m, m.navigate(PageBrowse))
+			drain(m, press(m, tea.Key{Code: tea.KeyTab}))
+		}},
+		scenario{"popup-country-picker", func(m *Model) {
+			drain(m, m.navigate(PageBrowse))
+			drain(m, press(m, tea.Key{Code: tea.KeyTab}))
+			drain(m, press(m, ch('c')))
+			press(m, ch('u'), ch('n'))
+		}},
+		scenario{"recent-local", func(m *Model) {
+			ts := scenarioTracks()
+			m.plays.add(ts[3])
+			m.plays.add(ts[1]) // also in the account history: keeps its local position
+			drain(m, m.navigate(PageRecent))
+		}},
 		scenario{"library-signed-out", func(m *Model) {
 			m.o.API.(*fakeAPI).errs["LibraryAlbums"] = ytmusic.ErrUnauthenticated
-			drain(m, press(m, ch('j'), ch('j'), tea.Key{Code: tea.KeyRight}))
+			drain(m, press(m, ch('j'), ch('j'), ch('j'), tea.Key{Code: tea.KeyRight}))
 		}},
 		scenario{"library-columns", func(m *Model) {
 			// root → Playlists → Late night drives → its tracks, cursor on row 2.
 			lib := m.pages[PageLibrary].(*libraryPage)
 			preview := func() { drain(m, m.deliver(pageMsg{to: lib, msg: libraryPreviewMsg{lib.seq}})) }
-			drain(m, press(m, ch('j'), ch('j'), ch('j')))
+			drain(m, press(m, ch('j'), ch('j'), ch('j'), ch('j')))
 			preview()
 			drain(m, press(m, tea.Key{Code: tea.KeyRight}, ch('j')))
 			preview()

@@ -105,9 +105,10 @@ type Model struct {
 	toasts  toasts
 	quiting bool
 
-	pb   playback
-	art  artState
-	spec specState
+	pb    playback
+	plays localPlays // in-app play log (Recently Played → Local)
+	art   artState
+	spec  specState
 
 	scrubSeq uint64 // bumps per wheel tick on the progress bar
 }
@@ -143,6 +144,9 @@ func New(o Options) *Model {
 	m.pages[PageLibrary] = newLibraryPage()
 	m.pages[PageSearch] = newSearchPage(columns(o.Config))
 	m.pages[PageTrack] = newTrackPage(&m.bar, &m.art, &m.spec, o.Queue)
+	m.pages[PageLiked] = newLikedPage(columns(o.Config))
+	m.pages[PageBrowse] = newBrowsePage(o.Config.UI.Region, o.Config.UI.HomeShelves)
+	m.pages[PageRecent] = newRecentPage(columns(o.Config), &m.plays)
 	if _, ok := m.pages[m.current]; !ok {
 		m.current = PageLibrary
 	}
@@ -290,6 +294,9 @@ func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case historyReportedMsg:
 		m.historyReported(msg)
 		return m, nil
+	case regionPickedMsg:
+		cmd := m.regionPicked(msg.code)
+		return m, cmd
 	case EnqueueMsg:
 		cmd := m.enqueue(msg)
 		return m, cmd

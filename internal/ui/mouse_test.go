@@ -82,11 +82,11 @@ func TestRightClickOpensActionsAndPopupBlocksMouse(t *testing.T) {
 func TestLibraryColumnClicks(t *testing.T) {
 	h := newPB(t)
 	lib := h.m.pages[PageLibrary].(*libraryPage)
-	h.left(mainX0+2, mainY0+3) // root: Playlists
-	if c := lib.cols[0].list.Cursor(); c != 3 || lib.focus != 0 {
+	h.left(mainX0+2, mainY0+4) // root: Playlists
+	if c := lib.cols[0].list.Cursor(); c != 4 || lib.focus != 0 {
 		t.Fatalf("cursor %d focus %d", c, lib.focus)
 	}
-	h.left(mainX0+2, mainY0+3) // again: open it
+	h.left(mainX0+2, mainY0+4) // again: open it
 	if lib.focus != 1 || lib.col().key != "playlists" {
 		t.Fatalf("second click did not open: focus %d", lib.focus)
 	}

@@ -62,6 +62,23 @@ func newFakeAPI() *fakeAPI {
 			{Type: ytmusic.TypePlaylist, Playlist: &ytmusic.PlaylistRef{Title: "This Is Daft Punk", ID: "PLthis", Author: "YouTube Music"}},
 		},
 		suggest: map[string][]string{"daft": {"daft punk", "daft punk get lucky"}},
+		home: []ytmusic.HomeShelf{
+			{Title: "Listen again", Items: []ytmusic.SearchResult{
+				{Type: ytmusic.TypeSong, Track: &ts[0]},
+				{Type: ytmusic.TypeAlbum, Album: &ytmusic.AlbumRef{Name: "Discovery", ID: "MPREb_disc", Kind: "Album", Year: "2001"}},
+			}},
+			{Title: "Mixed for you", Items: []ytmusic.SearchResult{
+				{Type: ytmusic.TypePlaylist, Playlist: &ytmusic.PlaylistRef{Title: "My Supermix", ID: "RDTMAK5uy_mix", Author: "YouTube Music"}},
+				{Type: ytmusic.TypePlaylist, Playlist: &ytmusic.PlaylistRef{Title: "Chill", ID: "PLchill", Author: "YouTube Music", Count: "50 songs"}},
+			}},
+		},
+		charts: map[string]ytmusic.Charts{"ZZ": {
+			Country:   "Global",
+			Playlists: []ytmusic.PlaylistRef{{Title: "Top 100 Songs Global", ID: "PLtop"}, {Title: "Trending 20 Global", ID: "OLAK5uy_trend"}},
+			Artists:   []ytmusic.ArtistRef{{Name: "Daft Punk", ID: "UCdp", Audience: "10M subscribers"}},
+		}},
+		explore: ytmusic.Explore{NewReleases: []ytmusic.AlbumRef{{Name: "New Album", ID: "MPREb_new", Kind: "Album", Artists: []ytmusic.Artist{{Name: "Someone"}}}}},
+		history: []ytmusic.HistoryItem{{Track: ts[1], Played: "Today"}, {Track: ts[2], Played: "Yesterday"}},
 	}
 }
 

@@ -51,13 +51,19 @@ type contextPage struct {
 
 	// Rows of the table and the releases list at the last View (mouse).
 	tableY, relY int
+
+	// Liked Songs (M6) is a playlist page under its own page id with a
+	// "▶ Start Radio" line on top.
+	as      PageID
+	asTitle string
+	radio   bool
 }
 
 func newContextPage(kind contextKind, id, name string, cols components.Columns) *contextPage {
 	empty := map[contextKind]string{
 		kindPlaylist: "This playlist is empty.", kindAlbum: "This album has no tracks.", kindArtist: "No songs.",
 	}[kind]
-	p := &contextPage{kind: kind, id: id, name: name, table: components.NewTrackTable(cols, empty), queue: id}
+	p := &contextPage{kind: kind, id: id, name: name, table: components.NewTrackTable(cols, empty), queue: id, relY: -1}
 	if kind == kindArtist {
 		p.releases = components.NewList("No releases.")
 	}
@@ -76,10 +82,28 @@ func newArtistPage(id, name string, cols components.Columns) *contextPage {
 	return newContextPage(kindArtist, id, name, cols)
 }
 
-func (p *contextPage) ID() PageID { return PageContext }
+// newLikedPage is the Liked Songs page: the LM playlist plus Start Radio
+// (five random liked songs as seeds, as ytm-player's liked_songs.py).
+func newLikedPage(cols components.Columns) *contextPage {
+	p := newPlaylistPage("LM", "Liked Music", cols)
+	p.as, p.asTitle, p.radio = PageLiked, "Liked Songs", true
+	return p
+}
+
+func (p *contextPage) ID() PageID {
+	if p.as != "" {
+		return p.as
+	}
+	return PageContext
+}
 
 // Title implements titler.
-func (p *contextPage) Title() string { return kindNames[p.kind] }
+func (p *contextPage) Title() string {
+	if p.asTitle != "" {
+		return p.asTitle
+	}
+	return kindNames[p.kind]
+}
 
 func (p *contextPage) Capturing() bool {
 	if p.focus == 1 {
@@ -289,6 +313,9 @@ func (p *contextPage) source() trackSource {
 
 func (p *contextPage) View(width, height int, st *style.UI) string {
 	var lines []string // the name is in the panel title (spec 09)
+	if p.radio {
+		lines = append(lines, radioButton(st))
+	}
 	for _, h := range p.head {
 		if h != "" {
 			lines = append(lines, " "+st.Muted.Render(h))
@@ -342,6 +369,9 @@ func (p *contextPage) Click(ev mouseEv, ctx *Context) (Page, tea.Cmd) {
 		return p.clickAction(listClick(p.releases.Click(ev.y-p.relY, ev.right)), ctx)
 	}
 	if ev.y < p.tableY {
+		if p.radio && ev.y == 0 && !ev.right {
+			return p, radioFromRows(p.table, "Radio: "+p.Title())
+		}
 		return p, nil
 	}
 	p.focus = 0

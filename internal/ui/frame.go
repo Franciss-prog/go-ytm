@@ -20,14 +20,14 @@ type tabDef struct {
 	page PageID
 }
 
-// tabDefs are the tabs in display order. Browse joins in M6.
-var tabDefs = []tabDef{{"queue", PageQueue}, {"library", PageLibrary}, {"track", PageTrack}, {"search", PageSearch}}
+// tabDefs are the tabs in display order.
+var tabDefs = []tabDef{{"queue", PageQueue}, {"library", PageLibrary}, {"track", PageTrack}, {"search", PageSearch}, {"browse", PageBrowse}}
 
 // tabOf maps a page to the tab it belongs under; "" keeps the current tab
 // (Context pages, Help).
 func tabOf(id PageID) PageID {
 	switch id {
-	case PageQueue, PageLibrary, PageSearch, PageTrack:
+	case PageQueue, PageLibrary, PageSearch, PageTrack, PageBrowse:
 		return id
 	case PageLiked, PageRecent:
 		return PageLibrary
