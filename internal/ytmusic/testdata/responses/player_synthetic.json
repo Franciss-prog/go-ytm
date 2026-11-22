@@ -1,0 +1,11 @@
+{
+ "_comment": "SYNTHETIC: player response trimmed to playbackTracking (ytmusicapi get_song); URL host replaced by the test server",
+ "playabilityStatus": {
+  "status": "OK"
+ },
+ "playbackTracking": {
+  "videostatsPlaybackUrl": {
+   "baseUrl": "https://s.youtube.com/api/stats/playback?cl=1&docid=VIDEO&ei=x&len=246"
+  }
+ }
+}

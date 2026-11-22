@@ -26,6 +26,15 @@ type fakeAPI struct {
 	search   []ytmusic.SearchResult
 	suggest  map[string][]string
 	edits    []string
+
+	// M6: radio answers by seed (watch[""] for any seed), home, charts,
+	// explore, history and reported plays.
+	watch    map[string][]ytmusic.Track
+	home     []ytmusic.HomeShelf
+	charts   map[string]ytmusic.Charts
+	explore  ytmusic.Explore
+	history  []ytmusic.HistoryItem
+	reported []string
 }
 
 func newFakeAPI() *fakeAPI {
@@ -227,6 +236,46 @@ func (f *fakeAPI) Rate(_ context.Context, id string, s ytmusic.LikeStatus) error
 		return err
 	}
 	f.edit("rate " + id + " " + s.String())
+	return nil
+}
+
+func (f *fakeAPI) WatchPlaylist(_ context.Context, r ytmusic.WatchRequest) (ytmusic.WatchPlaylist, error) {
+	key := cmpOr(r.VideoID, r.PlaylistID)
+	if err := f.rec("WatchPlaylist", key); err != nil {
+		return ytmusic.WatchPlaylist{}, err
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	ts, ok := f.watch[key]
+	if !ok {
+		ts = f.watch[""]
+	}
+	return ytmusic.WatchPlaylist{Tracks: append([]ytmusic.Track(nil), ts...)}, nil
+}
+
+func (f *fakeAPI) Home(_ context.Context, n int) ([]ytmusic.HomeShelf, error) {
+	return f.home, f.rec("Home", fmt.Sprint(n))
+}
+
+func (f *fakeAPI) Charts(_ context.Context, c string) (ytmusic.Charts, error) {
+	return f.charts[c], f.rec("Charts", c)
+}
+
+func (f *fakeAPI) Explore(context.Context) (ytmusic.Explore, error) {
+	return f.explore, f.rec("Explore", "")
+}
+
+func (f *fakeAPI) History(context.Context) ([]ytmusic.HistoryItem, error) {
+	return f.history, f.rec("History", "")
+}
+
+func (f *fakeAPI) AddHistoryItem(_ context.Context, id string) error {
+	if err := f.rec("AddHistoryItem", id); err != nil {
+		return err
+	}
+	f.mu.Lock()
+	f.reported = append(f.reported, id)
+	f.mu.Unlock()
 	return nil
 }
 

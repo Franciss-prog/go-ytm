@@ -160,3 +160,68 @@ func lastContinuation(resp node) string {
 	shelf := resp.get("contents", "twoColumnBrowseResultsRenderer", "secondaryContents", "sectionListRenderer", "contents", 0, "musicPlaylistShelfRenderer", "contents")
 	return shelf.get(-1, "continuationItemRenderer", "continuationEndpoint", "continuationCommand", "token").str()
 }
+
+// TestRecordM6 captures the M6 read-only calls: watch playlists (radio,
+// up next, playlist radio), home, charts, explore, history and player.
+func TestRecordM6(t *testing.T) {
+	dir := os.Getenv("YTM_RECORD_DIR")
+	if dir == "" {
+		t.Skip("set YTM_RECORD_DIR")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
+	creds := recordCreds(t)
+	a := New(Options{Credentials: creds})
+	defer a.Close()
+
+	call := func(name, endpoint string, body map[string]any, q string) node {
+		t.Helper()
+		n, err := a.read(ctx, endpoint, body, q)
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		b, _ := json.MarshalIndent(n.v, "", " ")
+		if err := os.WriteFile(filepath.Join(dir, name+".json"), b, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		t.Logf("saved %s (%d bytes)", name, len(b))
+		return n
+	}
+
+	songs, err := a.Search(ctx, "daft punk get lucky", FilterSongs, 1)
+	if err != nil || len(songs.Items) == 0 {
+		t.Fatalf("song search: %v", err)
+	}
+	vid := songs.Items[0].Track.VideoID
+	radio := call("watch_radio", "next", map[string]any{
+		"enablePersistentPlaylistPanel": true, "isAudioOnly": true, "tunerSettingValue": "AUTOMIX_SETTING_NORMAL",
+		"videoId": vid, "playlistId": "RDAMVM" + vid, "params": "wAEB",
+	}, "")
+	panel := radio.get("contents", "singleColumnMusicWatchNextResultsRenderer", "tabbedRenderer", "watchNextTabbedResultsRenderer", "tabs", 0, "tabRenderer", "content", "musicQueueRenderer", "content", "playlistPanelRenderer")
+	if tok := nextContinuation(panel); tok != "" {
+		call("watch_radio_cont", "next", map[string]any{
+			"enablePersistentPlaylistPanel": true, "isAudioOnly": true, "tunerSettingValue": "AUTOMIX_SETTING_NORMAL",
+			"videoId": vid, "playlistId": "RDAMVM" + vid, "params": "wAEB",
+		}, ctokenQuery(tok)+"Radio")
+	}
+	call("watch_playlist_radio", "next", map[string]any{
+		"enablePersistentPlaylistPanel": true, "isAudioOnly": true, "tunerSettingValue": "AUTOMIX_SETTING_NORMAL",
+		"playlistId": "RDAMPLPL4fGSI1pDJn6O1LS0XSdF3RyO0Rq_LDeI", "params": "wAEB",
+	}, "")
+
+	call("home", "browse", map[string]any{"browseId": "FEmusic_home"}, "")
+	call("charts", "browse", map[string]any{"browseId": "FEmusic_charts", "formData": map[string]any{"selectedValues": []string{"ZZ"}}}, "")
+	call("charts_us", "browse", map[string]any{"browseId": "FEmusic_charts", "formData": map[string]any{"selectedValues": []string{"US"}}}, "")
+	call("explore", "browse", map[string]any{"browseId": "FEmusic_explore"}, "")
+	days := int(time.Now().Unix()/86400) - 1
+	call("player", "player", map[string]any{
+		"playbackContext": map[string]any{"contentPlaybackContext": map[string]any{"signatureTimestamp": days}},
+		"video_id":        vid,
+	}, "")
+	if creds == nil {
+		t.Log("no credentials: history skipped")
+		return
+	}
+	call("history", "browse", map[string]any{"browseId": "FEmusic_history"}, "")
+	call("liked", "browse", map[string]any{"browseId": "VLLM"}, "")
+}

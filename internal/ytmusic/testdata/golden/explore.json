@@ -1,0 +1,328 @@
+{
+  "new_releases": [
+    {
+      "name": "I Found More Than Love When I Found You",
+      "id": "MPREb_Im36EAhT6DC",
+      "playlist_id": "OLAK5uy_nN5qyJeSQyiKI6-5Jxr7TSFhq4nZbBOXA",
+      "kind": "Album",
+      "artists": [
+        {
+          "name": "NONG",
+          "id": "UCIrBILAGvM-hmJHDSTF1y2w"
+        }
+      ],
+      "thumbnail_url": "https://yt3.googleusercontent.com/OfvHdkBWTqopOwgP4l7rKFltne3SYTbC3vgS5ImPT_qEXmjUFC_dKeDNZyj_YU7C-y9L1HhT4FP4oo4=w544-h544-l90-rj"
+    },
+    {
+      "name": "Sway",
+      "id": "MPREb_7P0nEt9sl6I",
+      "playlist_id": "OLAK5uy_necWp_6jqwge64_Sfk-z3_aRTI8t1azyw",
+      "kind": "Single",
+      "artists": [
+        {
+          "name": "Reverie Music",
+          "id": "UCjXzID8N3hS3YNqNVYxyNdQ"
+        }
+      ],
+      "thumbnail_url": "https://yt3.googleusercontent.com/uvlwKfBJhU8TbwRf9CTt2X8rLhm75Vy5DY0qzsW3KxrQULhrgDouMus091jzHihOtlozIh8L9dVSQddH=w544-h544-l90-rj"
+    },
+    {
+      "name": "Dumating",
+      "id": "MPREb_UvBMv2xm7cF",
+      "playlist_id": "OLAK5uy_lLoxcT4q-7ciGaKiUdeAUmjbP192DDEPM",
+      "kind": "Single",
+      "artists": [
+        {
+          "name": "Yeng Constantino",
+          "id": "UCx59vT1pyK0lHegjsAysKNg"
+        }
+      ],
+      "thumbnail_url": "https://yt3.googleusercontent.com/tyMsM3ckH4djTtWDFDAfHAyB6jo_bU73ITLgD2FwbFqItX_HkjEfn6dLBkAKJ1KROMb0DKJfGzu9_b6B=w544-h544-l90-rj"
+    },
+    {
+      "name": "Wala Nang Bagyo",
+      "id": "MPREb_MFMqX7FO6iy",
+      "playlist_id": "OLAK5uy_lxWpyMXkw95DZZgzcnAz82tC0IfSLwc3Q",
+      "kind": "Single",
+      "artists": [
+        {
+          "name": "GelMusic",
+          "id": "UCob607gntxOA7qu0-JpgquQ"
+        }
+      ],
+      "thumbnail_url": "https://yt3.googleusercontent.com/qaJwK-XqdVq209dHFFjwTUGBojXwwUnMtF_14eGwlyMieXPxIU0bQrXhq51IqOfckvzPm50hmp1F3Iz5=w544-h544-l90-rj"
+    },
+    {
+      "name": "KABADO (feat. Sol)",
+      "id": "MPREb_80eph5cCCf7",
+      "playlist_id": "OLAK5uy_kkGZIU3AAy477DISgA33ZdAJgbT2Y-0uA",
+      "kind": "Single",
+      "artists": [
+        {
+          "name": "Dro Perez",
+          "id": "UClQqeXq55z7WA7sJyTHY1GA"
+        }
+      ],
+      "thumbnail_url": "https://yt3.googleusercontent.com/v_Xytwn-0_FW-d-D4FLJ2sgCmsewhP4s44Bx3eLgDLJXAT1BnXytHeUo-oQpo7XERkwe3T31TMPc8w8=w544-h544-l90-rj"
+    },
+    {
+      "name": "Baliw Na Puso",
+      "id": "MPREb_OO6IekLUu1a",
+      "playlist_id": "OLAK5uy_nM-mfa-1BeaxBgTZIZl__oEMiZkjy6z3Q",
+      "kind": "Single",
+      "artists": [
+        {
+          "name": "SUNDAY GRIT PH",
+          "id": "UCXzg18rrlkp4mV9IwsPTdkg"
+        }
+      ],
+      "thumbnail_url": "https://yt3.googleusercontent.com/tLISp8ydMCKOULGuQ9Zn-D79cG-XFwjX3Mk3Ma0Ar0vuDvePdPKHn0TqwEGf7DIi6CMFvJHxCEH8zxo=w544-h544-l90-rj"
+    }
+  ],
+  "trending": {
+    "items": [
+      {
+        "video_id": "ZUW1PjzE5vE",
+        "title": "Na Para Bang",
+        "artists": [
+          {
+            "name": "Mariah Deborah",
+            "id": "UCUBIpcp9MV1pl0zeheoF5Ng"
+          }
+        ],
+        "thumbnail_url": "https://i.ytimg.com/vi/ZUW1PjzE5vE/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg\u0026rs=AMzJL3lWjnZzB_lvyzsRMr9WFy93KxsoZQ",
+        "is_video": true,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "views": "1.5M",
+        "video_type": "MUSIC_VIDEO_TYPE_OMV",
+        "duration_seconds": 0
+      },
+      {
+        "video_id": "gVFLLCAIvms",
+        "title": "Yakap 2018",
+        "artists": [
+          {
+            "name": "Panty Droppaz League",
+            "id": "UC6iBJMWFUqcv-OXRfoWXEhQ"
+          },
+          {
+            "name": "Skusta Clee",
+            "id": "UCzbGQ1-t-pdd9fOlLmcjQ5Q"
+          },
+          {
+            "name": "Flow G",
+            "id": "UCUxcRvhDz_5Lv4PGjieVV3Q"
+          },
+          {
+            "name": "jikamarie",
+            "id": "UCfZs_DjkRNBaNlSyC22piEQ"
+          }
+        ],
+        "album": {
+          "name": "For Keeps",
+          "id": "MPREb_j3Ob5O2WFnb"
+        },
+        "thumbnail_url": "https://yt3.googleusercontent.com/xA1g8wO-l3AVzyqjfMyzDzB8gVS07XIgQHX25IV2m7PaQSt2zAgvYf4JPDyOiHrSeHLR8PPySjBF3a0V=w120-h120-l90-rj",
+        "is_video": false,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "video_type": "MUSIC_VIDEO_TYPE_ATV",
+        "duration_seconds": 0
+      },
+      {
+        "video_id": "0HQEwoytCSY",
+        "title": "SHEAN - Ako ang bagyo (Lyrics)",
+        "artists": [
+          {
+            "name": "Finding Sounds",
+            "id": "UCRrkivmCIQp0LCSwcZglkXw"
+          }
+        ],
+        "thumbnail_url": "https://i.ytimg.com/vi/0HQEwoytCSY/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg\u0026rs=AMzJL3kgajLMaEr1FgzsoglZyem-KW6axw",
+        "is_video": true,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "views": "656K",
+        "video_type": "MUSIC_VIDEO_TYPE_UGC",
+        "duration_seconds": 0
+      },
+      {
+        "video_id": "2JGNvZ-6_dc",
+        "title": "Pakisabi Na Lang - Aiza Seguerra | Soulful Romantic Male Cover by Reverie Music",
+        "artists": [
+          {
+            "name": "Reverie Music",
+            "id": "UCjXzID8N3hS3YNqNVYxyNdQ"
+          }
+        ],
+        "thumbnail_url": "https://i.ytimg.com/vi/2JGNvZ-6_dc/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg\u0026rs=AMzJL3kWA1mR3H2CKZuPtQzRk7JBiHIC2A",
+        "is_video": true,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "views": "382K",
+        "video_type": "MUSIC_VIDEO_TYPE_OMV",
+        "duration_seconds": 0
+      },
+      {
+        "video_id": "8Uggep12CH4",
+        "title": "Wherever You Will Go",
+        "artists": [
+          {
+            "name": "The Calling",
+            "id": "UCv4VDvPfbHv4zABeY6X4Dew"
+          }
+        ],
+        "thumbnail_url": "https://i.ytimg.com/vi/8Uggep12CH4/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg\u0026rs=AMzJL3kd6UI3YRps0-u-6KPaml-M27UUqw",
+        "is_video": true,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "views": "1.9M",
+        "video_type": "MUSIC_VIDEO_TYPE_OMV",
+        "duration_seconds": 0
+      },
+      {
+        "video_id": "c7vtMYbixwk",
+        "title": "Mahal Magmahal",
+        "artists": [
+          {
+            "name": "Esremborak",
+            "id": "UCgBv8sCbOtqH8w_LzxubNWg"
+          }
+        ],
+        "thumbnail_url": "https://i.ytimg.com/vi/c7vtMYbixwk/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg\u0026rs=AMzJL3ngj1WC4--vP8AUqP28gBq1LiZo0A",
+        "is_video": true,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "views": "401K",
+        "video_type": "MUSIC_VIDEO_TYPE_OMV",
+        "duration_seconds": 0
+      }
+    ],
+    "browse_id": "OLAK5uy_nN8piXt8hZIPgs8INtq87-E3qGs9G3x04"
+  },
+  "new_videos": [
+    {
+      "video_id": "Gz0XDFZWi_4",
+      "title": "Bless The Lord (Official Live Video)",
+      "artists": [
+        {
+          "name": "Tye Tribbett",
+          "id": "UCslaQ9wqmmuf3pBkYIoONOA"
+        }
+      ],
+      "thumbnail_url": "https://i.ytimg.com/vi/Gz0XDFZWi_4/hq720.jpg?sqp=-oaymwEKCKAGEMIDIABIWg\u0026rs=AMzJL3n8NQA6HGtLKAD2NieZOidn_WZtiQ",
+      "is_video": true,
+      "like_status": "unknown",
+      "explicit": false,
+      "available": true,
+      "views": "415K",
+      "video_type": "MUSIC_VIDEO_TYPE_OMV",
+      "duration_seconds": 0
+    },
+    {
+      "video_id": "4nKg4uV8H38",
+      "title": "Chiltern Firehouse .",
+      "artists": [
+        {
+          "name": "fakemink",
+          "id": "UCh3InrfxPGYYE5zPwclqpfA"
+        },
+        {
+          "name": "Skepta",
+          "id": "UCc4WH_3xPXq64TXnEmgePgQ"
+        }
+      ],
+      "thumbnail_url": "https://i.ytimg.com/vi/4nKg4uV8H38/hq720.jpg?sqp=-oaymwEKCKAGEMIDIABIWg\u0026rs=AMzJL3lFn6yn1dAVY2IrKvDRCZJgFnf3Tg",
+      "is_video": true,
+      "like_status": "unknown",
+      "explicit": false,
+      "available": true,
+      "views": "689K",
+      "video_type": "MUSIC_VIDEO_TYPE_OMV",
+      "duration_seconds": 0
+    },
+    {
+      "video_id": "oYhnW_RtspI",
+      "title": "Suave",
+      "artists": [
+        {
+          "name": "Kany García",
+          "id": "UCw3HhreALeqcDfqriN1u1vw"
+        },
+        {
+          "name": "Rauw Alejandro",
+          "id": "UCw_m17sBd4GHxuK83-AZtuA"
+        }
+      ],
+      "thumbnail_url": "https://i.ytimg.com/vi/oYhnW_RtspI/hq720.jpg?sqp=-oaymwEKCKAGEMIDIABIWg\u0026rs=AMzJL3kl7S8Y_2B172BHsNVKUhvKkeTVOA",
+      "is_video": true,
+      "like_status": "unknown",
+      "explicit": false,
+      "available": true,
+      "views": "1.1M",
+      "video_type": "MUSIC_VIDEO_TYPE_OMV",
+      "duration_seconds": 0
+    },
+    {
+      "video_id": "pkzcabt_7rI",
+      "title": "Can't Give You What You Need",
+      "artists": [
+        {
+          "name": "Naomi Sharon",
+          "id": "UCeqbUnESukqJ2YI3My1mYhw"
+        }
+      ],
+      "thumbnail_url": "https://i.ytimg.com/vi/pkzcabt_7rI/hq720.jpg?sqp=-oaymwEKCKAGEMIDIABIWg\u0026rs=AMzJL3lkBg45CSr_ezeUuHZ0WC7ZPTgD7g",
+      "is_video": true,
+      "like_status": "unknown",
+      "explicit": false,
+      "available": true,
+      "views": "38K",
+      "video_type": "MUSIC_VIDEO_TYPE_OMV",
+      "duration_seconds": 0
+    },
+    {
+      "video_id": "Uoa62do7hFc",
+      "title": "Migajas",
+      "artists": [
+        {
+          "name": "Yami Safdie",
+          "id": "UC1yC7JwJBrlqZLWcme3fZ4Q"
+        }
+      ],
+      "thumbnail_url": "https://i.ytimg.com/vi/Uoa62do7hFc/hq720.jpg?sqp=-oaymwEKCKAGEMIDIABIWg\u0026rs=AMzJL3kZgYRygXx6ol8_eDbkEcH4uqvEOg",
+      "is_video": true,
+      "like_status": "unknown",
+      "explicit": false,
+      "available": true,
+      "views": "266K",
+      "video_type": "MUSIC_VIDEO_TYPE_OMV",
+      "duration_seconds": 0
+    },
+    {
+      "video_id": "GeeD4_RrTj4",
+      "title": "Funeral",
+      "artists": [
+        {
+          "name": "Amira Elfeky",
+          "id": "UCrw7llnZo1r2ZY849xEUV3A"
+        }
+      ],
+      "thumbnail_url": "https://i.ytimg.com/vi/GeeD4_RrTj4/hq720.jpg?sqp=-oaymwEKCKAGEMIDIABIWg\u0026rs=AMzJL3l6eOujzOjwsWbkacWwndu6wSY8ew",
+      "is_video": true,
+      "like_status": "unknown",
+      "explicit": false,
+      "available": true,
+      "views": "183K",
+      "video_type": "MUSIC_VIDEO_TYPE_OMV",
+      "duration_seconds": 0
+    }
+  ]
+}
