@@ -50,6 +50,8 @@ Pages (switch with the tab bar or the keys below):
 - **Queue**: reorder, remove, shuffle, repeat, filter and sort.
 - **Track** (`g n`): a centered "now playing" card with cover art, title, artist, album, time,
   volume, a spectrum visualizer and a progress bar you can click to seek.
+- **Browse** (`g b`): For You, Charts (with a country picker), New releases and Playlists.
+- **Liked Songs** (`g y`) and **Recently Played** (`g r`, local and YouTube Music history).
 - Album, playlist and artist pages, a track actions popup (`a`), add to playlist (`A`),
   like/unlike (`l`), and a playlist sidebar (`Ctrl+E`).
 
@@ -59,6 +61,8 @@ Playback:
 - **Hover prefetch.** When the cursor rests on a track for 0.4 s, ytm starts resolving it, so
   Enter plays almost at once. Without it, a new track takes about 10 s to start, because
   YouTube needs roughly 5 s to hand out the audio link and then blocks it for about 3 s more.
+- Radio from any track (actions popup), Liked Songs radio, and a discovery mix (`D`).
+- Autoplay: when the queue runs out, related tracks are added (`autoplay = true`).
 - mpv crash recovery: mpv restarts and resumes where it was.
 
 Looks:
@@ -183,7 +187,6 @@ WezTerm: `window_background_opacity = 0.85`), then turn on `transparent = true` 
 
 ## Not done yet
 
-- Browse (For You, Charts), Liked Songs and Recently Played pages, radio and discovery mixes
 - Resume the last session, offline downloads and the audio cache
 - Synced lyrics
 - Controlling a running player from the shell (`ytm play`, `ytm next`, ...)
