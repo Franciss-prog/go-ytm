@@ -1,6 +1,6 @@
 # 03 — YouTube Music API, auth, and stream resolution
 
-Status: **M2 implemented** (client core, auth, search), **M3 implemented** (stream) · Milestones: M2 (client, auth, search), M3 (stream), M6 (browse/radio/history)
+Status: **M2 implemented** (client core, auth, search), **M3 implemented** (stream), **M6 implemented** (radio, home, charts, explore, history) · Milestones: M2 (client, auth, search), M3 (stream), M6 (browse/radio/history)
 
 ## Goals
 
@@ -247,6 +247,45 @@ type Resolver interface {
 - **Not verified live:** the write calls (no edits were made to the owner's account); bodies are
   checked against ytmusicapi in `TestWriteRequestBodies`. Server response to a duplicate add is
   assumed to be a non-success `status`.
+
+## Radio, discovery and history (M6)
+
+Shipped interface (replaces the draft's `NewReleases`, `Song` and `WatchRequest` shapes):
+
+```go
+WatchPlaylist(ctx, WatchRequest{VideoID, PlaylistID, Radio, Shuffle, Limit}) (WatchPlaylist, error)
+Home(ctx, shelves int) ([]HomeShelf, error)          // HomeShelf{Title, Items []SearchResult}
+Charts(ctx, country string) (Charts, error)          // {Country, Playlists, Artists}
+Explore(ctx) (Explore, error)                         // {NewReleases, Trending Shelf[Track], NewVideos}
+History(ctx) ([]HistoryItem, error)                   // Track + Played ("Today", …)
+AddHistoryItem(ctx, videoID string) error            // player call + tracking ping in one
+func Radio(ctx, Watcher, seeds []string, limit int) ([]Track, error)
+```
+
+- `next` body, params and playlist ids from ytmusicapi `get_watch_playlist`: radio `wAEB`,
+  shuffle `wAEB8gECKAE%3D`, video radio playlist `RDAMVM<id>`, playlist radio `RDAMPL<id>`.
+  Radios page with `nextRadioContinuationData`, playlists with `nextContinuationData`.
+  `Radio` = ytm-player `get_radio`: one radio per seed in parallel, merged without duplicates,
+  single seed keeps YouTube's order, several seeds shuffled, cut to the limit (25).
+- `Home` follows `sectionListContinuation` until `shelves` rows; cards are typed by navigation
+  target (parse_mixed_content); podcasts and episodes are skipped.
+- `Charts` sends `formData.selectedValues = [country]`; playlist carousels are the two-row card
+  ones, artists the list rows linking to `UC…` (charts.py recognizes carousels by content).
+  Signed out / free accounts get video charts (plus genres in some regions), not daily/weekly.
+- `Explore` keys sections by their header browse id (`FEmusic_new_releases_albums`,
+  `FEmusic_new_releases_videos`, `VLOLA…` = trending).
+- `AddHistoryItem`: `player` (signatureTimestamp = days since epoch − 1), then GET
+  `playbackTracking.videostatsPlaybackUrl.baseUrl` + `ver=2&c=WEB_REMIX&cpn=<16>`; 204 = recorded.
+  Cookies are sent only to `https` `youtube.com` hosts (the URL comes from the response).
+- **Stale sessions:** YouTube answers 200 with a signed-out page (history: "Sign in" message;
+  `VLLM`: an empty public playlist; `responseContext` GFEEDBACK `logged_in=0`) instead of 401.
+  History and Liked Music treat that as `ErrUnauthenticated` inside the renewal wrapper, so
+  silent renewal runs (found live, 2026-11-22). Public pages keep their signed-out answer.
+- Fixtures recorded signed out 2026-11-22 (`TestRecordM6`): watch radio, playlist radio, home,
+  charts (global, US), explore. `history_synthetic`, `player_synthetic`, `watch_radio_cont` are
+  hand-built (ytmusicapi shapes). The history parser was run live against the owner's account
+  through the TUI (Recently Played listed real plays); a scrubbed signed-in capture is still owed.
+- The 60 s browse TTL cache is still not built (no need seen yet).
 
 ## Edge cases
 

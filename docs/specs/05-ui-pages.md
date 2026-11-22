@@ -1,6 +1,6 @@
 # 05 — UI pages, components, layout
 
-Status: **M4 implemented** (shell, bar, help, toasts), **M5 implemented** (pages, popups, playlist sidebar, mouse) · Milestones: M4 (shell, bar, help), M5, M6, M8
+Status: **M4 implemented** (shell, bar, help, toasts), **M5 implemented** (pages, popups, playlist sidebar, mouse), **M6 implemented** (browse, liked, recent, radio) · Milestones: M4 (shell, bar, help), M5, M6, M8
 
 ## Goals
 
@@ -213,7 +213,7 @@ Bottom-right above bar, max 3 stacked, 4 s, severity tokens (error/warn/success)
   `delete_item`, `add_to_playlist`), so popup and keys behave the same. Track items: Play, Play next,
   Add to queue (Queue page: Remove from queue), Go to artist, Go to album, Add to playlist, Remove
   from playlist (owned playlists only), Like/Unlike, Copy link (OSC 52, `tea.SetClipboard`). Single-
-  track items hide when rows are marked. **Start radio and Download are left out until M6 / M7.**
+  track items hide when rows are marked. **Start radio arrived in M6; Download waits for M7.**
   Library playlists: Open, Delete playlist (owned only), Copy link.
 - Playlist picker lists owned library playlists only (edits fail on others), filters by typed
   substring like the original, "+ New playlist" first. A refused add (`ErrEditFailed`) asks the
@@ -264,6 +264,44 @@ Bottom-right above bar, max 3 stacked, 4 s, severity tokens (error/warn/success)
 - Wheel over the sidebar or main area moves that pane's cursor one row per event (terminals send
   several events per notch).
 - The bar draws no ◁◁ / ▷▷ glyphs yet (the mock above has them); `n` / `p` remain the route.
+
+## Implementation notes (M6)
+
+- **Browse** (`g b`, tab "browse"): tabs For You · Charts · New releases · Playlists (`tab`
+  cycles, mouse on the tab row). Each tab loads on first view; For You and Playlists share one
+  `Home(home_shelves)` call. For You lists each shelf under a `── Title` heading row (8 items
+  per shelf, as the original). **Charts differs from the mock above:** a list of the region's
+  chart playlists, then "Top artists", instead of pill rows over a TrackTable; enter opens the
+  chart as a normal playlist page (TrackTable, play, marks). "Featured globally" event shelves
+  are just more rows. `c` opens the country picker (Global + 67 regions from ytm-player
+  `regions.py`, typed filter), saves `[ui] region` with `config.Patch` and reloads the charts;
+  answers for an older region are dropped. Rows: songs play (autoplay continues), albums,
+  artists and playlists open their page, `RD…` mixes play their watch queue.
+- **Liked Songs** (`g y`): the `LM` playlist page under its own id and title with a
+  "▶ Start Radio" line (click: five random rows as seeds, label "Radio: Liked Songs").
+  Keyboard radio is the actions popup's **Start radio** (cursor or marked rows); no new key.
+- **Recently Played** (`g r`): All · Local · YT Music with the original's one-line
+  explanations, "▶ Start Radio" as on Liked. Account history reloads each time the page is
+  shown. All = local rows first in their order, then account-only rows, one row per video id
+  (100 + 100). When the account history fails, All keeps the local rows and adds a footer
+  "Account history unavailable: …". **Local is the session's plays in memory** (recorded at
+  `history_min_listen_seconds`, signed in or not) until M7's SQLite store persists it.
+- Library root column gains Recently Played (account history as a track column), spec 09.
+- **Radio**: actions popup **Start radio** on tracks (one seed, or the marked rows as a
+  shuffled multi-seed mix) and on library playlists (`RDAMPL`). It replaces the queue with
+  seeds + radio, clears the queue context (no shuffle lock key) and shows "Generated from:
+  <label>" on the Queue page (`show_queue_source`). No suggestions → warning, queue untouched.
+- **Autoplay** (`[playback] autoplay`, repeat off): when a track starts with ≤ 3 tracks left,
+  a radio seeded by the last 5 played tracks is appended (↻, skipping queued and dismissed
+  ids), once per queue at a time; at the end of the queue (natural end or `n`) it fetches and
+  continues instead of stopping.
+- **Discovery mix** (`D`, sidebar row): rotates charts → trending → home → liked → a library
+  artist's top songs → history, starting after the last source that worked; three random
+  seeds → radio labelled "Discovery (<source>)", then shows the Queue.
+- **History sync**: once a track has played more than `history_min_listen_seconds` past where
+  it was loaded (mpv position events, so terminal focus does not matter), it goes to the local
+  log and, with `sync_history_to_ytmusic` and a session, to `AddHistoryItem` once. Failures are
+  logged, not retried (position events arrive several times a second).
 
 ## Open questions
 

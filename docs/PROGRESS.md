@@ -15,7 +15,7 @@ Last updated: 2026-11-22
 | M4b | dynamic-theme | **merged** 2026-11-17 | [#7](https://github.com/Franciss-prog/go-ytm/pull/7) | sources, contrast, depth, watcher, Patch, Settings, `theme show` |
 | M5 | tui-library-search-queue | **merged** 2026-11-17 | [#8](https://github.com/Franciss-prog/go-ytm/pull/8) | queue pkg, ytmusic browse/library/edit calls, TrackTable, playback owner (resolve/gapless/retry), Queue, Library, Context, Search pages, popups, playlist sidebar, mouse |
 | M5b | ytkew-look | **merged** 2026-11-17 (spec 09 approved 2026-11-17) | [#9](https://github.com/Franciss-prog/go-ytm/pull/9) | side quest, spec 09: frame, rows, Library columns, track page, cover art, visualizer |
-| M6 | browse-liked-history | **in progress** | branch `feat/browse-liked-history` | |
+| M6 | browse-liked-history | **built**, PR not opened | branch `feat/browse-liked-history` | ytmusic watch/radio/home/charts/explore/history, radio + autoplay + discovery + history sync, Browse, Liked Songs, Recently Played, country picker |
 | M7 | session-cache-offline | not started | | |
 | M8 | lyrics | not started | | |
 | M9 | cli-ipc | not started | | |
@@ -89,6 +89,13 @@ Last updated: 2026-11-22
 | 2026-11-17 | Kitty art via `x/ansi/kitty` Unicode placeholders; `ultraviolet` promoted indirect → direct for `KittyGraphicsEvent` | 09, 01 |
 | 2026-11-17 | Visualizer = `pw-cat` sink-monitor capture + in-house FFT (no dependency); Linux only | 09 |
 
+| 2026-11-22 | Radio/autoplay/discovery follow ytm-player `_playback.py` (refill at ≤ 3 left, 5 seeds, 6 discovery sources in rotation) | 03, 05 |
+| 2026-11-22 | `Explore` replaces the draft `NewReleases`; `AddHistoryItem` folds in `Song` (player call) | 03 |
+| 2026-11-22 | Charts tab = list of chart playlists opening the playlist page (not pills over a table) | 05 |
+| 2026-11-22 | Recently Played → Local is in memory until M7's store; no new `start_radio` key (popup + click) | 05 |
+| 2026-11-22 | Signed-out 200 pages (history, `VLLM`, `logged_in=0`) trigger silent renewal | 03 |
+| 2026-11-22 | History pings send cookies to `https` `*.youtube.com` only | 03 |
+
 ## Verified facts (with how)
 
 - mpv v0.41.0 JSON IPC reply/event shapes, `loadfile … append-play` → `playlist_entry_id` (local probe).
@@ -149,6 +156,14 @@ Last updated: 2026-11-22
   wrote `popup_fill`/`transparent` keeping comments.
 - Real binary in a PTY (110×30, signed in): sidebar lists the owner's library playlists, `C-w h`,
   `j`, enter opens the playlist page, `C-e` hides the sidebar.
+- InnerTube 2026-11-22 (signed out, live, `TestRecordM6`): `next` radio returns 50 panel items with
+  `nextRadioContinuationData`; home = carousels of flat song rows + two-row playlists with a
+  `sectionListRenderer` continuation; charts first section is the country selector, ~70
+  `musicFormBooleanChoice` region tokens in `frameworkUpdates`; explore sections keyed by header
+  browse id. Signed-out history/LM answer 200 with `logged_in=0`.
+- Real binary in a PTY (120×34, 2026-11-22, owner's account via in-process renewal): Browse For You
+  and Charts load, `c` → "united st" → US charts, enter opens "Top 100 Live Performances" (100
+  songs); Liked Songs lists the account's 6 likes; Recently Played lists real account plays.
 - Real binary in a PTY (110×30): renders, `?`/`j`/`g s`/backspace/`3+`/`q` work, alt screen
   entered and left, OSC 11 sets the root bg, exit 0, `--trace-frames` logs every frame.
 
@@ -237,6 +252,8 @@ Last updated: 2026-11-22
 
 ## Open questions (need owner)
 
+- M6: OK to open the PR from `feat/browse-liked-history`? (not pushed yet)
+
 - None currently.
 
 ## Known gaps
@@ -282,6 +299,14 @@ Last updated: 2026-11-22
   sidebar has focus (only the sidebar title/cursor show focus).
 - `TestRestartBackoffAndGiveUp` (player) failed once under `make test` (its state-after-give-up
   check, `controller_test.go:412`); 20/20 passes on rerun. Timing flake, not investigated yet.
+- M6: **radio, autoplay, discovery mix and the history ping were not run live** (they start
+  playback and write to the account history); covered by fake-player/fake-API tests only.
+  `AddHistoryItem` has never been sent to YouTube.
+- M6: history fixture is synthetic; `TestRecordM6` cannot renew a stale session itself, so the
+  signed-in capture needs a fresh `ytm setup` first.
+- M6: no benchmarks for the new pages (lists of ≤ 200 rows reuse List/TrackTable).
+- `popup-confirm-delete` golden scenario renders no popup (the root column has nothing to
+  delete); pre-existing, noticed in M6, not fixed.
 - M4b: album-art transparency rules wait for album art (no art yet, no exemption registered).
 - fang queries the terminal background (OSC 11) when rendering help on a TTY; harmless on real
   terminals, visible as junk only under `script`-style captures.
