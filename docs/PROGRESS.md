@@ -15,8 +15,8 @@ Last updated: 2026-11-22
 | M4b | dynamic-theme | **merged** 2026-11-17 | [#7](https://github.com/Franciss-prog/go-ytm/pull/7) | sources, contrast, depth, watcher, Patch, Settings, `theme show` |
 | M5 | tui-library-search-queue | **merged** 2026-11-17 | [#8](https://github.com/Franciss-prog/go-ytm/pull/8) | queue pkg, ytmusic browse/library/edit calls, TrackTable, playback owner (resolve/gapless/retry), Queue, Library, Context, Search pages, popups, playlist sidebar, mouse |
 | M5b | ytkew-look | **merged** 2026-11-17 (spec 09 approved 2026-11-17) | [#9](https://github.com/Franciss-prog/go-ytm/pull/9) | side quest, spec 09: frame, rows, Library columns, track page, cover art, visualizer |
-| M6 | browse-liked-history | **in review** | PR #10 | ytmusic watch/radio/home/charts/explore/history, radio + autoplay + discovery + history sync, Browse, Liked Songs, Recently Played, country picker |
-| M7 | session-cache-offline | **built**, PR not opened | branch `feat/session-cache-offline` | SQLite store (play/search history, cache index), session.json resume, shuffle_prefs.json lock, yt-dlp downloads + LRU audio cache, search history, Download action |
+| M6 | browse-liked-history | **merged** 2026-11-22 | [#10](https://github.com/Franciss-prog/go-ytm/pull/10) | ytmusic watch/radio/home/charts/explore/history, radio + autoplay + discovery + history sync, Browse, Liked Songs, Recently Played, country picker |
+| M7 | session-cache-offline | **merged** 2026-11-22 | [#11](https://github.com/Franciss-prog/go-ytm/pull/11) | SQLite store (play/search history, cache index), session.json resume, shuffle_prefs.json lock, yt-dlp downloads + LRU audio cache, search history, Download action |
 | M8 | lyrics | not started | | |
 | M9 | cli-ipc | not started | | |
 | M10 | mpris-media-keys | not started | | |
@@ -252,7 +252,6 @@ Last updated: 2026-11-22
 
 ## Open questions (need owner)
 
-- M7: OK to open the PR from `feat/session-cache-offline`? (not pushed yet)
 
 ## Known gaps
 
