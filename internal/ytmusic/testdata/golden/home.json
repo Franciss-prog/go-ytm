@@ -1,0 +1,198 @@
+[
+  {
+    "title": "Song mixes",
+    "items": [
+      {
+        "type": "song",
+        "video_id": "mGsOHanQwxk",
+        "title": "Na Para Bang",
+        "artists": [
+          {
+            "name": "Mariah Deborah",
+            "id": "UCUBIpcp9MV1pl0zeheoF5Ng"
+          }
+        ],
+        "album": {
+          "name": "Na Para Bang",
+          "id": "MPREb_fC0Ed7YeLaq"
+        },
+        "thumbnail_url": "https://yt3.googleusercontent.com/Kj04wERwQlPkEUgWeSwUz5RAVdlAw2KSNc23VdYE8DfaMVG2qRRrvbIJCJ9X6J0roJ75GxGOHEJdkrU=w120-h120-l90-rj",
+        "is_video": false,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "views": "51M",
+        "video_type": "MUSIC_VIDEO_TYPE_ATV",
+        "duration_seconds": 0
+      },
+      {
+        "type": "song",
+        "video_id": "3dSMi3Xl--E",
+        "title": "ako ang bagyo",
+        "artists": [
+          {
+            "name": "SHEAN",
+            "id": "UC6uO7Vymvdzp4EXw2-C1u5w"
+          }
+        ],
+        "album": {
+          "name": "ako ang bagyo",
+          "id": "MPREb_mfZBpvOqVaB"
+        },
+        "thumbnail_url": "https://yt3.googleusercontent.com/hl1EXwyg4Ilp4cPKY7SVdGJFo24fi2Vv6novBYu2d8Hun_6w-L6SjUAd68GuYdF-zbZfXwW0yKbPqGpc=w120-h120-l90-rj",
+        "is_video": false,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "views": "21M",
+        "video_type": "MUSIC_VIDEO_TYPE_ATV",
+        "duration_seconds": 0
+      },
+      {
+        "type": "song",
+        "video_id": "5mnZcoQldHM",
+        "title": "Mahal Magmahal",
+        "artists": [
+          {
+            "name": "Esremborak",
+            "id": "UCgBv8sCbOtqH8w_LzxubNWg"
+          }
+        ],
+        "album": {
+          "name": "Mahal Magmahal",
+          "id": "MPREb_Ua8DbblOPJL"
+        },
+        "thumbnail_url": "https://yt3.googleusercontent.com/UQowAWrKWwfISoFhNW83TT3ztsiHUE5x1VvfJR96du6HyAwtoI2BHZ1wex2yWazM39-QQ0SVpokWMZh_=w120-h120-l90-rj",
+        "is_video": false,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "views": "56M",
+        "video_type": "MUSIC_VIDEO_TYPE_ATV",
+        "duration_seconds": 0
+      },
+      {
+        "type": "song",
+        "video_id": "qheo0TFUGho",
+        "title": "Pangako, Mamahalin Kita",
+        "artists": [
+          {
+            "name": "LenzTone Music",
+            "id": "UCACSLsvoW1WqPt58v-5Iyrg"
+          }
+        ],
+        "album": {
+          "name": "Pangako, Mamahalin Kita",
+          "id": "MPREb_28E19g7WNj4"
+        },
+        "thumbnail_url": "https://yt3.googleusercontent.com/Qye5R24Rvwi9AsTLi71KSSkaehOnwr1h2PI4uJDnuRFl-LI6NQWm7pQ2bfKO9ekQXA0NmKpqYTymuaEJ=w120-h120-l90-rj",
+        "is_video": false,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "views": "521K",
+        "video_type": "MUSIC_VIDEO_TYPE_ATV",
+        "duration_seconds": 0
+      },
+      {
+        "type": "song",
+        "video_id": "hInPXsNsOAw",
+        "title": "Closer",
+        "artists": [
+          {
+            "name": "GEHLEE",
+            "id": "UC21PxoY1fMkugFdQEmlbQIQ"
+          }
+        ],
+        "album": {
+          "name": "Closer",
+          "id": "MPREb_aCpssehwjMe"
+        },
+        "thumbnail_url": "https://yt3.googleusercontent.com/6rlvDC8gMhrjb-xavKRzuRPoml0mtMfrSOC_9VUlv4uFJDU9ntzM0hX4lWdfI3xpWPia6ibfvHI6YF5m=w120-h120-l90-rj",
+        "is_video": false,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "views": "6.5M",
+        "video_type": "MUSIC_VIDEO_TYPE_ATV",
+        "duration_seconds": 0
+      },
+      {
+        "type": "song",
+        "video_id": "RFv7U52Kmg0",
+        "title": "Sulitin",
+        "artists": [
+          {
+            "name": "Guddhist Gunatita",
+            "id": "UCoG8OslEnFXPhpKaLp5ZElw"
+          }
+        ],
+        "album": {
+          "name": "Sulitin",
+          "id": "MPREb_MOIbDdWG7n9"
+        },
+        "thumbnail_url": "https://yt3.googleusercontent.com/9BVwmkhpen7MgN3y3EnqqVp6Mmum-Gt5YTa4PxvKLq_k-36emUldtjA0tcHfPOL-t63g1LftSuf-HnLv=w120-h120-l90-rj",
+        "is_video": false,
+        "like_status": "unknown",
+        "explicit": false,
+        "available": true,
+        "views": "111M",
+        "video_type": "MUSIC_VIDEO_TYPE_ATV",
+        "duration_seconds": 0
+      }
+    ]
+  },
+  {
+    "title": "Trending community playlists",
+    "items": [
+      {
+        "type": "playlist",
+        "title": "Ako ang bagyo🌩️",
+        "id": "PLIHJWqRomjc0",
+        "author": "Anjo cruz",
+        "count": "931K views",
+        "thumbnail_url": "https://yt3.googleusercontent.com/nZeGLSKZ9b7isBIwQfGQs7IwS0ekcSG_rJFHMg5szWbfSJfpRsTeSwTM6a06D10lHqb5ReMAMg=s576"
+      },
+      {
+        "type": "playlist",
+        "title": "happy songs",
+        "id": "PLTvuFC8tSnc2I-Xc-e5u7eKSSsN9Uw_Qj",
+        "author": "Kingbon",
+        "count": "4.1M views",
+        "thumbnail_url": "https://yt3.ggpht.com/8yrh0FgbkDr0VFAD341jGPJM2PZXFiwi3hJDFXCekEHdgcxl_zgH9Sk1bHS-dB_DjOziYuvdt2VO=s576"
+      },
+      {
+        "type": "playlist",
+        "title": "Pinoy Rocks",
+        "id": "PL68OPaEtpRS5cznIEHEBOwALUJ6W2fc4r",
+        "author": "Riel Ochoa",
+        "count": "2.5M views",
+        "thumbnail_url": "https://yt3.googleusercontent.com/2CgQTH8N9WMJQR_fGXWjbH302H-nm_THiDTHL9RHvjeH3QtpUE3D-RguwY-ykx40XwPwy4U01Lwh=s576"
+      },
+      {
+        "type": "playlist",
+        "title": "OPM",
+        "id": "PLqVixVJlY_6PALe_aPidCpIE5Dze0YuLM",
+        "author": "Jasper Ines",
+        "count": "1.7M views",
+        "thumbnail_url": "https://yt3.googleusercontent.com/OKQ35xlrqKnIIQwdkXyyRVIQiLwTuVYp_2YfvtxYbp1X4IlXjPwqKJKR2qkSQOSalXxpItAAq-C8=s576"
+      },
+      {
+        "type": "playlist",
+        "title": "geng geng playlist",
+        "id": "PLqowMJfbbKVKnsAzkLwnlT4ATfp0Ddra4",
+        "author": "xzell_TV",
+        "count": "5.6M views",
+        "thumbnail_url": "https://yt3.googleusercontent.com/N1RSpknqmBmSh0cylffId0QF9so2YhH5eOYatZXQenHZss-_B2ULAY4qPoOwKdGYReIxpbkXamTV=s576"
+      },
+      {
+        "type": "playlist",
+        "title": "roadtrip song",
+        "id": "PLDrTypYw0sLurneiWgyd63NlT8R7j1ZFI",
+        "author": "Jekoy Official",
+        "count": "4.2M views",
+        "thumbnail_url": "https://yt3.googleusercontent.com/rEUHcMWw6fIswwd3Ojgipvfb4QF4qdhnsHxn85gH8U16Qi8JyiBh75psh2Pm9wslBidYEJQ6uE1Q=s576"
+      }
+    ]
+  }
+]

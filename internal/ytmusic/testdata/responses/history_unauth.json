@@ -1,0 +1,71 @@
+{
+ "contents": {
+  "singleColumnBrowseResultsRenderer": {
+   "tabs": [
+    {
+     "tabRenderer": {
+      "content": {
+       "sectionListRenderer": {
+        "contents": [
+         {
+          "itemSectionRenderer": {
+           "contents": [
+            {
+             "messageRenderer": {
+              "button": {
+               "buttonRenderer": {
+                "isDisabled": false,
+                "navigationEndpoint": {
+                 "signInEndpoint": {
+                  "hack": true
+                 }
+                },
+                "style": "STYLE_DEFAULT",
+                "text": {
+                 "runs": [
+                  {
+                   "text": "Sign in"
+                  }
+                 ]
+                }
+               }
+              },
+              "icon": {
+               "iconType": "WATCH_HISTORY"
+              },
+              "style": {
+               "value": "RENDER_STYLE_VERTICAL_CENTERED"
+              },
+              "subtext": {
+               "messageSubtextRenderer": {
+                "text": {
+                 "runs": [
+                  {
+                   "text": "Revisit old favorites and discover new songs"
+                  }
+                 ]
+                }
+               }
+              },
+              "text": {
+               "runs": [
+                {
+                 "text": "Sign in to view your history"
+                }
+               ]
+              }
+             }
+            }
+           ]
+          }
+         }
+        ]
+       }
+      },
+      "selected": true
+     }
+    }
+   ]
+  }
+ }
+}

@@ -30,7 +30,7 @@ import (
 // Client is the YouTube Music API used by the rest of the app. It grows
 // per milestone (docs/specs/03-ytmusic-api.md); M2 covers search and the
 // account lookup used by `ytm setup`; M5 adds browse pages, the library
-// and playlist edits.
+// and playlist edits; M6 adds radio, home, charts, explore and history.
 type Client interface {
 	// Search returns up to limit results. Filtered searches follow
 	// continuation pages until limit is reached.
@@ -70,6 +70,22 @@ type Client interface {
 	RemovePlaylistItems(ctx context.Context, playlistID string, tracks []Track) error
 	// Rate likes, dislikes or clears the rating of a video.
 	Rate(ctx context.Context, videoID string, s LikeStatus) error
+
+	// WatchPlaylist returns the queue YouTube Music builds for a track or
+	// playlist: radio, up next, playlist radio (M6).
+	WatchPlaylist(ctx context.Context, r WatchRequest) (WatchPlaylist, error)
+	// Home returns the home feed, loading at least shelves rows when
+	// YouTube has that many.
+	Home(ctx context.Context, shelves int) ([]HomeShelf, error)
+	// Charts returns the charts for a region code ("ZZ": global).
+	Charts(ctx context.Context, country string) (Charts, error)
+	// Explore returns new releases and the trending chart.
+	Explore(ctx context.Context) (Explore, error)
+	// History returns the account's play history, newest first;
+	// ErrUnauthenticated when signed out.
+	History(ctx context.Context) ([]HistoryItem, error)
+	// AddHistoryItem records a play in the account history.
+	AddHistoryItem(ctx context.Context, videoID string) error
 }
 
 // Sentinel errors. Match with errors.Is.
@@ -440,30 +456,10 @@ func (a *API) once(ctx context.Context, endpoint string, payload []byte, extraQu
 	if err != nil {
 		return node{}, fmt.Errorf("ytmusic: %s: %w", endpoint, err)
 	}
-	h := req.Header
-	h.Set("Content-Type", "application/json")
-	h.Set("Accept", "*/*")
-	h.Set("Origin", Origin)
-	h.Set("X-Origin", Origin)
-	h.Set("User-Agent", DefaultUserAgent)
-	// SOCS=CAI skips the EU cookie-consent interstitial (ytmusicapi ytmusic.py).
-	cookie := "SOCS=CAI"
-	if creds != nil {
-		sapisid, err := creds.SAPISID()
-		if err != nil {
-			return node{}, fmt.Errorf("ytmusic: %w: %w", ErrUnauthenticated, err)
-		}
-		if creds.UserAgent != "" {
-			h.Set("User-Agent", creds.UserAgent)
-		}
-		cookie = creds.Cookie
-		if _, ok := CookieValue(cookie, "SOCS"); !ok {
-			cookie += "; SOCS=CAI"
-		}
-		h.Set("Authorization", SAPISIDHash(sapisid, Origin, a.o.Clock.Now()))
-		h.Set("X-Goog-AuthUser", strconv.Itoa(creds.AuthUser))
+	req.Header.Set("Content-Type", "application/json")
+	if err := a.setHeaders(req.Header, creds); err != nil {
+		return node{}, err
 	}
-	h.Set("Cookie", cookie)
 
 	start := a.o.Clock.Now()
 	resp, err := a.o.HTTP.Do(req)
@@ -497,6 +493,34 @@ func (a *API) once(ctx context.Context, endpoint string, payload []byte, extraQu
 		return node{}, fmt.Errorf("ytmusic: %s: decode response: %w", endpoint, err)
 	}
 	return node{v}, nil
+}
+
+// setHeaders adds the browser-like and (with creds) signed-in headers
+// every request carries.
+func (a *API) setHeaders(h http.Header, creds *Credentials) error {
+	h.Set("Accept", "*/*")
+	h.Set("Origin", Origin)
+	h.Set("X-Origin", Origin)
+	h.Set("User-Agent", DefaultUserAgent)
+	// SOCS=CAI skips the EU cookie-consent interstitial (ytmusicapi ytmusic.py).
+	cookie := "SOCS=CAI"
+	if creds != nil {
+		sapisid, err := creds.SAPISID()
+		if err != nil {
+			return fmt.Errorf("ytmusic: %w: %w", ErrUnauthenticated, err)
+		}
+		if creds.UserAgent != "" {
+			h.Set("User-Agent", creds.UserAgent)
+		}
+		cookie = creds.Cookie
+		if _, ok := CookieValue(cookie, "SOCS"); !ok {
+			cookie += "; SOCS=CAI"
+		}
+		h.Set("Authorization", SAPISIDHash(sapisid, Origin, a.o.Clock.Now()))
+		h.Set("X-Goog-AuthUser", strconv.Itoa(creds.AuthUser))
+	}
+	h.Set("Cookie", cookie)
+	return nil
 }
 
 func parseRetryAfter(s string, now time.Time) time.Duration {
