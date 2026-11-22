@@ -41,6 +41,16 @@ func (l LikeStatus) String() string {
 // MarshalJSON encodes the status as its name.
 func (l LikeStatus) MarshalJSON() ([]byte, error) { return json.Marshal(l.String()) }
 
+// UnmarshalJSON reads what MarshalJSON writes (unknown text: LikeUnknown).
+func (l *LikeStatus) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+	*l = map[string]LikeStatus{"indifferent": LikeIndifferent, "like": Like, "dislike": Dislike}[s]
+	return nil
+}
+
 // Track is a playable song, video or episode, normalized across every
 // renderer that can carry one (docs/specs/01-architecture.md).
 type Track struct {
@@ -66,6 +76,22 @@ func (t Track) MarshalJSON() ([]byte, error) {
 		plain
 		DurationSeconds int `json:"duration_seconds"`
 	}{plain(t), int(t.Duration / time.Second)})
+}
+
+// UnmarshalJSON reads what MarshalJSON writes (the session file and the
+// play history store tracks as JSON).
+func (t *Track) UnmarshalJSON(b []byte) error {
+	type plain Track
+	var v struct {
+		plain
+		DurationSeconds int `json:"duration_seconds"`
+	}
+	if err := json.Unmarshal(b, &v); err != nil {
+		return err
+	}
+	*t = Track(v.plain)
+	t.Duration = time.Duration(v.DurationSeconds) * time.Second
+	return nil
 }
 
 // AlbumRef identifies an album, single or EP.
