@@ -180,8 +180,24 @@ func (c *Cache) log() *slog.Logger {
 // localTTL is how long a cached file counts as fresh in the stream cache.
 const localTTL = 24 * time.Hour
 
+// local returns id's cached file as a Stream.
+func (c *Cache) local(ctx context.Context, id string, now func() time.Time) (stream.Stream, bool) {
+	p, ok := c.Lookup(ctx, id)
+	if !ok {
+		return stream.Stream{}, false
+	}
+	if now == nil {
+		now = time.Now
+	}
+	return stream.Stream{
+		VideoID: id, URL: p, Expires: now().Add(localTTL),
+		Codec: strings.TrimPrefix(filepath.Ext(p), "."),
+	}, true
+}
+
 // Resolver plays cached files instead of resolving them (spec 03: a local
 // audio cache hit short-circuits resolution), and falls through to Next.
+// It sits under stream.Cache, so prefetching a cached track runs no yt-dlp.
 type Resolver struct {
 	Cache *Cache
 	Next  stream.Resolver
@@ -190,15 +206,39 @@ type Resolver struct {
 
 // Resolve implements stream.Resolver.
 func (r Resolver) Resolve(ctx context.Context, id string, q stream.Quality) (stream.Stream, error) {
-	if p, ok := r.Cache.Lookup(ctx, id); ok {
-		now := time.Now
-		if r.Now != nil {
-			now = r.Now
-		}
-		return stream.Stream{
-			VideoID: id, URL: p, Expires: now().Add(localTTL),
-			Codec: strings.TrimPrefix(filepath.Ext(p), "."),
-		}, nil
+	if s, ok := r.Cache.local(ctx, id, r.Now); ok {
+		return s, nil
 	}
 	return r.Next.Resolve(ctx, id, q)
+}
+
+// Playable is what the player asks for a track (stream.Cache).
+type Playable interface {
+	Playable(ctx context.Context, id string, q stream.Quality) (stream.Stream, error)
+	Refresh(ctx context.Context, id string, q stream.Quality) (stream.Stream, error)
+}
+
+// Streams checks the cache in front of Next: a URL resolved (or
+// prefetched) before the track was downloaded stays memoized in Next, so
+// the Resolver under it alone would keep playing the network copy.
+type Streams struct {
+	Cache *Cache
+	Next  Playable
+	Now   func() time.Time
+}
+
+// Playable implements ui.Streams.
+func (s Streams) Playable(ctx context.Context, id string, q stream.Quality) (stream.Stream, error) {
+	if st, ok := s.Cache.local(ctx, id, s.Now); ok {
+		return st, nil
+	}
+	return s.Next.Playable(ctx, id, q)
+}
+
+// Refresh implements ui.Streams.
+func (s Streams) Refresh(ctx context.Context, id string, q stream.Quality) (stream.Stream, error) {
+	if st, ok := s.Cache.local(ctx, id, s.Now); ok {
+		return st, nil
+	}
+	return s.Next.Refresh(ctx, id, q)
 }

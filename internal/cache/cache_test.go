@@ -158,3 +158,34 @@ func TestResolverPrefersLocal(t *testing.T) {
 		t.Errorf("fallthrough: %+v", s)
 	}
 }
+
+type memoStreams struct{ calls int }
+
+func (m *memoStreams) Playable(context.Context, string, stream.Quality) (stream.Stream, error) {
+	m.calls++
+	return stream.Stream{URL: "https://memoized"}, nil
+}
+
+func (m *memoStreams) Refresh(ctx context.Context, id string, q stream.Quality) (stream.Stream, error) {
+	return m.Playable(ctx, id, q)
+}
+
+// A URL memoized before the download must not win over the file.
+func TestStreamsPreferLocalOverMemo(t *testing.T) {
+	ctx := context.Background()
+	c := newCache(t, 100, &fakeDL{size: 1})
+	next := &memoStreams{}
+	s := Streams{Cache: c, Next: next}
+	if st, _ := s.Playable(ctx, "aaaaaaaaaaa", stream.High); st.URL != "https://memoized" {
+		t.Fatalf("before download: %+v", st)
+	}
+	r, _ := c.Download(ctx, "aaaaaaaaaaa")
+	for _, f := range []func(context.Context, string, stream.Quality) (stream.Stream, error){s.Playable, s.Refresh} {
+		if st, err := f(ctx, "aaaaaaaaaaa", stream.High); err != nil || st.URL != r.Path {
+			t.Errorf("after download: %+v %v", st, err)
+		}
+	}
+	if next.calls != 1 {
+		t.Errorf("memo asked %d times after the download", next.calls-1)
+	}
+}
