@@ -1,6 +1,6 @@
 # 05 — UI pages, components, layout
 
-Status: **M4 implemented** (shell, bar, help, toasts), **M5 implemented** (pages, popups, playlist sidebar, mouse), **M6 implemented** (browse, liked, recent, radio), **M7 implemented** (search history, Download, shuffle lock, session resume) · Milestones: M4 (shell, bar, help), M5, M6, M8
+Status: **M4 implemented** (shell, bar, help, toasts), **M5 implemented** (pages, popups, playlist sidebar, mouse), **M6 implemented** (browse, liked, recent, radio), **M7 implemented** (search history, Download, shuffle lock, session resume), **M8 implemented** (lyrics pane) · Milestones: M4 (shell, bar, help), M5, M6, M8
 
 ## Goals
 
@@ -268,6 +268,40 @@ Bottom-right above bar, max 3 stacked, 4 s, severity tokens (error/warn/success)
 - Wheel over the sidebar or main area moves that pane's cursor one row per event (terminals send
   several events per notch).
 - The bar draws no ◁◁ / ▷▷ glyphs yet (the mock above has them); `n` / `p` remain the route.
+
+## Implementation notes (M8 lyrics)
+
+- `internal/lyrics.Finder` order: YouTube timed → LRCLIB synced → YouTube plain → LRCLIB plain
+  (ytm-player asks LRCLIB only when YouTube has no timestamps; the LRCLIB plain fallback is
+  ours). The YouTube side needs the track's lyrics id, so it costs a `next` call (watch playlist,
+  limit 1) plus one or two `browse` calls. Instrumental LRCLIB records count as "no lyrics".
+- LRCLIB (`lrclib.net/docs.txt`, read 2026-11-22): `GET /api/get` with the sanitized title,
+  first artist, album and duration in whole seconds (only 1..3600; LRCLIB matches ±2 s).
+  User-Agent `ytm-go/<version> (https://github.com/Franciss-Prog/go-ytm)`, 10 s timeout. 404 =
+  none; 429/503 honor `Retry-After` (no request before it; 60 s if missing); a non-JSON reply is
+  an error. Title sanitizing is ytm-player's bracketed-noise regex (MIT) plus "Artist - " strip.
+- LRC: several leading stamps on one line → one line each; `[mm:ss]`, `.x`/`.xx`/`.xxx` and
+  `:xx` fractions; `[offset:±ms]` (positive = earlier); tag and unstamped lines dropped.
+- Pane: fetched only while shown, once per track; answers for another track are dropped. States:
+  "Nothing playing.", "Loading lyrics…", "No lyrics for this track.", "Couldn't load lyrics. r
+  retries." (details in the log), "Lyrics unavailable." (no finder). The source label sits in the
+  panel's bottom-left border ("YouTube Music · LyricFind", "LRCLIB"), plus " · not synced".
+- Synced lines use `lyrics_played/current/upcoming` (current bold); the current line is centered.
+  Lines wrap to the pane (one column margin). Focus: `C-w l` from main, `C-w w` cycles main →
+  playlists → lyrics; `C-w h` goes back to main. Focused, `j/k` scroll 1 row, `C-f/C-b` 10,
+  `g g`/`G` ends, `r` retries; the wheel over the pane scrolls. Any manual scroll pauses the
+  auto-scroll for 5 s (latest scroll wins). **Click on a synced line seeks to it** (as the
+  original) and resumes following.
+- `T` toggles transliteration for the session (start value `[lyrics] transliteration`) with an
+  info toast; a muted anyascii line goes under each line holding non-ASCII letters (symbol-only
+  lines such as "♪" get none). Dependency: `github.com/anyascii/go` (ISC, no deps), the library
+  ytm-player uses, so output matches; `mozillazg/go-unidecode` (MIT) was the other candidate
+  (no emoji, different Cyrillic/Greek romanization).
+- BiDi: `reorder` and `auto` reorder lines with Hebrew/Arabic/Syriac/Thaana/N'Ko letters with
+  `x/text/unicode/bidi` and right-align them; `passthrough` leaves them. **`auto` = `reorder`
+  for now**: no terminal is detected as doing BiDi itself. x/text v0.24.0 detects neither the
+  paragraph direction nor the visual run order (`Order()` returns logical order), so ytm-go
+  applies P2 and a two-level L2 itself (no nested embeddings).
 
 ## Implementation notes (M6)
 
