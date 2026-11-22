@@ -209,14 +209,17 @@ func (p *parser) parseWatchItems(items []node) []Track {
 	return out
 }
 
+// Watcher is the part of Client that Radio needs.
+type Watcher interface {
+	WatchPlaylist(ctx context.Context, r WatchRequest) (WatchPlaylist, error)
+}
+
 // Radio returns a radio mix seeded by videoIDs: one radio per seed, merged
 // without duplicates and cut to limit (ytm-player services/ytmusic.py
 // get_radio). A single seed keeps YouTube's order (the seed leads); several
 // seeds are shuffled. Failed seeds are skipped; the error is returned only
 // when every seed failed.
-func Radio(ctx context.Context, c interface {
-	WatchPlaylist(context.Context, WatchRequest) (WatchPlaylist, error)
-}, videoIDs []string, limit int) ([]Track, error) {
+func Radio(ctx context.Context, c Watcher, videoIDs []string, limit int) ([]Track, error) {
 	if limit <= 0 {
 		limit = 25
 	}

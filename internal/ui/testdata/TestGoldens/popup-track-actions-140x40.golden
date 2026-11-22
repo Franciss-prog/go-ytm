@@ -18,6 +18,7 @@
 │                                                       │  Add to queue            │                                                       │
 │                                                       │  Go to artist            │                                                       │
 │                                                       │  Go to album             │                                                       │
+│                                                       │  Start radio             │                                                       │
 │                                                       │  Add to playlist         │                                                       │
 │                                                       │  Remove from playlist    │                                                       │
 │                                                       │  Like                    │                                                       │
@@ -25,7 +26,6 @@
 │                                                       │                          │                                                       │
 │                                                       │ enter select · esc close │                                                       │
 │                                                       ╰──────────────────────────╯                                                       │
-│                                                                                                                                          │
 │                                                                                                                                          │
 │                                                                                                                                          │
 │                                                                                                                                          │

@@ -257,8 +257,10 @@ func TestAddHistoryItem(t *testing.T) {
 		w.WriteHeader(status)
 	}))
 	t.Cleanup(srv.Close)
-	a := New(Options{BaseURL: srv.URL + "/youtubei/v1/", HTTP: tlsAll(srv), RatePerSec: 1000, Burst: 1000,
-		Credentials: &Credentials{Cookie: "__Secure-3PAPISID=x; SID=y"}})
+	a := New(Options{
+		BaseURL: srv.URL + "/youtubei/v1/", HTTP: tlsAll(srv), RatePerSec: 1000, Burst: 1000,
+		Credentials: &Credentials{Cookie: "__Secure-3PAPISID=x; SID=y"},
+	})
 	t.Cleanup(func() { _ = a.Close() })
 
 	if err := a.AddHistoryItem(context.Background(), "VIDEO"); err != nil {

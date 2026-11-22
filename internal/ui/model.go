@@ -278,6 +278,18 @@ func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case PlayMsg:
 		cmd := m.play(msg)
 		return m, cmd
+	case RadioMsg:
+		cmd := m.startRadio(msg)
+		return m, cmd
+	case radioLoadedMsg:
+		cmd := m.radioLoaded(msg)
+		return m, cmd
+	case discoveryMsg:
+		cmd := m.discovered(msg)
+		return m, cmd
+	case historyReportedMsg:
+		m.historyReported(msg)
+		return m, nil
 	case EnqueueMsg:
 		cmd := m.enqueue(msg)
 		return m, cmd
@@ -381,8 +393,8 @@ func (m *Model) action(a keys.Action) tea.Cmd {
 
 // notYet lists actions whose features arrive in later milestones.
 var notYet = map[string]string{
-	"like_toggle":   "likes",
-	"discovery_mix": "radio", "current_context": "pages", "jump_to_current": "the queue",
+	"like_toggle":     "likes",
+	"current_context": "pages", "jump_to_current": "the queue",
 	"command_palette": "the command palette", "theme_picker": "the theme picker",
 	"toggle_transliteration": "lyrics",
 }
@@ -412,6 +424,8 @@ func (m *Model) global(a keys.Action) tea.Cmd {
 		return m.toggleTransparency()
 	case "settings":
 		m.openSettings()
+	case "discovery_mix":
+		return m.startDiscovery()
 	case "next_track", "previous_track", "play_random", "cycle_repeat", "toggle_shuffle":
 		return m.queueAction(a.Name)
 	case "play_pause", "volume_up", "volume_down", "mute", "seek_forward", "seek_backward", "seek_start":
@@ -464,6 +478,7 @@ func (m *Model) playerEvent(ev player.Event) tea.Cmd {
 	switch e := ev.(type) {
 	case player.StateChanged:
 		m.bar.st = e.State
+		return m.maybeReport()
 	case player.TrackStarted:
 		m.bar.scrubbing = false
 		return m.trackStarted(e.Item)
