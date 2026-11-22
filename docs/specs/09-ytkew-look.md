@@ -49,7 +49,7 @@ Selection info (`show_selection_info`) renders inside the panel's bottom border,
   volume as 5 dots + percent (wheel changes it). Pending
   chord/count (`g-`, `15`) shows left of the position in `accent`.
 - **Tabs** map to existing actions: queue (`z`), library (`g l`), track (`g n`, new), search
-  (`g s`), browse (`g b`, M6; hidden until then). Liked Songs and Recently Played open under
+  (`g s`), browse (`g b`, shown since M6). Liked Songs and Recently Played open under
   *library*; Context pages under the tab they were opened from. Help (`?`) and Settings (`,`) stay
   overlays. Back/Forward (`backspace` / `S-backspace`) unchanged; the header's `← Back / Forward →`
   text is removed, mouse back/forward moves to the side buttons (X1/X2) only.
@@ -87,7 +87,7 @@ TrackTable keeps every feature (marks, filter, sort, playing ▶, ↻, dimmed ro
 
 Replaces the Playlists · Albums · Artists tabs.
 
-- Column 1 (root): Liked Music, Recently Played (M6, hidden until then), Artists, Albums,
+- Column 1 (root): Liked Music, Recently Played (account history, since M6), Artists, Albums,
   Playlists.
 - Levels: Artists → artist → albums/singles → tracks · Albums → album → tracks · Playlists →
   playlist → tracks · Liked Music → tracks (playlist `LM`).
