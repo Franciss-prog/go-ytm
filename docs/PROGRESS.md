@@ -1,21 +1,21 @@
 # Progress
 
-Last updated: 2026-11-17
+Last updated: 2026-11-22
 
 ## Milestones
 
 | # | Slug | Status | PR | Notes |
 |---|---|---|---|---|
 | P0 | specs | **approved** 2026-11-16 | [#1](https://github.com/Franciss-prog/go-ytm/pull/1) | all proposed defaults accepted |
-| M0 | scaffold | **in review** | branch `feat/scaffold` (stacked on #1) | CLI skeleton, config loader, logging, style, doctor stub |
-| M1 | player-core | **in review** | [#3](https://github.com/Franciss-prog/go-ytm/pull/3) (stacked on #2) | mpv launcher, JSON IPC, controller, crash restore, fakempv |
-| M2 | ytmusic-auth-search | **in review** | [#4](https://github.com/Franciss-prog/go-ytm/pull/4) (stacked on #3) | InnerTube client, search, setup, auth store, doctor Auth |
-| M3 | stream-resolve | **in review** | [#5](https://github.com/Franciss-prog/go-ytm/pull/5) (stacked on #4) | yt-dlp resolver, URL cache, prefetcher, doctor mpv version |
-| M4 | tui-shell | **in review** | [#6](https://github.com/Franciss-prog/go-ytm/pull/6) (stacked on #5) | keymap engine, root model, header, bar, toasts, Help, app wiring |
-| M4b | dynamic-theme | **in review** | [#7](https://github.com/Franciss-prog/go-ytm/pull/7) (stacked on #6) | sources, contrast, depth, watcher, Patch, Settings, `theme show` |
-| M5 | tui-library-search-queue | **in review** | [#8](https://github.com/Franciss-prog/go-ytm/pull/8) (stacked on #7) | queue pkg, ytmusic browse/library/edit calls, TrackTable, playback owner (resolve/gapless/retry), Queue, Library, Context, Search pages, popups, playlist sidebar, mouse |
-| M5b | ytkew-look | **in review** (spec 09 approved 2026-11-17) | [#9](https://github.com/Franciss-prog/go-ytm/pull/9) (stacked on #8) | side quest, spec 09: frame, rows, Library columns, track page, cover art, visualizer |
-| M6 | browse-liked-history | not started | | |
+| M0 | scaffold | **merged** 2026-11-16 | [#2](https://github.com/Franciss-prog/go-ytm/pull/2) | CLI skeleton, config loader, logging, style, doctor stub |
+| M1 | player-core | **merged** 2026-11-16 | [#3](https://github.com/Franciss-prog/go-ytm/pull/3) | mpv launcher, JSON IPC, controller, crash restore, fakempv |
+| M2 | ytmusic-auth-search | **merged** 2026-11-16 | [#4](https://github.com/Franciss-prog/go-ytm/pull/4) | InnerTube client, search, setup, auth store, doctor Auth |
+| M3 | stream-resolve | **merged** 2026-11-17 | [#5](https://github.com/Franciss-prog/go-ytm/pull/5) | yt-dlp resolver, URL cache, prefetcher, doctor mpv version |
+| M4 | tui-shell | **merged** 2026-11-17 | [#6](https://github.com/Franciss-prog/go-ytm/pull/6) | keymap engine, root model, header, bar, toasts, Help, app wiring |
+| M4b | dynamic-theme | **merged** 2026-11-17 | [#7](https://github.com/Franciss-prog/go-ytm/pull/7) | sources, contrast, depth, watcher, Patch, Settings, `theme show` |
+| M5 | tui-library-search-queue | **merged** 2026-11-17 | [#8](https://github.com/Franciss-prog/go-ytm/pull/8) | queue pkg, ytmusic browse/library/edit calls, TrackTable, playback owner (resolve/gapless/retry), Queue, Library, Context, Search pages, popups, playlist sidebar, mouse |
+| M5b | ytkew-look | **merged** 2026-11-17 (spec 09 approved 2026-11-17) | [#9](https://github.com/Franciss-prog/go-ytm/pull/9) | side quest, spec 09: frame, rows, Library columns, track page, cover art, visualizer |
+| M6 | browse-liked-history | **in progress** | branch `feat/browse-liked-history` | |
 | M7 | session-cache-offline | not started | | |
 | M8 | lyrics | not started | | |
 | M9 | cli-ipc | not started | | |
