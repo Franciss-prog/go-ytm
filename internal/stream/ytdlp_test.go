@@ -347,3 +347,31 @@ func TestResolveCopiesCookieJar(t *testing.T) {
 		t.Errorf("temp jar not removed: %v", err)
 	}
 }
+
+func TestDownload(t *testing.T) {
+	var got []string
+	y := YtDlp{Run: func(_ context.Context, _ []string, _ string, args ...string) ([]byte, []byte, error) {
+		got = args
+		return []byte("/stage/dQw4w9WgXcQ.webm\n"), nil, nil
+	}}
+	stage := t.TempDir()
+	p, err := y.Download(context.Background(), "dQw4w9WgXcQ", stage)
+	if err != nil || p != "/stage/dQw4w9WgXcQ.webm" {
+		t.Fatalf("path %q err %v", p, err)
+	}
+	for _, want := range []string{DownloadFormat, filepath.Join(stage, "%(id)s.%(ext)s"), "after_move:filepath", "--no-part"} {
+		if !slices.Contains(got, want) {
+			t.Errorf("args %q lack %q", got, want)
+		}
+	}
+	if slices.Contains(got, "--simulate") {
+		t.Error("download args simulate")
+	}
+	y.Run = func(context.Context, []string, string, ...string) ([]byte, []byte, error) { return nil, nil, nil }
+	if _, err := y.Download(context.Background(), "dQw4w9WgXcQ", "/stage"); err == nil {
+		t.Error("empty output accepted")
+	}
+	if _, err := y.Download(context.Background(), "a b", "/stage"); !errors.Is(err, ErrInvalidID) {
+		t.Errorf("bad id: %v", err)
+	}
+}

@@ -115,12 +115,27 @@ func (y YtDlp) cookieSource() string {
 // Args returns the yt-dlp arguments for one resolve. cookies is the jar
 // path to pass (a private copy, see Resolve) or "".
 func (y YtDlp) Args(id string, q Quality, cookies string) []string {
-	args := []string{
-		"--ignore-config", "--no-playlist", "--no-warnings", "--simulate",
-		"-f", q.Format(),
-		"--extractor-args", "youtube:player_client=default,android",
-		"-O", printTemplate,
-	}
+	return y.args([]string{"--simulate", "-f", q.Format()}, []string{"-O", printTemplate}, id, cookies)
+}
+
+// DownloadFormat prefers YouTube's opus-in-webm, which mpv plays as is, so
+// a download needs no ffmpeg (ytm-player _DOWNLOAD_FORMAT, without its
+// FFmpegExtractAudio re-encode).
+const DownloadFormat = "bestaudio[ext=webm]/bestaudio/best"
+
+// DownloadArgs returns the yt-dlp arguments that save id's audio into dir
+// and print the final file path.
+func (y YtDlp) DownloadArgs(id, dir, cookies string) []string {
+	return y.args(
+		[]string{"-f", DownloadFormat, "--no-part", "-o", filepath.Join(dir, "%(id)s.%(ext)s")},
+		[]string{"-O", "after_move:filepath"}, id, cookies)
+}
+
+// args wraps mode-specific flags (head, tail) with the shared ones.
+func (y YtDlp) args(head, tail []string, id, cookies string) []string {
+	args := append([]string{"--ignore-config", "--no-playlist", "--no-warnings"}, head...)
+	args = append(args, "--extractor-args", "youtube:player_client=default,android")
+	args = append(args, tail...)
 	if cookies != "" {
 		args = append(args, "--cookies", cookies)
 	}
@@ -153,18 +168,43 @@ func splitList(s string) []string {
 }
 
 // Resolve implements Resolver with a single yt-dlp run (no retries; see
-// Cache). The cookie jar is copied to a private temp file first: yt-dlp
-// saves --cookies back on exit, which would race between two concurrent
-// runs and could overwrite a jar `ytm setup` just replaced.
+// Cache).
 func (y YtDlp) Resolve(ctx context.Context, id string, q Quality) (Stream, error) {
-	if err := checkID(id); err != nil {
+	stdout, err := y.run(ctx, id, func(jar string) []string { return y.Args(id, q, jar) })
+	if err != nil {
 		return Stream{}, err
+	}
+	return parseInfo(id, stdout, y.now())
+}
+
+// Download saves id's audio into dir and returns the file's path. Callers
+// stage dir (the file may be half written on error).
+func (y YtDlp) Download(ctx context.Context, id, dir string) (string, error) {
+	stdout, err := y.run(ctx, id, func(jar string) []string { return y.DownloadArgs(id, dir, jar) })
+	if err != nil {
+		return "", err
+	}
+	lines := strings.Split(strings.TrimSpace(string(stdout)), "\n")
+	path := strings.TrimSpace(lines[len(lines)-1])
+	if path == "" {
+		return "", fmt.Errorf("download %s: yt-dlp printed no file path", id)
+	}
+	return path, nil
+}
+
+// run runs yt-dlp once with the arguments args builds for a cookie jar.
+// The jar is copied to a private temp file first: yt-dlp saves --cookies
+// back on exit, which would race between two concurrent runs and could
+// overwrite a jar `ytm setup` just replaced.
+func (y YtDlp) run(ctx context.Context, id string, args func(jar string) []string) ([]byte, error) {
+	if err := checkID(id); err != nil {
+		return nil, err
 	}
 	var jar string
 	if src := y.cookieSource(); src != "" {
 		dir, err := os.MkdirTemp(y.TempDir, "ytm-stream-")
 		if err != nil {
-			return Stream{}, fmt.Errorf("cookie temp dir: %w", err)
+			return nil, fmt.Errorf("cookie temp dir: %w", err)
 		}
 		defer func() { _ = os.RemoveAll(dir) }()
 		jar = filepath.Join(dir, "cookies.txt")
@@ -180,19 +220,19 @@ func (y YtDlp) Resolve(ctx context.Context, id string, q Quality) (Stream, error
 	}
 	bin := y.binary()
 	start := y.now()
-	stdout, stderr, err := run(ctx, y.Env(), bin, y.Args(id, q, jar)...)
+	stdout, stderr, err := run(ctx, y.Env(), bin, args(jar)...)
 	if ctx.Err() != nil {
-		return Stream{}, ctx.Err()
+		return nil, ctx.Err()
 	}
-	y.log().Debug("stream: yt-dlp finished", "id", id, "quality", string(q), "took", y.now().Sub(start), "err", err)
+	y.log().Debug("stream: yt-dlp finished", "id", id, "took", y.now().Sub(start), "err", err)
 	if err != nil {
 		var ee *exec.Error
 		if errors.As(err, &ee) || errors.Is(err, fs.ErrNotExist) {
-			return Stream{}, fmt.Errorf("%w: %s: %w", ErrYtDlpNotFound, bin, err)
+			return nil, fmt.Errorf("%w: %s: %w", ErrYtDlpNotFound, bin, err)
 		}
-		return Stream{}, classify(stderr, err)
+		return nil, classify(stderr, err)
 	}
-	return parseInfo(id, stdout, y.now())
+	return stdout, nil
 }
 
 func copyFile(src, dst string) error {
