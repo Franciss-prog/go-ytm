@@ -206,7 +206,7 @@ func TestAlbumRowsCannotBeRemoved(t *testing.T) {
 func TestDeleteLibraryPlaylist(t *testing.T) {
 	h := newPB(t)
 	lib := h.m.pages[PageLibrary].(*libraryPage)
-	h.keys(ch('j'), ch('j'), ch('j'), kRight) // the Playlists column
+	h.keys(ch('j'), ch('j'), ch('j'), ch('j'), kRight) // the Playlists column
 	// Liked Music is not owned.
 	h.keys(tea.Key{Code: tea.KeyDelete})
 	if h.m.popup != nil || !strings.Contains(plain(h.m), "Only your own playlists") {

@@ -27,7 +27,7 @@ func TestLibraryColumns(t *testing.T) {
 		t.Fatalf("start columns %d calls %v", len(lib.cols), api.Calls())
 	}
 	// Moving the cursor previews the next node only once it rests.
-	h.keys(ch('j'), ch('j'), ch('j')) // Playlists
+	h.keys(ch('j'), ch('j'), ch('j'), ch('j')) // Playlists
 	if lib.cols[1].key != "pl:LM" {
 		t.Fatal("preview ran before the debounce")
 	}
@@ -91,7 +91,7 @@ func TestLibraryColumns(t *testing.T) {
 func TestLibraryArtistReleases(t *testing.T) {
 	h := newPB(t)
 	lib := h.m.pages[PageLibrary].(*libraryPage)
-	h.keys(ch('j'))
+	h.keys(ch('j'), ch('j'))
 	libPreview(h)
 	h.keys(kRight) // Artists → first artist previews its releases
 	if lib.focus != 1 || len(lib.cols) != 3 || lib.cols[2].kind != nodeArtist || lib.cols[2].list.Len() != 2 {
@@ -154,7 +154,7 @@ func TestArtistPage(t *testing.T) {
 func TestLibrarySignedOut(t *testing.T) {
 	h := newPB(t)
 	h.m.o.API.(*fakeAPI).errs["LibraryArtists"] = errUnauth()
-	h.keys(ch('j'), kRight)
+	h.keys(ch('j'), ch('j'), kRight)
 	if !strings.Contains(plain(h.m), "Run `ytm setup`") {
 		t.Fatalf("no signed-out state:\n%s", plain(h.m))
 	}

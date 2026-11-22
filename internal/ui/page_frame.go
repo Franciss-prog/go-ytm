@@ -62,6 +62,9 @@ func (p *queuePage) Hints() []hint {
 
 // PanelTitle implements panelTitler: "album · Discovery".
 func (p *contextPage) PanelTitle() string {
+	if p.asTitle != "" {
+		return strings.ToLower(p.asTitle)
+	}
 	k := strings.ToLower(kindNames[p.kind])
 	if p.name == "" {
 		return k

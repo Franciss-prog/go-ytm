@@ -1,11 +1,11 @@
- ytm  queue  library  track  search                         ⤮  ⟳  vol ▪▪▪▪▪ 80% 
+ ytm  queue  library  track  search  browse                 ⤮  ⟳  vol ▪▪▪▪▪ 80% 
 ────────────╯       ╰───────────────────────────────────────────────────────────
 ╭│ playlists │───────────╮╭│ library │─────────────────────────────────────────╮
 │ ♥ Liked Songs          ││ Liked Music   ▸ │                                  │
-│ ⏱ Recently Played      ││ Artists       ▸ │ No tracks here.                  │
-│ ♫ Discovery Mix        ││ Albums        ▸ │                                  │
-│ ────────────────────── ││ Playlists     ▸ │                                  │
-│ Playlists              ││                 │                                  │
+│ ⏱ Recently Played      ││ Recently Pl…  ▸ │ No tracks here.                  │
+│ ♫ Discovery Mix        ││ Artists       ▸ │                                  │
+│ ────────────────────── ││ Albums        ▸ │                                  │
+│ Playlists              ││ Playlists     ▸ │                                  │
 │ Late night drives  87  ││                 │                                  │
 │ Focus              43  ││                 │                                  │
 │                        ││                 │                                  │
@@ -19,6 +19,6 @@
 │                        ││                 │                                  │
 │                        ││                 │                                  │
 │ 2 playlists            ││                 │                                  │
-╰ Focus · 43 songs ──────╯╰ Liked Music ──────────────────────────────│ 1/4 │──╯
+╰ Focus · 43 songs ──────╯╰ Liked Music ──────────────────────────────│ 1/5 │──╯
  Nothing playing                                                                
  enter open · C-w l main · C-e hide · / filter   ? help                         
