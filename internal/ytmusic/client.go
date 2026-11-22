@@ -7,6 +7,7 @@
 package ytmusic
 
 import (
+	"maps"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -377,6 +378,11 @@ func (a *API) call(ctx context.Context, endpoint string, body map[string]any, ex
 	}
 }
 
+// clientOverride is a body key whose map value replaces fields of the
+// request's context.client (e.g. the Android app client for timed lyrics).
+// It is never sent as a body field.
+const clientOverride = "\x00client"
+
 func (a *API) payload(body map[string]any) ([]byte, error) {
 	client := map[string]any{
 		"clientName":    "WEB_REMIX",
@@ -392,6 +398,10 @@ func (a *API) payload(body map[string]any) ([]byte, error) {
 	}
 	full := make(map[string]any, len(body)+1)
 	for k, v := range body {
+		if k == clientOverride {
+			maps.Copy(client, v.(map[string]any))
+			continue
+		}
 		full[k] = v
 	}
 	full["context"] = map[string]any{"client": client, "user": user}

@@ -1,0 +1,26 @@
+{
+  "contents": {
+    "sectionListRenderer": {
+      "contents": [
+        {
+          "musicDescriptionShelfRenderer": {
+            "description": {
+              "runs": [
+                {
+                  "text": "Like the legend of the phoenix\r\nAll ends with beginnings\r\nWhat keeps the planet spinning (uh)\r\nThe force from the beginning\r\n\r\n(Look)\r"
+                }
+              ]
+            },
+            "footer": {
+              "runs": [
+                {
+                  "text": "Source: LyricFind"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

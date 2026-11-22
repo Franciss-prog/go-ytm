@@ -1,0 +1,61 @@
+{
+  "contents": {
+    "elementRenderer": {
+      "newElement": {
+        "type": {
+          "componentType": {
+            "model": {
+              "timedLyricsModel": {
+                "lyricsData": {
+                  "sourceMessage": "Source: LyricFind",
+                  "timedLyricsData": [
+                    {
+                      "cueRange": {
+                        "endTimeMilliseconds": "30000",
+                        "metadata": {
+                          "id": "0"
+                        },
+                        "startTimeMilliseconds": "0"
+                      },
+                      "lyricLine": "♪"
+                    },
+                    {
+                      "cueRange": {
+                        "endTimeMilliseconds": "33210",
+                        "metadata": {
+                          "id": "1"
+                        },
+                        "startTimeMilliseconds": "30000"
+                      },
+                      "lyricLine": "Like the legend of the phoenix"
+                    },
+                    {
+                      "cueRange": {
+                        "endTimeMilliseconds": "38670",
+                        "metadata": {
+                          "id": "2"
+                        },
+                        "startTimeMilliseconds": "33210"
+                      },
+                      "lyricLine": "All ends with beginnings"
+                    },
+                    {
+                      "cueRange": {
+                        "endTimeMilliseconds": "42880",
+                        "metadata": {
+                          "id": "3"
+                        },
+                        "startTimeMilliseconds": "38670"
+                      },
+                      "lyricLine": "What keeps the planet spinning (uh)"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

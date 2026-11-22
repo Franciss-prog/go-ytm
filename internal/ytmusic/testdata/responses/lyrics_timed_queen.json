@@ -1,0 +1,61 @@
+{
+  "contents": {
+    "elementRenderer": {
+      "newElement": {
+        "type": {
+          "componentType": {
+            "model": {
+              "timedLyricsModel": {
+                "lyricsData": {
+                  "sourceMessage": "Source: Musixmatch",
+                  "timedLyricsData": [
+                    {
+                      "cueRange": {
+                        "endTimeMilliseconds": "7120",
+                        "metadata": {
+                          "id": "0"
+                        },
+                        "startTimeMilliseconds": "170"
+                      },
+                      "lyricLine": "Is this the real life? Is this just fantasy?"
+                    },
+                    {
+                      "cueRange": {
+                        "endTimeMilliseconds": "14830",
+                        "metadata": {
+                          "id": "1"
+                        },
+                        "startTimeMilliseconds": "7120"
+                      },
+                      "lyricLine": "Caught in a landslide, no escape from reality"
+                    },
+                    {
+                      "cueRange": {
+                        "endTimeMilliseconds": "25140",
+                        "metadata": {
+                          "id": "2"
+                        },
+                        "startTimeMilliseconds": "14830"
+                      },
+                      "lyricLine": "Open your eyes, look up to the skies and see"
+                    },
+                    {
+                      "cueRange": {
+                        "endTimeMilliseconds": "30730",
+                        "metadata": {
+                          "id": "3"
+                        },
+                        "startTimeMilliseconds": "25140"
+                      },
+                      "lyricLine": "I'm just a poor boy (ooh, poor boy), I need no sympathy"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
