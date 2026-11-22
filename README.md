@@ -1,280 +1,256 @@
 # ytm-go
 
-> A fast, beautiful YouTube Music client for your terminal, rewritten in Go.
+A YouTube Music player for the terminal, written in Go.
 
-**Status: 🚧 pre-alpha (M0 scaffold).** Today `ytm doctor`, `ytm config` (`check`, `path`,
-`defaults`) and `--help`/`--version` work; the player itself does not yet.
-Nothing is released yet. The rest of this README describes the planned feature set. See the [roadmap](#roadmap).
+Vim keys, mouse support, cover art, a spectrum visualizer, and colors that follow your
+wallpaper (pywal / matugen). It ships as one binary: no Python, no venv.
 
-`ytm-go` is a ground-up Go rewrite of [ytm-player](https://github.com/peternaame-boop/ytm-player)
-(MIT). The original is great but the Python/Textual stack can feel laggy. `ytm-go` aims for the same
-feature set in a single static binary that stays smooth, and adds first-class wallpaper-driven
-theming and transparency.
+It is a Go rewrite of [ytm-player](https://github.com/peternaame-boop/ytm-player) (Python/Textual,
+MIT). The goal is the same features without the lag.
 
----
+**Status: early, but it plays music.** You can search, browse your library, build a queue and
+listen. There are no releases yet: build it from source. See [What works](#what-works) and
+[Not done yet](#not-done-yet).
 
-## Why
+## Quick start
 
-- **Lag.** Slow repaints and UI stalls during network/mpv calls. Go + Bubble Tea with a non-blocking
-  update loop and goroutines for all I/O is the fix.
-- **Install friction.** One static binary instead of a Python environment (pipx, venvs, PEP 668 issues).
-- **Rice-friendly.** Built for people who theme their desktop from their wallpaper (pywal, matugen)
-  and run transparent terminals.
+You need:
 
-## Planned features
-
-### Playback and library
-
-- Search, Library, Browse (For You, Charts), Queue, Liked Songs, Recently Played
-- Radio and discovery mixes, autoplay of related tracks
-- Gapless playback, next-track prefetch, resume where you left off
-- Offline downloads with an LRU audio cache (size-capped)
-- Per-playlist shuffle lock
-- Synced lyrics sidebar (lrclib), optional transliteration, RTL text support
-- Spotify playlist import with fuzzy matching
-
-### Interface
-
-- Vim-style keys with chords and counts (`g` `l`, `15J`), fully rebindable
-- Full mouse support (seek, marks, right-click actions)
-- Marks and range selection, filter and sort in every track list
-- Album art in the terminal (half-block rendering)
-- Built with the [Charm](https://charm.sh) stack: Bubble Tea, Bubbles, Huh, Lip Gloss
-
-### Dynamic theming and transparency
-
-- **pywal**: reads `~/.cache/wal/colors.json`
-- **matugen**: Material You roles via a template shipped in this repo
-- **ansi**: uses your terminal's own palette, so anything that recolors the terminal recolors the app
-- **static / file**: built-in themes or your own `theme.toml`
-- **Live reload**: change your wallpaper and the running player recolors without flicker or interrupting playback
-- **Contrast guard**: unreadable wallpaper palettes get adjusted automatically (toggleable)
-- **Transparent mode**: the app stops painting backgrounds so your terminal's transparency/blur shows through
-- Settings popup (`,`) to change all of this live
-
-> **Note on transparency:** a terminal app cannot set real opacity. Your terminal emulator controls that.
-> Transparent mode makes `ytm-go` use the terminal's default background everywhere so the terminal's own
-> opacity or blur shows through. Set the opacity in your terminal's config.
-
-### CLI and scripting
-
-- Pretty output on a TTY, plain/JSON when piped (`--json`, `NO_COLOR` respected)
-- Control a running player from another terminal or a keybinding in your window manager
-- Diagnostics with `ytm doctor`
+- Go 1.26 or newer (to build)
+- [mpv](https://mpv.io/) (plays the audio)
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp) plus a JavaScript runtime it can use, such as
+  [deno](https://deno.com/) (yt-dlp needs one to unlock YouTube's audio links)
+- Optional: `pw-cat` from PipeWire, for the spectrum visualizer (Linux only)
+- Optional: kitty or Ghostty, for sharp cover art (other terminals get half-block art)
 
 ```sh
-ytm search "daft punk" --filter songs --json | jq '.[0]'
-ytm play | pause | next | prev
-ytm seek +10
-ytm like
-ytm queue add VIDEO_ID
-ytm now            # now-playing card
-ytm stats          # listening stats
-ytm import "https://open.spotify.com/playlist/..."
-ytm theme reload   # force a theme refresh
-ytm doctor         # diagnostic report
+git clone https://github.com/Franciss-prog/go-ytm.git
+cd go-ytm
+make build          # builds ./bin/ytm
+./bin/ytm doctor    # checks mpv, yt-dlp, config and your terminal
+./bin/ytm           # starts the player
 ```
 
-## Performance goals
-
-These are targets, to be measured and published in PRs.
-
-| Metric                                           | Target   |
-| ------------------------------------------------ | -------- |
-| Cold start to interactive UI (excluding network) | < 150 ms |
-| Keypress to repaint                              | < 16 ms  |
-| Idle CPU                                         | < 1%     |
-| Memory with art + lyrics open                    | < 80 MB  |
-| Theme change to full repaint                     | < 50 ms  |
-
-A `--pprof` flag will ship so lag can be profiled instead of guessed.
-
-## How it works
-
-```
- ┌────────────┐   messages   ┌──────────────┐   JSON IPC   ┌───────┐
- │ Bubble Tea │ ◄──────────► │  player core │ ◄──────────► │  mpv  │
- │    TUI     │              └──────┬───────┘              └───────┘
- └─────┬──────┘                     │
-       │                   ┌────────┴────────┐
-       │                   │ stream resolver │── yt-dlp
-       │                   └────────┬────────┘
-       │                            │
- ┌─────┴──────┐   ┌─────────────────┴──┐   ┌──────────────┐
- │ theme/     │   │ YouTube Music API  │   │ SQLite store │
- │ settings   │   │ (InnerTube)        │   │ + audio cache│
- └─────┬──────┘   └────────────────────┘   └──────────────┘
-       │ fsnotify
-  pywal / matugen files
-```
-
-- **No cgo.** mpv runs as a subprocess controlled over its JSON IPC socket; SQLite is pure Go.
-- **Non-blocking UI.** The update loop never waits on the network, disk, or mpv.
-- **Everything behind interfaces** (mpv, YouTube Music, yt-dlp) so it can be tested with fakes.
-
-## Requirements (planned)
-
-- [mpv](https://mpv.io/)
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp)
-- A truecolor terminal is recommended (256 and 16 colors degrade gracefully)
-- Linux, macOS, Windows (Linux is the primary target)
-
-## Installation (planned)
-
-Not available yet. Planned channels:
+Searching works without an account. To get your library, playlists and likes, sign in once:
 
 ```sh
-# from source (once there is a release)
-go install github.com/Franciss-Prog/go-ytm/cmd/ytm@latest
-
-# later: GitHub releases, AUR, Homebrew, Scoop, Nix
+./bin/ytm setup     # reads your YouTube Music session from a browser you are logged in to
 ```
+
+`setup` uses `yt-dlp --cookies-from-browser`, so it supports the browsers yt-dlp supports
+(Firefox, Chrome, Chromium, Brave, Edge, Vivaldi, Opera, Zen, Helium).
+
+## What works
+
+Pages (switch with the tab bar or the keys below):
+
+- **Search**: songs, videos, albums, artists, playlists, with suggestions.
+- **Library**: Miller columns, like ranger or yazi: Playlists / Albums / Artists, then the
+  items, then their tracks.
+- **Queue**: reorder, remove, shuffle, repeat, filter and sort.
+- **Track** (`g n`): a centered "now playing" card with cover art, title, artist, album, time,
+  volume, a spectrum visualizer and a progress bar you can click to seek.
+- Album, playlist and artist pages, a track actions popup (`a`), add to playlist (`A`),
+  like/unlike (`l`), and a playlist sidebar (`Ctrl+E`).
+
+Playback:
+
+- Gapless playback. The next track is resolved and loaded into mpv before the current one ends.
+- **Hover prefetch.** When the cursor rests on a track for 0.4 s, ytm starts resolving it, so
+  Enter plays almost at once. Without it, a new track takes about 10 s to start, because
+  YouTube needs roughly 5 s to hand out the audio link and then blocks it for about 3 s more.
+- mpv crash recovery: mpv restarts and resumes where it was.
+
+Looks:
+
+- Cover art as real images (kitty graphics protocol) or half blocks, `Ctrl+A` to toggle.
+- Themes from pywal, matugen, your terminal's own 16 colors, built-ins (`ytm-dark`,
+  `ytm-light`, `nord`, `gruvbox-dark`) or your own `theme.toml`.
+- Live reload: change your wallpaper and the player recolors itself, without stopping playback.
+- Transparent mode (`Ctrl+T`): the player paints no backgrounds, so your terminal's opacity and
+  blur show through.
+- Contrast guard: colors that would be hard to read are adjusted automatically.
+- Settings popup (`,`) to change theme, transparency and more while it runs.
+
+## Keys
+
+Vim-style, with counts (`5j`) and chords (`g s`). Press `?` in the player for the full list.
+Every key can be rebound in `keymap.toml`.
+
+| Key | Action |
+| --- | --- |
+| `j` / `k`, arrows | move down / up |
+| `enter` | play / open |
+| `g g` / `G` | top / bottom |
+| `/` | filter the list |
+| `backspace` | back |
+| `tab` | next panel |
+| `g s` / `g l` / `z` / `g n` | Search / Library / Queue / Track page |
+| `h` / `right` | Library: previous / next column |
+| `space` | play / pause |
+| `n` / `p` | next / previous track |
+| `<` / `>` | seek back / forward |
+| `-` / `+` / `_` | volume down / up / mute |
+| `Ctrl+S` / `Ctrl+R` | shuffle / repeat |
+| `Z` / `X` | add to queue / play next |
+| `v` / `V` | mark / mark range |
+| `a` | track actions |
+| `,` | settings |
+| `q` | quit |
+
+The mouse works too: click rows, right-click for actions, scroll, and click or scroll the
+progress bar to seek.
+
+## Command line
+
+```sh
+ytm                          # start the player
+ytm search "daft punk"       # search from the shell
+ytm search "daft punk" --json | jq '.[0]'
+ytm setup                    # sign in from your browser
+ytm doctor                   # diagnose mpv, yt-dlp, config, terminal
+ytm theme show               # print the active theme and any contrast fixes
+ytm config check             # validate config.toml
+ytm config path              # where the config lives
+ytm config defaults          # print every setting with its default
+```
+
+Output is styled on a terminal and plain when piped. `--json` and `NO_COLOR` are respected.
 
 ## Configuration
 
-Files live in `~/.config/ytm-go/` (`$XDG_CONFIG_HOME` respected, `%APPDATA%\ytm-go\` on Windows):
+Files live in `~/.config/ytm-go/` (`$XDG_CONFIG_HOME` is respected; `%APPDATA%\ytm-go\` on
+Windows). None of them are required.
 
-| File          | Purpose                                    |
-| ------------- | ------------------------------------------ |
-| `config.toml` | General, playback, cache, UI, integrations |
-| `keymap.toml` | Keybinding overrides                       |
-| `theme.toml`  | Custom theme colors                        |
+| File | What it holds |
+| --- | --- |
+| `config.toml` | playback, UI, theme, yt-dlp options |
+| `keymap.toml` | your key overrides |
+| `theme.toml` | your own colors (with `source = "file"`) |
 
-Example theming setup:
+Run `ytm config defaults` to see every setting. A few useful ones:
 
 ```toml
+[playback]
+default_volume = 80
+prefetch_on_hover = true   # resolve the track under the cursor ahead of time
+
+[ui]
+album_art_mode = "auto"    # auto | kitty | blocks | off
+visualizer = true          # spectrum on the Track page (Linux, needs pw-cat)
+show_sidebar = false
+
 [theme]
-source = "pywal"            # static | pywal | matugen | ansi | file
+source = "pywal"           # static | pywal | matugen | ansi | file
 transparent = true
-transparent_selection = "bar"   # bar | reverse | underline | solid
+watch = true               # recolor live when the palette file changes
 enforce_contrast = true
-watch = true                # live reload on wallpaper change
-fallback = "ytm-dark"       # used if the source file is missing or invalid
+fallback = "ytm-dark"      # used when the palette file is missing or broken
 ```
-
-## Dynamic theming with pywal and matugen
-
-The player recolors itself when your wallpaper palette changes (about 0.1 s after the file is
-written), without restarting or interrupting playback. Check what it resolved with
-`ytm theme show`; `ytm doctor` has a Theme section.
 
 ### pywal
 
-```toml
-[theme]
-source = "pywal"
-# pywal_path = "~/.cache/wal/colors.json"   # the default
-```
-
-Run `wal -i <wallpaper>` as usual. If your `colors.json` is written by a matugen template (no
-`special` block, many empty colors), `ytm doctor` says so: `source = "matugen"` gives richer colors.
-Pick tokens yourself with `[theme.pywal_map]`, e.g. `accent = "color5"`.
+Set `source = "pywal"` and run `wal -i <wallpaper>` as usual. ytm reads
+`~/.cache/wal/colors.json`. To pick which color goes where, use `[theme.pywal_map]`, for example
+`accent = "color5"`.
 
 ### matugen
 
-1. Copy the template: `cp contrib/matugen/ytm-go.toml ~/.config/ytm-go/matugen-template.toml`
-2. Add to `~/.config/matugen/config.toml`:
+1. `cp contrib/matugen/ytm-go.toml ~/.config/ytm-go/matugen-template.toml`
+2. Add this to `~/.config/matugen/config.toml`:
 
    ```toml
    [templates.ytm-go]
    input_path = '~/.config/ytm-go/matugen-template.toml'
    output_path = '~/.config/ytm-go/matugen-colors.toml'
-   # no post_hook needed: ytm-go watches the output file
    ```
 
-3. Set `source = "matugen"` under `[theme]` and run matugen as usual.
-
-The template was rendered with matugen 4.2.0 (`scripts/gen-matugen-fixtures.sh`).
-
-### Other sources
-
-- `ansi`: the terminal's own 16 colors (`ansi_accent = 4` picks the accent slot). Anything that
-  recolors the terminal recolors the app, with no file watching.
-- `static`: `name = "ytm-dark" | "ytm-light" | "nord" | "gruvbox-dark"`.
-- `file`: your own `~/.config/ytm-go/theme.toml` with `[colors]` (`bg`, `fg`, `accent` required, the
-  rest derived). Its `[overrides]` table applies on top of every source.
+3. Set `source = "matugen"` and run matugen as usual. No post hook is needed: ytm watches the
+   output file.
 
 ### Transparent terminal
 
-A terminal app cannot set opacity; your terminal does. Set it there, then `transparent = true`
-(or press `Ctrl+T` in the player, or use Settings with `,`):
+A terminal program cannot make itself see-through: your terminal emulator controls that. Set the
+opacity there (kitty: `background_opacity 0.85`, alacritty: `[window] opacity = 0.85`,
+WezTerm: `window_background_opacity = 0.85`), then turn on `transparent = true` or press
+`Ctrl+T`.
 
-| Terminal  | Setting                                       |
-| --------- | --------------------------------------------- |
-| kitty     | `background_opacity 0.85`                     |
-| alacritty | `[window]` `opacity = 0.85`                   |
-| foot      | `[colors-dark]` `alpha = 0.85` (foot ≥ 1.26)  |
-| WezTerm   | `config.window_background_opacity = 0.85`    |
+### When colors look wrong
 
-In transparent mode `ytm-go` never paints a background; the selection is drawn as an accent bar by
-default (`transparent_selection = "bar" | "reverse" | "underline" | "solid"`).
+- `ytm doctor` shows which palette file is used and whether live reload is on.
+- `ytm theme show` lists every color the contrast guard changed.
+- `kill -USR1 $(pgrep -x ytm)` forces a theme reload.
 
-### Troubleshooting
+## Not done yet
 
-- **Theme not updating:** `ytm doctor` (Theme section) shows the palette path and whether live reload
-  is on (`watch = true`). `kill -USR1 $(pgrep -x ytm)` forces a reload.
-- **Hard-to-read colors:** keep `enforce_contrast = true`; `ytm theme show` lists every adjusted
-  color. Override single tokens with `[theme.pywal_map]` or `theme.toml` `[overrides]`.
-- **Fallback colors:** if the palette file is missing or broken, the `fallback` theme is used and a
-  toast says why; the player switches once a valid file appears.
+- Browse (For You, Charts), Liked Songs and Recently Played pages, radio and discovery mixes
+- Resume the last session, offline downloads and the audio cache
+- Synced lyrics
+- Controlling a running player from the shell (`ytm play`, `ytm next`, ...)
+- MPRIS / media keys, notifications, Discord, Last.fm, Spotify import
+- Releases and packages (AUR, Homebrew, ...)
 
-## Roadmap
+The plan, milestone by milestone, is in [docs/PROGRESS.md](docs/PROGRESS.md), and the design
+specs are in [docs/specs/](docs/specs/).
 
-| Milestone | Scope                                                                             |
-| --------- | --------------------------------------------------------------------------------- |
-| M0        | Scaffold, CI, config loader, styled CLI base                                      |
-| M1        | mpv IPC player core                                                               |
-| M2        | Auth wizard, YouTube Music search                                                 |
-| M3        | Stream resolution and prefetch                                                    |
-| M4        | TUI shell, theme system                                                           |
-| **M4b**   | **pywal / matugen / ansi theming, live reload, transparent mode, Settings popup** |
-| M5        | Library, Search, Queue pages                                                      |
-| M6        | Browse, Liked Songs, Recently Played, radio                                       |
-| M7        | Session resume, audio cache, offline downloads                                    |
-| M8        | Synced lyrics                                                                     |
-| M9        | Full CLI and IPC control                                                          |
-| M10       | MPRIS, media keys, notifications                                                  |
-| M11       | Discord RPC, Last.fm, Spotify import                                              |
-| M12       | Performance pass, docs, packaging, v0.1.0                                         |
-
-Each milestone ships as its own pull request, driven by written specs in `docs/specs/`.
-
-## Project layout (planned)
+## How it works
 
 ```
-cmd/ytm/                 entry point
-internal/app/            application wiring
-internal/ui/             Bubble Tea models, pages, popups
-internal/style/          all Lip Gloss styles, icons, theme tokens
-internal/player/         mpv IPC client and state machine
-internal/ytmusic/        YouTube Music API client
-internal/stream/         yt-dlp resolver and URL cache
-internal/store/          SQLite, session, audio cache
-internal/config/         TOML config, keymap, theme
-internal/ipc/            CLI <-> running TUI
-internal/lyrics/         lrclib client and sync
-internal/integrations/   MPRIS, Discord, Last.fm, Spotify import
-docs/specs/              design specs
-contrib/matugen/         matugen template
+ Bubble Tea UI  <-- messages -->  player core  <-- JSON IPC -->  mpv
+       |                              |
+       |                       stream resolver  -->  yt-dlp
+       |                              |
+  theme watcher               YouTube Music API (InnerTube)
+       |
+  pywal / matugen files
 ```
 
-## Contributing
+- **No cgo.** mpv runs as a separate process, controlled over its JSON IPC socket.
+- **The UI never waits.** Network, disk and mpv calls run in the background and report back as
+  messages, so a slow request never freezes a keypress.
+- **Fakes for everything.** mpv, YouTube Music, yt-dlp and the clock sit behind interfaces, so the
+  tests run without network or audio.
 
-Not open yet. Once the specs and scaffold land, contributions will follow the workflow in `CLAUDE.md`:
-one PR per change, Conventional Commits, tests required (`go test -race ./...`), lint clean.
+Code layout:
+
+```
+cmd/ytm/            entry point
+internal/ui/        Bubble Tea pages, popups, frame
+internal/player/    mpv process and JSON IPC
+internal/ytmusic/   YouTube Music (InnerTube) client
+internal/stream/    yt-dlp resolver, URL cache, prefetch
+internal/theme/     palettes, contrast guard, live reload
+internal/art/       cover art fetch, kitty graphics
+internal/viz/       spectrum analyzer
+internal/config/    config.toml loading and validation
+internal/keys/      keymap, chords, counts
+internal/cli/       the ytm command
+docs/specs/         design specs
+```
+
+## Development
+
+```sh
+make build   # ./bin/ytm
+make test    # go test -race ./...
+make lint
+make run
+```
+
+Read `CLAUDE.md` for the project rules: one PR per milestone, Conventional Commits, tests and
+lint must pass.
 
 ## Disclaimer
 
-`ytm-go` is an unofficial, third-party client. It is not affiliated with or endorsed by YouTube or
-Google. It relies on undocumented YouTube Music endpoints and on `yt-dlp`, so it may break when
-YouTube changes things. Use it with your own account and at your own risk, and respect YouTube's
-terms of service.
+ytm-go is an unofficial client. It is not affiliated with or endorsed by YouTube or Google. It
+relies on undocumented YouTube Music endpoints and on yt-dlp, so it can break when YouTube changes
+things. Use your own account, at your own risk, and respect YouTube's terms of service.
 
 ## Credits and license
 
-- Inspired by and behaviorally modeled on [ytm-player](https://github.com/peternaame-boop/ytm-player)
-  by peternaame-boop and contributors (MIT).
-- Built with [Bubble Tea](https://github.com/charmbracelet/bubbletea), Lip Gloss, Bubbles and Huh from
-  [Charm](https://charm.sh), plus mpv and yt-dlp.
+- Modeled on [ytm-player](https://github.com/peternaame-boop/ytm-player) by peternaame-boop and
+  contributors (MIT).
+- The look takes ideas from kew and ytkew screenshots. No code was copied from them.
+- Built with [Charm](https://charm.sh) (Bubble Tea, Lip Gloss, Bubbles, Huh), mpv and yt-dlp.
 
 Released under the [MIT License](LICENSE).
