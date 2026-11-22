@@ -22,11 +22,13 @@ import (
 	"github.com/charmbracelet/colorprofile"
 
 	"github.com/Franciss-Prog/go-ytm/internal/art"
+	"github.com/Franciss-Prog/go-ytm/internal/cache"
 	"github.com/Franciss-Prog/go-ytm/internal/clock"
 	"github.com/Franciss-Prog/go-ytm/internal/config"
 	"github.com/Franciss-Prog/go-ytm/internal/keys"
 	"github.com/Franciss-Prog/go-ytm/internal/platform"
 	"github.com/Franciss-Prog/go-ytm/internal/player"
+	"github.com/Franciss-Prog/go-ytm/internal/store"
 	"github.com/Franciss-Prog/go-ytm/internal/stream"
 	"github.com/Franciss-Prog/go-ytm/internal/theme"
 	"github.com/Franciss-Prog/go-ytm/internal/ui"
@@ -123,12 +125,18 @@ func Run(ctx context.Context, o Options) error {
 
 	// Streams: one cache shared by play requests and the prefetcher, so a
 	// play joins an in-flight prefetch of the same track.
+	home, _ := os.UserHomeDir()
+	y := stream.FromConfig(o.Config.YtDlp, o.Paths.Config, func(p string) string { return platform.ExpandHome(p, home) })
+	y.Log = o.Log
 	res := o.Resolver
 	if res == nil {
-		home, _ := os.UserHomeDir()
-		y := stream.FromConfig(o.Config.YtDlp, o.Paths.Config, func(p string) string { return platform.ExpandHome(p, home) })
-		y.Log = o.Log
 		res = y
+	}
+	loc, ltoasts := openLocal(ctx, o, y, home)
+	defer loc.close(o.Log)
+	toasts = append(toasts, ltoasts...)
+	if loc.cache != nil {
+		res = cache.Resolver{Cache: loc.cache, Next: res}
 	}
 	streams := stream.NewCache(res, clock.Real{}, o.Log)
 	// The prefetcher's results go through prog, created below; onDone is
@@ -153,14 +161,16 @@ func Run(ctx context.Context, o Options) error {
 		spectrum = viz.New(src, spectrumBands, func(l []float64) { prog.Send(ui.SpectrumMsg{Levels: l}) }, o.Log)
 	}
 
-	var model tea.Model = ui.New(ui.Options{
+	um := ui.New(ui.Options{
 		Config: o.Config, Keymap: km, KeymapPath: o.Paths.KeymapFile(),
 		Theme: o.Theme.Theme, NoColor: o.NoColor, Player: pl, Log: o.Log, Toasts: toasts, Context: ctx,
 		Themes:     themeService{m: themes, configDir: o.ThemeSpec.ConfigDir, home: o.ThemeSpec.Home},
 		ConfigPath: o.Paths.ConfigFile(), PatchConfig: config.Patch, Profile: o.Profile,
 		Streams: streams, Prefetch: prefetch, API: o.API, SignedIn: o.SignedIn,
 		Art: artFetcher(o.Art), Spectrum: uiSpectrum(spectrum),
+		Local: loc.local(), Downloads: loc.downloads(), Session: loc.session, ShuffleLocks: loc.locks(),
 	})
+	var model tea.Model = um
 	if o.TraceFrames {
 		model = &tracer{inner: model, log: o.Log, start: start}
 	}
@@ -203,8 +213,11 @@ func Run(ctx context.Context, o Options) error {
 		runErr = nil // cancelled from outside (signal): a normal exit
 	}
 
-	// Shutdown: stop the player (mpv quit, kill after 2 s), which closes
-	// its event channel and ends the forwarder; then cancel the root ctx.
+	// Shutdown (spec 01): save the session, then stop the player (mpv quit,
+	// kill after 2 s), which closes its event channel and ends the
+	// forwarder; then cancel the root ctx. The program has stopped, so
+	// reading the model here races with nothing.
+	loc.saveSession(um.Session(), o.Log)
 	// The root ctx may already be cancelled: shutdown gets its own budget.
 	sctx, scancel := context.WithTimeout(context.Background(), ShutdownBudget) //nolint:contextcheck // see above
 	defer scancel()
@@ -330,4 +343,87 @@ func uiSpectrum(v *viz.Visualizer) ui.Spectrum {
 		return nil
 	}
 	return v
+}
+
+// local is the on-disk state: history store, audio cache, session and
+// shuffle locks. Each part is nil when it could not be opened; the app
+// then runs without it (and says so in a toast).
+type local struct {
+	dir     string
+	db      *store.DB
+	cache   *cache.Cache
+	session *store.Session
+	prefs   *store.ShufflePrefs
+}
+
+// openLocal opens the store in the data dir and the audio cache.
+func openLocal(ctx context.Context, o Options, y stream.YtDlp, home string) (*local, []ui.Toast) {
+	l := &local{dir: o.Paths.Data}
+	if l.dir == "" {
+		return l, nil
+	}
+	var toasts []ui.Toast
+	db, err := store.Open(ctx, l.dir)
+	if err != nil {
+		o.Log.Error("store unavailable", "err", err)
+		toasts = append(toasts, ui.Toast{Severity: ui.SevWarn, Text: "History and downloads are off this session; see the log"})
+	} else {
+		l.db = db
+		dir := platform.ExpandHome(o.Config.Cache.Location, home)
+		if dir == "" {
+			dir = filepath.Join(o.Paths.Cache, "audio")
+		}
+		l.cache = &cache.Cache{Dir: dir, Max: int64(o.Config.Cache.MaxSizeMB) << 20, Index: db, DL: y, Log: o.Log}
+	}
+	if s, ok, err := store.LoadSession(l.dir); err != nil {
+		o.Log.Warn("session not restored", "err", err)
+	} else if ok {
+		l.session = &s
+	}
+	prefs, err := store.LoadShufflePrefs(l.dir)
+	if err != nil {
+		o.Log.Warn("shuffle prefs unreadable; starting empty", "err", err)
+	}
+	l.prefs = prefs
+	return l, toasts
+}
+
+// The ui options take interfaces: a nil pointer must stay a nil interface.
+func (l *local) local() ui.Local {
+	if l.db == nil {
+		return nil
+	}
+	return l.db
+}
+
+func (l *local) downloads() ui.Downloads {
+	if l.cache == nil {
+		return nil
+	}
+	return l.cache
+}
+
+func (l *local) locks() ui.ShuffleLocks {
+	if l.prefs == nil {
+		return nil
+	}
+	return l.prefs
+}
+
+// saveSession writes session.json (skipped without a data dir).
+func (l *local) saveSession(s store.Session, log *slog.Logger) {
+	if l.dir == "" {
+		return
+	}
+	if err := store.SaveSession(l.dir, s); err != nil {
+		log.Error("session not saved", "err", err)
+	}
+}
+
+func (l *local) close(log *slog.Logger) {
+	if l.db != nil {
+		if err := l.db.Close(); err != nil {
+			log.Warn("store close", "err", err)
+		}
+	}
 }

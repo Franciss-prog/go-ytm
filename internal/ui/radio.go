@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math/rand/v2"
 	"strings"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 
@@ -347,14 +348,21 @@ func (m *Model) maybeReport() tea.Cmd {
 		return nil
 	}
 	r.reported = true
+	var save tea.Cmd
 	if t, ok := m.pb.q.Current(); ok && t.VideoID == r.reportID {
 		m.plays.add(t)
+		if l := m.o.Local; l != nil {
+			// shortcut: logs the listen time at the threshold, not the final one
+			// (ytm-player updates it on track end); upgrade with M9's stats.
+			listened := st.Position - time.Duration(r.startPos*float64(time.Second))
+			save = localWrite(m.o.Context, m.log, "play", func(c context.Context) error { return l.LogPlay(c, t, listened) })
+		}
 	}
 	if !m.o.Config.Playback.SyncHistoryToYTMusic || !m.o.SignedIn || m.o.API == nil {
-		return nil
+		return save
 	}
 	api, ctx, id := m.o.API, m.o.Context, r.reportID
-	return func() tea.Msg { return historyReportedMsg{id: id, err: api.AddHistoryItem(ctx, id)} }
+	return tea.Batch(save, func() tea.Msg { return historyReportedMsg{id: id, err: api.AddHistoryItem(ctx, id)} })
 }
 
 // historyReported logs a failed report. Best effort and not retried:

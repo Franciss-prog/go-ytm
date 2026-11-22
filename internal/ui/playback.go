@@ -10,6 +10,7 @@ import (
 	"github.com/Franciss-Prog/go-ytm/internal/config"
 	"github.com/Franciss-Prog/go-ytm/internal/player"
 	"github.com/Franciss-Prog/go-ytm/internal/queue"
+	"github.com/Franciss-Prog/go-ytm/internal/store"
 	"github.com/Franciss-Prog/go-ytm/internal/stream"
 	"github.com/Franciss-Prog/go-ytm/internal/ui/components"
 	"github.com/Franciss-Prog/go-ytm/internal/ytmusic"
@@ -92,6 +93,11 @@ type playback struct {
 	hover     string // video ID that rested long enough ("" none)
 
 	radio radioState // radio, autoplay, discovery, history reporting (radio.go)
+
+	// Session resume (session.go): the saved resume point, kept until a
+	// track loads, and where play_pause starts the restored track.
+	savedResume *store.Resume
+	resumeAt    time.Duration
 }
 
 func (m *Model) quality() stream.Quality {
@@ -130,6 +136,7 @@ func (m *Model) startCurrent(startAt time.Duration) tea.Cmd {
 	m.pb.seq++
 	m.pb.loading = t.VideoID
 	m.pb.retried = ""
+	m.pb.savedResume = nil
 	m.dropAppended()
 	m.bar.now = nowPlaying(t)
 	m.queueChanged()
@@ -409,6 +416,9 @@ func (m *Model) queueAction(name string) tea.Cmd {
 		cmd := m.queueEdited()
 		return tea.Batch(cmd, m.toasts.push(Toast{Severity: SevInfo, Text: "Repeat: " + r.String()}))
 	case "toggle_shuffle":
+		if m.locked(q.Context()) {
+			return m.toasts.push(Toast{Severity: SevWarn, Text: "Shuffle is locked for this playlist; turn its Shuffle lock off first"})
+		}
 		q.ToggleShuffle()
 		cmd := m.queueEdited()
 		state := "off"
@@ -426,7 +436,7 @@ func (m *Model) play(msg PlayMsg) tea.Cmd {
 		return nil
 	}
 	q := m.pb.q
-	shuffle := q.Shuffle() || msg.Shuffle
+	shuffle := q.Shuffle() || msg.Shuffle || m.locked(msg.Context)
 	m.pb.radio.source = ""
 	q.Clear()
 	q.SetShuffle(false)

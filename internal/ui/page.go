@@ -104,6 +104,10 @@ type Context struct {
 	Styles *style.UI
 	// Log is the debug log.
 	Log *slog.Logger
+	// Local is the on-disk history (nil: none).
+	Local Local
+	// ShuffleLocks are the per-playlist shuffle locks (nil: none).
+	ShuffleLocks ShuffleLocks
 }
 
 // Load runs f in a command and delivers its result to page p as a

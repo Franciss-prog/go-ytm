@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -44,7 +45,9 @@ type searchPage struct {
 	editing  bool
 	seq      uint64 // bumps on every edit and search
 	suggest  []string
-	sugSel   int // -1: none
+	sugSel   int      // -1: none
+	history  []string // recent searches, newest first (shown on an empty input)
+	histOK   bool     // history loaded (or no store)
 	all      bool
 	query    string // last searched
 	state    loadState
@@ -77,10 +80,36 @@ func newSearchPage(cols components.Columns) *searchPage {
 
 func (p *searchPage) ID() PageID { return PageSearch }
 
-// Activate implements activator: arriving on the page focuses the input.
-func (p *searchPage) Activate(*Context) tea.Cmd {
+// searchHistoryMax is how many recent searches the empty input lists.
+const searchHistoryMax = 8
+
+// searchHistoryMsg delivers the stored recent searches.
+type searchHistoryMsg struct{ queries []string }
+
+// Activate implements activator: arriving on the page focuses the input
+// and, the first time, loads the recent searches.
+func (p *searchPage) Activate(ctx *Context) tea.Cmd {
 	p.editing = true
-	return nil
+	p.showHistory()
+	if p.histOK || ctx.Local == nil {
+		return nil
+	}
+	p.histOK = true
+	l, root, log := ctx.Local, ctx.Root, ctx.Log
+	return func() tea.Msg {
+		qs, err := l.RecentSearches(root, searchHistoryMax)
+		if err != nil {
+			log.Warn("ui: search history unreadable", "err", err)
+		}
+		return pageMsg{to: p, msg: searchHistoryMsg{qs}}
+	}
+}
+
+// showHistory lists the recent searches while the input is empty.
+func (p *searchPage) showHistory() {
+	if p.editing && len(p.input) == 0 {
+		p.suggest, p.sugSel = slices.Clone(p.history), -1
+	}
 }
 
 func (p *searchPage) Capturing() bool {
@@ -196,6 +225,7 @@ func (p *searchPage) edited(ctx *Context) tea.Cmd {
 	p.sugSel = -1
 	if strings.TrimSpace(string(p.input)) == "" {
 		p.suggest = nil
+		p.showHistory()
 		return nil
 	}
 	return after(ctx.Root, suggestDebounce, pageMsg{to: p, msg: suggestTickMsg{p.seq}})
@@ -209,7 +239,17 @@ func (p *searchPage) search(q string, ctx *Context) tea.Cmd {
 	p.state, p.err, p.top = stateLoading, "", nil
 	p.panel = panelSongs
 	tag := func(k string) string { return k + "@" + itoa(seq) }
-	return tea.Batch(
+	p.history = append([]string{q}, slices.DeleteFunc(p.history, func(h string) bool { return h == q })...)
+	p.history = p.history[:min(len(p.history), searchHistoryMax)]
+	var save tea.Cmd
+	if l := ctx.Local; l != nil {
+		filter := "music"
+		if p.all {
+			filter = "all"
+		}
+		save = localWrite(ctx.Root, ctx.Log, "search", func(c context.Context) error { return l.LogSearch(c, q, filter) })
+	}
+	return tea.Batch(save,
 		ctx.Load(p, tag("all"), func(c context.Context, api ytmusic.Client) (any, error) {
 			return api.Search(c, q, ytmusic.FilterAll, 0)
 		}),
@@ -228,6 +268,15 @@ func itoa(n uint64) string { return strconv.FormatUint(n, 10) }
 // Receive implements receiver.
 func (p *searchPage) Receive(msg tea.Msg, ctx *Context) tea.Cmd {
 	switch msg := msg.(type) {
+	case searchHistoryMsg:
+		// Searches made before the store answered stay in front.
+		for _, q := range msg.queries {
+			if !slices.Contains(p.history, q) && len(p.history) < searchHistoryMax {
+				p.history = append(p.history, q)
+			}
+		}
+		p.showHistory()
+		return nil
 	case suggestTickMsg:
 		if msg.seq != p.seq || !p.editing {
 			return nil

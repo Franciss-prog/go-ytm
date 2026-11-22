@@ -18,8 +18,10 @@ import (
 	"github.com/Franciss-Prog/go-ytm/internal/config"
 	"github.com/Franciss-Prog/go-ytm/internal/platform"
 	"github.com/Franciss-Prog/go-ytm/internal/player"
+	"github.com/Franciss-Prog/go-ytm/internal/store"
 	"github.com/Franciss-Prog/go-ytm/internal/theme"
 	"github.com/Franciss-Prog/go-ytm/internal/ui"
+	"github.com/Franciss-Prog/go-ytm/internal/ytmusic"
 )
 
 func TestMain(m *testing.M) { goleak.VerifyTestMain(m) }
@@ -166,5 +168,34 @@ func TestThemeToast(t *testing.T) {
 	got := themeToast(r, theme.Spec{Watch: true})
 	if got == nil || got.Text != "Theme: pywal colors not found at /x — using ytm-dark; will switch when it appears" {
 		t.Errorf("toast = %+v", got)
+	}
+}
+
+func TestRunRestoresAndSavesSession(t *testing.T) {
+	o, _ := testOptions(t, strings.NewReader("q"))
+	data := t.TempDir()
+	o.Paths.Data, o.Paths.Cache = data, t.TempDir()
+	in := store.Session{
+		Volume: 30, Repeat: "all",
+		Tracks: []ytmusic.Track{{VideoID: "aaaaaaaaaaa", Title: "A"}, {VideoID: "bbbbbbbbbbb", Title: "B"}}, Index: 1,
+		Resume: &store.Resume{VideoID: "bbbbbbbbbbb", Position: 12},
+	}
+	if err := store.SaveSession(data, in); err != nil {
+		t.Fatal(err)
+	}
+	if err := Run(context.Background(), o); err != nil {
+		t.Fatal(err)
+	}
+	got, ok, err := store.LoadSession(data)
+	if !ok || err != nil {
+		t.Fatalf("session after run: ok=%v err=%v", ok, err)
+	}
+	// Nothing played: queue, flags and the resume point come back unchanged.
+	if got.Volume != 30 || got.Repeat != "all" || len(got.Tracks) != 2 || got.Index != 1 ||
+		got.Resume == nil || got.Resume.VideoID != "bbbbbbbbbbb" || got.Resume.Position != 12 {
+		t.Errorf("session = %+v", got)
+	}
+	if _, err := os.Stat(filepath.Join(data, store.DBFile)); err != nil {
+		t.Errorf("store not created: %v", err)
 	}
 }

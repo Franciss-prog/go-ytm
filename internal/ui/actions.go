@@ -123,6 +123,10 @@ func trackActionsPopup(t *components.TrackTable, src trackSource, inQueue bool) 
 		return nil, msgCmd(RadioMsg{Seeds: ts})
 	})
 	add("Add to playlist", pageAction("add_to_playlist"))
+	add("Download for offline", func(*Context) (popup, tea.Cmd) {
+		t.ClearMarks()
+		return nil, msgCmd(DownloadMsg{Tracks: ts})
+	})
 	if src.playlist != "" && !inQueue {
 		add("Remove from playlist", pageAction("delete_item"))
 	}
@@ -392,6 +396,9 @@ func playlistActionsPopup(pl ytmusic.PlaylistRef) popup {
 	items := []menuItem{{label: "Open", run: pageAction("select")}, {label: "Start radio", run: func(*Context) (popup, tea.Cmd) {
 		return nil, msgCmd(RadioMsg{Playlist: pl.ID, Label: "Radio from " + pl.Title})
 	}}}
+	items = append(items, menuItem{label: "Toggle shuffle lock", run: func(*Context) (popup, tea.Cmd) {
+		return nil, msgCmd(shuffleLockMsg{pl.ID})
+	}})
 	if pl.Owned {
 		items = append(items, menuItem{label: "Delete playlist", run: pageAction("delete_item")})
 	}
