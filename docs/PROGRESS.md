@@ -15,7 +15,7 @@ Last updated: 2026-11-22
 | M4b | dynamic-theme | **merged** 2026-11-17 | [#7](https://github.com/Franciss-prog/go-ytm/pull/7) | sources, contrast, depth, watcher, Patch, Settings, `theme show` |
 | M5 | tui-library-search-queue | **merged** 2026-11-17 | [#8](https://github.com/Franciss-prog/go-ytm/pull/8) | queue pkg, ytmusic browse/library/edit calls, TrackTable, playback owner (resolve/gapless/retry), Queue, Library, Context, Search pages, popups, playlist sidebar, mouse |
 | M5b | ytkew-look | **merged** 2026-11-17 (spec 09 approved 2026-11-17) | [#9](https://github.com/Franciss-prog/go-ytm/pull/9) | side quest, spec 09: frame, rows, Library columns, track page, cover art, visualizer |
-| M6 | browse-liked-history | **built**, PR not opened | branch `feat/browse-liked-history` | ytmusic watch/radio/home/charts/explore/history, radio + autoplay + discovery + history sync, Browse, Liked Songs, Recently Played, country picker |
+| M6 | browse-liked-history | **in review** | PR #10 | ytmusic watch/radio/home/charts/explore/history, radio + autoplay + discovery + history sync, Browse, Liked Songs, Recently Played, country picker |
 | M7 | session-cache-offline | not started | | |
 | M8 | lyrics | not started | | |
 | M9 | cli-ipc | not started | | |
@@ -251,8 +251,6 @@ Last updated: 2026-11-22
 - All other per-spec open questions: proposed defaults accepted.
 
 ## Open questions (need owner)
-
-- M6: OK to open the PR from `feat/browse-liked-history`? (not pushed yet)
 
 - None currently.
 
