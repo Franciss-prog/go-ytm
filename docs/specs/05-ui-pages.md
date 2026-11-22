@@ -1,6 +1,6 @@
 # 05 — UI pages, components, layout
 
-Status: **M4 implemented** (shell, bar, help, toasts), **M5 implemented** (pages, popups, playlist sidebar, mouse), **M6 implemented** (browse, liked, recent, radio) · Milestones: M4 (shell, bar, help), M5, M6, M8
+Status: **M4 implemented** (shell, bar, help, toasts), **M5 implemented** (pages, popups, playlist sidebar, mouse), **M6 implemented** (browse, liked, recent, radio), **M7 implemented** (search history, Download, shuffle lock, session resume) · Milestones: M4 (shell, bar, help), M5, M6, M8
 
 ## Goals
 
@@ -213,8 +213,12 @@ Bottom-right above bar, max 3 stacked, 4 s, severity tokens (error/warn/success)
   `delete_item`, `add_to_playlist`), so popup and keys behave the same. Track items: Play, Play next,
   Add to queue (Queue page: Remove from queue), Go to artist, Go to album, Add to playlist, Remove
   from playlist (owned playlists only), Like/Unlike, Copy link (OSC 52, `tea.SetClipboard`). Single-
-  track items hide when rows are marked. **Start radio arrived in M6; Download waits for M7.**
-  Library playlists: Open, Delete playlist (owned only), Copy link.
+  track items hide when rows are marked. **Start radio arrived in M6; Download for offline in M7**
+  (works on marked rows too; spec 01, "Persistence").
+  Library playlists: Open, Start radio, Toggle shuffle lock (M7), Delete playlist (owned only),
+  Copy link.
+- Playlist pages (M7) show a `⤮ Shuffle lock: ON/off` line under the panel title (accent when on);
+  a click toggles it. Keyboard: the playlist's actions popup (`a` on a library playlist row).
 - Playlist picker lists owned library playlists only (edits fail on others), filters by typed
   substring like the original, "+ New playlist" first. A refused add (`ErrEditFailed`) asks the
   original's "Already in …, add anyway?" and retries with duplicates allowed; a selection holding a
@@ -284,8 +288,8 @@ Bottom-right above bar, max 3 stacked, 4 s, severity tokens (error/warn/success)
   explanations, "▶ Start Radio" as on Liked. Account history reloads each time the page is
   shown. All = local rows first in their order, then account-only rows, one row per video id
   (100 + 100). When the account history fails, All keeps the local rows and adds a footer
-  "Account history unavailable: …". **Local is the session's plays in memory** (recorded at
-  `history_min_listen_seconds`, signed in or not) until M7's SQLite store persists it.
+  "Account history unavailable: …". **Local** is the play log (recorded at
+  `history_min_listen_seconds`, signed in or not), kept in SQLite since M7.
 - Library root column gains Recently Played (account history as a track column), spec 09.
 - **Radio**: actions popup **Start radio** on tracks (one seed, or the marked rows as a
   shuffled multi-seed mix) and on library playlists (`RDAMPL`). It replaces the queue with

@@ -1,6 +1,6 @@
 # 01 — Architecture
 
-Status: **draft** · Depends on: 00
+Status: **draft**, persistence implemented in M7 · Depends on: 00
 
 ## Goals
 
@@ -171,6 +171,47 @@ Shutdown order (bounded at 3 s total): stop accepting IPC → save session → s
 | runtime (sockets) | `$XDG_RUNTIME_DIR/ytm-go` else `/tmp/ytm-go-$UID` (0700) | `$TMPDIR/ytm-go` | named pipes `\\.\pipe\ytm-go-<user>-*` |
 
 Credential files are written `0600`, dirs `0700`.
+
+## Persistence (M7)
+
+All files live in the data dir (`Paths.Data`) unless noted; every write is atomic (temp + rename)
+and private (0600 files, 0700 dirs). A part that cannot be opened is skipped for the session with
+one warning toast; the app still runs.
+
+- `ytm.db` (`internal/store`, `modernc.org/sqlite`, WAL, one connection). Tables:
+  `play_history` (video id, title, first artist, listened seconds, the track as JSON, time; capped
+  at 10,000 rows), `search_history` (query + filter unique, count, last time) and `cache_index`
+  (video id, file path, size, last access). Store calls run in `tea.Cmd`s, never in `Update`;
+  write failures only reach the log (history is best effort, as in ytm-player).
+- Recently Played → Local reads `RecentPlays` (newest play first, one row per video, 100 rows) at
+  start; each play that passes `history_min_listen_seconds` is written through. The listen time
+  stored is the time at the threshold, not the final one (ytm-player updates it at track end;
+  M9's stats revisit this).
+- Search: the empty input lists the 8 most recent distinct queries (newest first); a submitted
+  search is logged with its mode (`music` / `all`).
+- `session.json` (`schema_version` 1; another version or a broken file is ignored and logged):
+  volume, repeat, shuffle, the queue in playback order, current index, queue context, and the
+  resume point. Saved on exit before the player stops (shutdown order above). The live position
+  wins past 1 s; otherwise the resume point read at start is written back until a track loads
+  this session. At start the queue, flags and volume are restored and the current track is shown
+  in the bar; with `resume_on_launch` a toast offers to resume, and `play_pause` with nothing
+  loaded starts the current track at the saved position (without it, from the start).
+- `shuffle_prefs.json`: playlist id (without `VL`) → true for playlists with **Shuffle lock** on,
+  capped at 1,000. A locked playlist always plays shuffled; `toggle_shuffle` refuses (toast) while
+  the queue plays it; locking the playing playlist turns shuffle on, unlocking leaves it.
+- **Audio cache** (`internal/cache`): `[cache] location` or `<cache dir>/audio`, limit
+  `max_size_mb` (0 = downloads off). **Download for offline** runs yt-dlp with
+  `-f bestaudio[ext=webm]/bestaudio/best` into a private staging dir inside the cache dir, prints
+  the file path with `-O after_move:filepath`, renames the file into place and indexes it, then
+  evicts least recently used files until the total fits (a file larger than the whole cache is
+  evicted again and toasted). ≈ ytm-player re-encodes to opus with ffmpeg; YouTube's webm already
+  is opus, so ytm-go keeps it as is and needs no ffmpeg. Downloads of several tracks run one after
+  another; the same track twice at once is refused. Only downloads fill the cache (as the original;
+  streamed audio is not kept).
+- Playback checks the cache first, both under the stream URL cache (prefetching a cached track runs
+  no yt-dlp) and in front of it (a URL memoized before the download must not win). A file deleted
+  behind our back drops its index entry and plays from the network.
+- `cache status` / `cache clear` are M9 CLI commands over the same index.
 
 ## Edge cases
 

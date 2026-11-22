@@ -63,6 +63,12 @@ Playback:
   YouTube needs roughly 5 s to hand out the audio link and then blocks it for about 3 s more.
 - Radio from any track (actions popup), Liked Songs radio, and a discovery mix (`D`).
 - Autoplay: when the queue runs out, related tracks are added (`autoplay = true`).
+- **Resume where you left off**: the queue, volume, repeat and shuffle come back at start, and
+  play/pause continues the last track from where it stopped.
+- **Offline downloads** (track actions, `a` → Download for offline). Downloaded tracks play from
+  disk; the cache is capped by `[cache] max_size_mb` and drops the least recently played first.
+- Recently Played and recent searches are kept between runs. **Shuffle lock** on a playlist
+  makes it always play shuffled.
 - mpv crash recovery: mpv restarts and resumes where it was.
 
 Looks:
@@ -187,7 +193,6 @@ WezTerm: `window_background_opacity = 0.85`), then turn on `transparent = true` 
 
 ## Not done yet
 
-- Resume the last session, offline downloads and the audio cache
 - Synced lyrics
 - Controlling a running player from the shell (`ytm play`, `ytm next`, ...)
 - MPRIS / media keys, notifications, Discord, Last.fm, Spotify import
