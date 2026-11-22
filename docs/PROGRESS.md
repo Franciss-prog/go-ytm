@@ -252,6 +252,7 @@ Last updated: 2026-11-22
 
 ## Open questions (need owner)
 
+None.
 
 ## Known gaps
 
