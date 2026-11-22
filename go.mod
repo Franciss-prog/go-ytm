@@ -9,6 +9,7 @@ require (
 	charm.land/lipgloss/v2 v2.1.1
 	charm.land/log/v2 v2.0.1
 	github.com/Microsoft/go-winio v0.6.4
+	github.com/anyascii/go v0.3.3
 	github.com/charmbracelet/colorprofile v0.4.3
 	github.com/charmbracelet/ultraviolet v0.0.0-20261008173134-6b8d4baf91b4
 	github.com/charmbracelet/x/ansi v0.11.9
@@ -22,6 +23,7 @@ require (
 	go.uber.org/goleak v1.3.0
 	golang.org/x/sync v0.24.0
 	golang.org/x/term v0.48.0
+	golang.org/x/text v0.24.0
 	modernc.org/sqlite v1.62.0
 )
 
@@ -56,7 +58,6 @@ require (
 	github.com/xo/terminfo v1.0.0 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/sys v0.50.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
 	modernc.org/libc v1.80.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
