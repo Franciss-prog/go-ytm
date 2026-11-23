@@ -17,7 +17,7 @@ Last updated: 2026-11-22
 | M5b | ytkew-look | **merged** 2026-11-17 (spec 09 approved 2026-11-17) | [#9](https://github.com/Franciss-prog/go-ytm/pull/9) | side quest, spec 09: frame, rows, Library columns, track page, cover art, visualizer |
 | M6 | browse-liked-history | **merged** 2026-11-22 | [#10](https://github.com/Franciss-prog/go-ytm/pull/10) | ytmusic watch/radio/home/charts/explore/history, radio + autoplay + discovery + history sync, Browse, Liked Songs, Recently Played, country picker |
 | M7 | session-cache-offline | **merged** 2026-11-22 | [#11](https://github.com/Franciss-prog/go-ytm/pull/11) | SQLite store (play/search history, cache index), session.json resume, shuffle_prefs.json lock, yt-dlp downloads + LRU audio cache, search history, Download action |
-| M8 | lyrics | **built**, PR not opened | branch `feat/lyrics` | YouTube timed/plain lyrics (Android client), LRCLIB fallback, LRC parse, lyrics pane (sync, 5 s pause, click-to-seek), transliteration (`T`, anyascii), BiDi |
+| M8 | lyrics | **built**, PR open | branch `feat/lyrics` | YouTube timed/plain lyrics (Android client), LRCLIB fallback, LRC parse, lyrics pane (sync, 5 s pause, click-to-seek), transliteration (`T`, anyascii), BiDi |
 | M9 | cli-ipc | not started | | |
 | M10 | mpris-media-keys | not started | | |
 | M11 | integrations | not started | | |
@@ -261,7 +261,7 @@ Last updated: 2026-11-22
 
 ## Open questions (need owner)
 
-- M8: OK to open the PR from `feat/lyrics`? (not pushed yet)
+- None.
 
 ## Known gaps
 
