@@ -225,3 +225,43 @@ func TestRecordM6(t *testing.T) {
 	call("history", "browse", map[string]any{"browseId": "FEmusic_history"}, "")
 	call("liked", "browse", map[string]any{"browseId": "VLLM"}, "")
 }
+
+// TestRecordLyrics captures the M8 lyrics browse page twice: with the
+// Android app client (timed lyrics, ytmusicapi as_mobile) and the web
+// client (plain lyrics). Public, no sign-in needed.
+func TestRecordLyrics(t *testing.T) {
+	dir := os.Getenv("YTM_RECORD_DIR")
+	if dir == "" {
+		t.Skip("set YTM_RECORD_DIR")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	a := New(Options{})
+	defer a.Close()
+
+	for _, q := range []string{"daft punk get lucky", "bohemian rhapsody queen"} {
+		songs, err := a.Search(ctx, q, FilterSongs, 1)
+		if err != nil || len(songs.Items) == 0 {
+			t.Fatalf("song search %q: %v", q, err)
+		}
+		w, err := a.WatchPlaylist(ctx, WatchRequest{VideoID: songs.Items[0].Track.VideoID, Limit: 1})
+		if err != nil || w.LyricsID == "" {
+			t.Fatalf("watch %q: lyrics id %q, %v", q, w.LyricsID, err)
+		}
+		slug := strings.ReplaceAll(strings.Fields(q)[len(strings.Fields(q))-1], " ", "_")
+		for name, body := range map[string]map[string]any{
+			"lyrics_timed_" + slug: {"browseId": w.LyricsID, clientOverride: map[string]any{"clientName": "ANDROID_MUSIC", "clientVersion": "7.21.50"}},
+			"lyrics_plain_" + slug: {"browseId": w.LyricsID},
+		} {
+			n, err := a.read(ctx, "browse", body, "")
+			if err != nil {
+				t.Fatalf("%s: %v", name, err)
+			}
+			b, _ := json.MarshalIndent(n.v, "", " ")
+			if err := os.WriteFile(filepath.Join(dir, name+".json"), b, 0o600); err != nil {
+				t.Fatal(err)
+			}
+			t.Logf("saved %s (%d bytes)", name, len(b))
+		}
+	}
+}

@@ -105,6 +105,12 @@ func (m *Model) click(ms tea.Mouse) tea.Cmd {
 	if x, y, ok := l.sideXY(ms.X, ms.Y); ok {
 		return m.sideClick(x, y, right)
 	}
+	if _, y, ok := l.lyricsXY(ms.X, ms.Y); ok {
+		if !right {
+			m.lyricsClick(y)
+		}
+		return nil
+	}
 	x, okX := l.mainX(ms.X)
 	y, okY := l.mainY(ms.Y)
 	if !okX || !okY {
@@ -195,6 +201,9 @@ func (m *Model) wheel(ms tea.Mouse) tea.Cmd {
 			m.side.list.Action(a)
 		}
 		return nil
+	}
+	if _, _, ok := l.lyricsXY(ms.X, ms.Y); ok {
+		return m.scrollLyrics(d)
 	}
 	x, okX := l.mainX(ms.X)
 	y, okY := l.mainY(ms.Y)

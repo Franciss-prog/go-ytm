@@ -256,6 +256,9 @@ func (f *fakeAPI) Rate(_ context.Context, id string, s ytmusic.LikeStatus) error
 	return nil
 }
 
+// Lyrics is unused by the UI (lyrics go through Options.Lyrics).
+func (f *fakeAPI) Lyrics(context.Context, string) (*ytmusic.Lyrics, error) { return nil, nil }
+
 func (f *fakeAPI) WatchPlaylist(_ context.Context, r ytmusic.WatchRequest) (ytmusic.WatchPlaylist, error) {
 	key := cmpOr(r.VideoID, r.PlaylistID)
 	if err := f.rec("WatchPlaylist", key); err != nil {

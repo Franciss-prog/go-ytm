@@ -1,6 +1,6 @@
 # 03 — YouTube Music API, auth, and stream resolution
 
-Status: **M2 implemented** (client core, auth, search), **M3 implemented** (stream), **M6 implemented** (radio, home, charts, explore, history) · Milestones: M2 (client, auth, search), M3 (stream), M6 (browse/radio/history)
+Status: **M2 implemented** (client core, auth, search), **M3 implemented** (stream), **M6 implemented** (radio, home, charts, explore, history), **M8 implemented** (lyrics) · Milestones: M2 (client, auth, search), M3 (stream), M6 (browse/radio/history)
 
 ## Goals
 
@@ -286,6 +286,24 @@ func Radio(ctx, Watcher, seeds []string, limit int) ([]Track, error)
   hand-built (ytmusicapi shapes). The history parser was run live against the owner's account
   through the TUI (Recently Played listed real plays); a scrubbed signed-in capture is still owed.
 - The 60 s browse TTL cache is still not built (no need seen yet).
+
+## Lyrics (M8)
+
+`Lyrics(ctx, browseID) (*Lyrics, error)` → `Lyrics{Lines []LyricLine{Start, Text}, Timed, Source}`;
+nil when YouTube has none. Ported from ytmusicapi `get_lyrics` / `LyricLine.from_raw`, checked
+against live captures (2026-11-22, `TestRecordLyrics`):
+
+- Timed lyrics are only served to the Android app client: the same `browse` body with
+  `context.client` = `ANDROID_MUSIC` / `7.21.50` (ytmusicapi `as_mobile`). Path
+  `contents.elementRenderer.newElement.type.componentType.model.timedLyricsModel.lyricsData`:
+  `timedLyricsData[].lyricLine` and `.cueRange.startTimeMilliseconds` (a **string**, ms),
+  `sourceMessage` ("Source: LyricFind"). Any line without a cue range → the set is untimed.
+- Fallback: the web client's page, `contents.sectionListRenderer.contents[0].musicDescriptionShelfRenderer`,
+  text in `description.runs`, source in **`footer.runs`** (ytmusicapi reads the shelf's top-level
+  `runs`, which the live page does not have). Line ends may be `\r\n`.
+- Requests set the client through an internal body key (`clientOverride`) that `payload` folds into
+  `context.client`; it is never sent.
+- Fixtures keep only the lyrics subtree and four to six lines (lyrics are copyrighted).
 
 ## Edge cases
 

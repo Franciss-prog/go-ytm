@@ -30,6 +30,8 @@ Status: **draft**, persistence implemented in M7 · Depends on: 00
 | TTY detection | `golang.org/x/term` | (x/ module) | `IsTerminal` for the output policy |
 | TOML | `github.com/pelletier/go-toml/v2` | v2.4.3 | `DecodeError.Position()` for line numbers; `unstable.Parser` gives node byte `Range`s (used for comment-preserving writes) |
 | SQLite | `modernc.org/sqlite` | v1.62.0 | pure Go |
+| Transliteration (M8) | `github.com/anyascii/go` | v0.3.3 | ISC, no deps; same library as ytm-player |
+| BiDi (M8) | `golang.org/x/text` | v0.24.0 | was indirect; `unicode/bidi` (direction and run order applied in-house, see 05) |
 | File watch | `github.com/fsnotify/fsnotify` | v1.10.1 | |
 | Color math | `github.com/lucasb-eyer/go-colorful` | v1.4.1 | OKLCH conversion is implemented in-house (~60 LOC) if not present; checked in M4b |
 | D-Bus (M10) | `github.com/godbus/dbus/v5` | v5.2.4 | |

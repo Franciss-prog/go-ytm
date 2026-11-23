@@ -17,7 +17,7 @@ Last updated: 2026-11-22
 | M5b | ytkew-look | **merged** 2026-11-17 (spec 09 approved 2026-11-17) | [#9](https://github.com/Franciss-prog/go-ytm/pull/9) | side quest, spec 09: frame, rows, Library columns, track page, cover art, visualizer |
 | M6 | browse-liked-history | **merged** 2026-11-22 | [#10](https://github.com/Franciss-prog/go-ytm/pull/10) | ytmusic watch/radio/home/charts/explore/history, radio + autoplay + discovery + history sync, Browse, Liked Songs, Recently Played, country picker |
 | M7 | session-cache-offline | **merged** 2026-11-22 | [#11](https://github.com/Franciss-prog/go-ytm/pull/11) | SQLite store (play/search history, cache index), session.json resume, shuffle_prefs.json lock, yt-dlp downloads + LRU audio cache, search history, Download action |
-| M8 | lyrics | not started | | |
+| M8 | lyrics | **built**, PR open | branch `feat/lyrics` | YouTube timed/plain lyrics (Android client), LRCLIB fallback, LRC parse, lyrics pane (sync, 5 s pause, click-to-seek), transliteration (`T`, anyascii), BiDi |
 | M9 | cli-ipc | not started | | |
 | M10 | mpris-media-keys | not started | | |
 | M11 | integrations | not started | | |
@@ -95,9 +95,18 @@ Last updated: 2026-11-22
 | 2026-11-22 | Recently Played → Local is in memory until M7's store; no new `start_radio` key (popup + click) | 05 |
 | 2026-11-22 | Signed-out 200 pages (history, `VLLM`, `logged_in=0`) trigger silent renewal | 03 |
 | 2026-11-22 | History pings send cookies to `https` `*.youtube.com` only | 03 |
+| 2026-11-22 | Lyrics order YouTube timed → LRCLIB synced → YouTube plain → LRCLIB plain; fetched only while the pane is shown | 05 |
+| 2026-11-22 | Transliteration = `anyascii/go` (ytm-player's library); `bidi_mode = auto` behaves as `reorder` (no BiDi terminal detection) | 05, 01 |
+| 2026-11-22 | Click on a synced lyric line seeks (from the original; spec 05 did not list it) | 05 |
 
 ## Verified facts (with how)
 
+- YouTube lyrics 2026-11-22 (signed out, live): `ANDROID_MUSIC` 7.21.50 returns `timedLyricsModel`
+  with string ms cue starts for both test tracks; the web page puts the source under the shelf's
+  `footer` (`TestRecordLyrics`). LRCLIB `/api/get` live: JSON on 200 and 404, `duration` 367 record
+  matched by 369 and 370 and by no duration (curl).
+- x/text v0.24.0 `bidi.Paragraph.Order()` returns runs in logical order and does not detect an RTL
+  paragraph by itself (local probe).
 - mpv v0.41.0 JSON IPC reply/event shapes, `loadfile … append-play` → `playlist_entry_id` (local probe).
 - Unix socket path > 108 bytes fails (`AF_UNIX path too long`, local probe).
 - matugen 4.2.0 template syntax `{{colors.<role>.default|dark|light.hex}}`, `{{mode}}` (rendered locally).
@@ -252,7 +261,7 @@ Last updated: 2026-11-22
 
 ## Open questions (need owner)
 
-None.
+- None.
 
 ## Known gaps
 
@@ -317,3 +326,11 @@ None.
 - M7: `play_pause` with nothing loaded now starts the queue's current track (was a "Nothing to
   play yet" toast); needed for resume, also applies after the queue ends.
 - M7: `cache status` / `cache clear` CLI land with M9 (spec 00).
+- M8: driven live once in tmux (2026-11-22, scratch XDG dirs, signed out): a Queen live track
+  got synced YouTube (Musixmatch) lyrics; the current line advanced and stayed centered,
+  `C-w l` + `C-b` paused the follow and it re-centered after 5 s, `T` toasted. **Not run live:**
+  the LRCLIB fallback inside the app (client checked with curl and fake-server tests), click-to-seek
+  (fake player only), RTL and transliteration on real lyrics (goldens/unit tests only), kitty
+  rendering (owner check).
+- M8: the pane lists the first artist only for LRCLIB; multi-artist credits may miss a match.
+- M8: no lyrics cache across tracks: going back to a track refetches.

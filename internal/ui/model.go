@@ -75,6 +75,8 @@ type Options struct {
 	Session *store.Session
 	// ShuffleLocks are the per-playlist shuffle locks (nil: none).
 	ShuffleLocks ShuffleLocks
+	// Lyrics finds lyrics for the lyrics pane (nil: unavailable).
+	Lyrics LyricsFinder
 }
 
 // Local is the on-disk history (*store.DB). Its methods block: the model
@@ -157,6 +159,7 @@ type Model struct {
 	plays localPlays // in-app play log (Recently Played → Local)
 	art   artState
 	spec  specState
+	lyr   lyricsState
 
 	scrubSeq uint64 // bumps per wheel tick on the progress bar
 }
@@ -186,6 +189,7 @@ func New(o Options) *Model {
 		toasts:  toasts{ctx: o.Context},
 		pb:      playback{q: o.Queue},
 		art:     newArtState(o.Art, o.Config.UI.AlbumArtMode),
+		lyr:     lyricsState{find: o.Lyrics, translit: o.Config.Lyrics.Transliteration},
 	}
 	m.pages[PageHelp] = &help{keymap: o.Keymap, path: o.KeymapPath}
 	m.pages[PageQueue] = newQueuePage(columns(o.Config), o.Queue)
@@ -270,6 +274,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if a := m.syncArt(); a != nil {
 		cmd = tea.Batch(cmd, a)
 	}
+	if l := m.syncLyrics(); l != nil {
+		cmd = tea.Batch(cmd, l)
+	}
 	if h := m.syncHover(); h != nil {
 		cmd = tea.Batch(cmd, h)
 	}
@@ -280,6 +287,14 @@ func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case artLoadedMsg:
 		m.artLoaded(msg)
+		return m, nil
+	case lyricsLoadedMsg:
+		m.lyricsLoaded(msg)
+		return m, nil
+	case lyricsResumeMsg:
+		if msg.seq == m.lyr.seq {
+			m.lyr.manual = false
+		}
 		return m, nil
 	case SpectrumMsg:
 		if m.spec.active {
@@ -452,6 +467,11 @@ func (m *Model) action(a keys.Action) tea.Cmd {
 			return cmd
 		}
 	}
+	if m.lyricsFocused() {
+		if cmd, ok := m.lyricsAction(a); ok {
+			return cmd
+		}
+	}
 	p, cmd, handled := m.pages[m.current].Action(a, m.ctx())
 	m.pages[m.current] = p
 	if handled {
@@ -465,7 +485,6 @@ var notYet = map[string]string{
 	"like_toggle":     "likes",
 	"current_context": "pages", "jump_to_current": "the queue",
 	"command_palette": "the command palette", "theme_picker": "the theme picker",
-	"toggle_transliteration": "lyrics",
 }
 
 func (m *Model) global(a keys.Action) tea.Cmd {
@@ -489,6 +508,11 @@ func (m *Model) global(a keys.Action) tea.Cmd {
 		return m.focusAction(a.Name)
 	case "lyrics":
 		m.lyrics = !m.lyrics
+		if !m.lyrics && m.focus == paneLyrics {
+			m.focus = paneMain
+		}
+	case "toggle_transliteration":
+		return m.toggleTransliteration()
 	case "toggle_transparency":
 		return m.toggleTransparency()
 	case "settings":
@@ -740,7 +764,7 @@ func (m *Model) render() string {
 		main = splitPanels(st, sp, l.panelW, l.panelH)
 	} else {
 		main = panel(st, panelSpec{
-			title: m.panelTitle(), counter: countText(page), info: info, focused: !m.sideFocused(),
+			title: m.panelTitle(), counter: countText(page), info: info, focused: !m.sideFocused() && !m.lyricsFocused(),
 		}, page.View(l.mainW, l.mainH, st), l.panelW, l.panelH, l.border)
 	}
 	if pr, ok := page.(progressor); ok {
@@ -759,7 +783,8 @@ func (m *Model) render() string {
 			m.sidebarView(l.sideW-2*in, l.panelH-2*in), l.sideW, l.panelH, l.border)
 	}
 	if l.lyricsW > 0 {
-		lyr = panel(st, panelSpec{title: "lyrics"}, m.lyricsView(l.lyricsW-2*in, l.panelH-2*in), l.lyricsW, l.panelH, l.border)
+		lyr = panel(st, panelSpec{title: "lyrics", info: m.lyricsInfo(), focused: m.lyricsFocused()},
+			m.lyricsView(l.lyricsW-2*in, l.panelH-2*in), l.lyricsW, l.panelH, l.border)
 	}
 	rows := make([]string, l.panelH)
 	for i := range l.panelH {
@@ -796,11 +821,6 @@ func (m *Model) render() string {
 
 func (m *Model) sidebarView(w, h int) string {
 	return m.side.view(w, h, m.st, m.sideFocused(), m.current)
-}
-
-func (m *Model) lyricsView(w, h int) string {
-	st := m.st
-	return block([]string{" " + st.Section.Render("Lyrics"), "", " " + st.Muted.Render("No lyrics yet.")}, w, h)
 }
 
 // modal reports that a popup (or Settings) owns input.

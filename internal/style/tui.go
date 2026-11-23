@@ -91,6 +91,9 @@ type UI struct {
 	ProgressFilled lipgloss.Style
 	ProgressEmpty  lipgloss.Style
 
+	// Lyrics pane: lines already sung, the current line, lines to come.
+	LyricsPlayed, LyricsCurrent, LyricsUpcoming lipgloss.Style
+
 	Popup      lipgloss.Style // bordered box
 	PopupTitle lipgloss.Style
 
@@ -162,6 +165,9 @@ func NewUI(t theme.Theme, o UIOptions, version uint64) *UI {
 	u.BarIconActive = fg(t.Accent)
 	u.ProgressFilled = fg(t.ProgressFilled)
 	u.ProgressEmpty = fg(t.ProgressEmpty)
+	u.LyricsPlayed = fg(t.LyricsPlayed)
+	u.LyricsCurrent = fg(t.LyricsCurrent).Bold(true)
+	u.LyricsUpcoming = fg(t.LyricsUpcoming)
 
 	u.Popup = n().Border(lipgloss.RoundedBorder()).BorderForeground(t.Border).Padding(0, 1).Foreground(t.Fg)
 	if !o.Transparent || o.PopupFill {
@@ -199,6 +205,7 @@ func (u *UI) noColor() {
 	u.BarTitle, u.BarArtist, u.BarTime, u.BarIcon = b, p, p, p
 	u.BarIconActive = b
 	u.ProgressFilled, u.ProgressEmpty = p, p.Faint(true)
+	u.LyricsPlayed, u.LyricsCurrent, u.LyricsUpcoming = p.Faint(true), b, p
 	u.Popup = p.Border(lipgloss.RoundedBorder()).Padding(0, 1)
 	u.PopupTitle = b
 	toast := p.Border(lipgloss.RoundedBorder()).Padding(0, 1)

@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"maps"
 	"math/rand/v2"
 	"net/http"
 	"net/url"
@@ -74,6 +75,9 @@ type Client interface {
 	// WatchPlaylist returns the queue YouTube Music builds for a track or
 	// playlist: radio, up next, playlist radio (M6).
 	WatchPlaylist(ctx context.Context, r WatchRequest) (WatchPlaylist, error)
+	// Lyrics returns the lyrics page WatchPlaylist.LyricsID points at,
+	// timed when YouTube has timings; nil when there are none (M8).
+	Lyrics(ctx context.Context, browseID string) (*Lyrics, error)
 	// Home returns the home feed, loading at least shelves rows when
 	// YouTube has that many.
 	Home(ctx context.Context, shelves int) ([]HomeShelf, error)
@@ -377,6 +381,11 @@ func (a *API) call(ctx context.Context, endpoint string, body map[string]any, ex
 	}
 }
 
+// clientOverride is a body key whose map value replaces fields of the
+// request's context.client (e.g. the Android app client for timed lyrics).
+// It is never sent as a body field.
+const clientOverride = "\x00client"
+
 func (a *API) payload(body map[string]any) ([]byte, error) {
 	client := map[string]any{
 		"clientName":    "WEB_REMIX",
@@ -392,6 +401,10 @@ func (a *API) payload(body map[string]any) ([]byte, error) {
 	}
 	full := make(map[string]any, len(body)+1)
 	for k, v := range body {
+		if k == clientOverride {
+			maps.Copy(client, v.(map[string]any))
+			continue
+		}
 		full[k] = v
 	}
 	full["context"] = map[string]any{"client": client, "user": user}

@@ -20,6 +20,7 @@ type pane int
 const (
 	paneMain pane = iota
 	paneSidebar
+	paneLyrics
 )
 
 // likedMusicID is the Liked Music playlist; the sidebar pins Liked Songs
@@ -274,6 +275,10 @@ func (m *Model) focusAction(name string) tea.Cmd {
 		}
 		return m.side.ensure(m.ctx())
 	case "focus_pane_left":
+		if m.focus == paneLyrics {
+			m.focus = paneMain
+			return nil
+		}
 		// Reaching for the sidebar shows it (as the original).
 		m.sidebar = true
 		if m.layout().sideW == 0 {
@@ -282,11 +287,21 @@ func (m *Model) focusAction(name string) tea.Cmd {
 		m.focus = paneSidebar
 		return m.side.ensure(m.ctx())
 	case "focus_pane_right":
-		m.focus = paneMain
+		if m.focus == paneMain && m.layout().lyricsW > 0 {
+			m.focus = paneLyrics
+		} else if m.focus == paneSidebar {
+			m.focus = paneMain
+		}
 	case "focus_pane_cycle":
-		if m.focus == paneMain && m.sidebar && m.layout().sideW > 0 {
+		// main → sidebar → lyrics → main, skipping hidden panes.
+		l := m.layout()
+		if m.focus == paneMain && l.sideW > 0 {
 			m.focus = paneSidebar
 			return m.side.ensure(m.ctx())
+		}
+		if m.focus != paneLyrics && l.lyricsW > 0 {
+			m.focus = paneLyrics
+			return nil
 		}
 		m.focus = paneMain
 	}
